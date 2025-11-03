@@ -4,7 +4,7 @@ import {
   AiOutlineSearch,
 } from "react-icons/ai";
 
-export function Header() {
+export default function Header() {
   return (
     <div className="w-full h-16 border-b border-gray-200 flex flex-row justify-between">
       <div className="flex justify-center items-center ">
