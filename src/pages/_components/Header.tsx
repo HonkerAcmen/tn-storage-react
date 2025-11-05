@@ -6,10 +6,10 @@ import {
 } from "react-icons/ai";
 
 export default function Header() {
-  const [clickProfile, setClickProfile] = useState(true);
+  const [clickProfile, setClickProfile] = useState(false);
 
   return (
-    <div className="w-full h-16 border-b border-gray-200 flex flex-row justify-between">
+    <div className="w-full h-16 border-b border-gray-200 flex flex-row justify-between bg-white">
       <div className="flex justify-center items-center ">
         <h2 className="ml-4 mr-16 font-bold text-[24px] cursor-pointer">
           TNStorage
