@@ -63,6 +63,7 @@ export default function Home() {
                     itemSelectedBg: '#eeedff',
                     itemSelectedColor: '#5542f6',
                     itemHeight: 50,
+                    itemColor: '#2e2c34',
                   },
                 },
               }}

@@ -1,40 +1,40 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   AiFillCaretDown,
   AiFillSetting,
   AiOutlineSearch,
-} from "react-icons/ai";
+} from 'react-icons/ai';
 
 export default function Header() {
   const [clickProfile, setClickProfile] = useState(false);
   const [clickSearch, setClickSearch] = useState(false);
 
   return (
-    <div className="w-full h-16 border-b border-gray-200 flex flex-row justify-between bg-white">
-      <div className="flex justify-center items-center ">
-        <h2 className="ml-4 mr-16 font-bold text-[24px] cursor-pointer">
+    <div className="flex h-16 w-full flex-row justify-between border-b border-gray-200 bg-white">
+      <div className="flex items-center justify-center">
+        <h2 className="mr-16 ml-4 cursor-pointer text-[24px] font-bold text-[#2e2c34]">
           TNStorage
         </h2>
         <div
-          className=" relative w-72 h-8 border border-gray-200 rounded-2xl flex flex-row items-center"
+          className="relative flex h-8 w-72 flex-row items-center rounded-2xl border border-gray-200"
           onBlur={() => setClickSearch(false)}
         >
-          <AiOutlineSearch className="ml-2 mr-2" />
+          <AiOutlineSearch className="mr-2 ml-2" />
           <input
             type="text"
-            className={`w-72 h-8 focus:outline-none text-sm`}
+            className={`h-8 w-72 text-sm focus:outline-none`}
             placeholder="搜索"
             onFocus={() => setClickSearch(!clickSearch)}
           />
           {clickSearch ? (
-            <div className=" absolute top-8 left-4 w-64 h-64 bg-white shadow-sm rounded-2xl p-4">
+            <div className="absolute top-8 left-4 h-64 w-64 rounded-2xl bg-white p-4 shadow-sm">
               <span className="text-[12px] text-gray-400">最近使用</span>
-              <ul className="w-full h-full flex flex-col mt-2">
-                <li className="w-full py-2 flex flex-row items-center cursor-pointer rounded-lg transition hover:bg-gray-100">
+              <ul className="mt-2 flex h-full w-full flex-col">
+                <li className="flex w-full cursor-pointer flex-row items-center rounded-lg py-2 transition hover:bg-gray-100">
                   <img
                     src="#"
                     alt=""
-                    className="bg-gray-200 w-8 h-8 ml-2 mr-2 rounded-lg"
+                    className="mr-2 ml-2 h-8 w-8 rounded-lg bg-gray-200"
                   />
                   <div className="ml-2">
                     <h2 className="">新文件.jpg</h2>
@@ -43,11 +43,11 @@ export default function Header() {
                     </span>
                   </div>
                 </li>
-                <li className="w-full py-2 flex flex-row items-center cursor-pointer rounded-lg transition hover:bg-gray-100">
+                <li className="flex w-full cursor-pointer flex-row items-center rounded-lg py-2 transition hover:bg-gray-100">
                   <img
                     src="#"
                     alt=""
-                    className="bg-gray-200 w-8 h-8 ml-2 mr-2 rounded-lg"
+                    className="mr-2 ml-2 h-8 w-8 rounded-lg bg-gray-200"
                   />
                   <div className="ml-2">
                     <h2 className="">新文件.jpg</h2>
@@ -56,11 +56,11 @@ export default function Header() {
                     </span>
                   </div>
                 </li>
-                <li className="w-full py-2 flex flex-row items-center cursor-pointer rounded-lg transition hover:bg-gray-100">
+                <li className="flex w-full cursor-pointer flex-row items-center rounded-lg py-2 transition hover:bg-gray-100">
                   <img
                     src="#"
                     alt=""
-                    className="bg-gray-200 w-8 h-8 ml-2 mr-2 rounded-lg"
+                    className="mr-2 ml-2 h-8 w-8 rounded-lg bg-gray-200"
                   />
                   <div className="ml-2">
                     <h2 className="">新文件.jpg</h2>
@@ -74,30 +74,30 @@ export default function Header() {
           ) : null}
         </div>
       </div>
-      <div className="flex mr-4 items-center">
-        <AiFillSetting className="w-6 h-6 mr-6 cursor-pointer  hover:rotate-90 transition" />
-        <div className="flex items-center relative">
+      <div className="mr-4 flex items-center">
+        <AiFillSetting className="mr-6 h-6 w-6 cursor-pointer transition hover:rotate-90" />
+        <div className="relative flex items-center">
           <img
             src="#"
             alt=""
-            className="w-12 h-12 bg-gray-200 rounded-4xl mr-6 cursor-pointer"
+            className="mr-6 h-12 w-12 cursor-pointer rounded-4xl bg-gray-200"
           />
           <div
-            className="flex items-center cursor-pointer"
+            className="flex cursor-pointer items-center"
             tabIndex={0}
             onFocus={() => setClickProfile(!clickProfile)}
             onBlur={() => setClickProfile(false)}
           >
-            <p className="mr-2 ">管理员</p>
-            <AiFillCaretDown className="text-gray-500 w-3 h-3" />
+            <p className="mr-2">管理员</p>
+            <AiFillCaretDown className="h-3 w-3 text-gray-500" />
           </div>
           {clickProfile === true ? (
-            <div className=" absolute top-16 right-2 w-40 h-22 bg-white border border-gray-200 rounded-2xl">
-              <ul className="flex flex-col w-full h-full ">
-                <li className="h-[50%] flex justify-center items-center border-b border-gray-200 cursor-pointer transition hover:bg-gray-100 rounded-t-2xl">
+            <div className="absolute top-16 right-2 h-22 w-40 rounded-2xl border border-gray-200 bg-white">
+              <ul className="flex h-full w-full flex-col">
+                <li className="flex h-[50%] cursor-pointer items-center justify-center rounded-t-2xl border-b border-gray-200 transition hover:bg-gray-100">
                   个人主页
                 </li>
-                <li className="h-[50%] flex justify-center items-center cursor-pointer transition hover:bg-gray-100 rounded-b-2xl">
+                <li className="flex h-[50%] cursor-pointer items-center justify-center rounded-b-2xl transition hover:bg-gray-100">
                   退出系统
                 </li>
               </ul>
