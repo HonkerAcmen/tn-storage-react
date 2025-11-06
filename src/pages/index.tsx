@@ -52,7 +52,7 @@ export default function Home() {
         <div className="grid flex-1 grid-cols-[240px_1fr]">
           {/* 左侧边栏 */}
           <aside className="flex flex-col items-center border-r border-gray-200 bg-white">
-            <div className="mt-2 flex h-12 w-[90%] cursor-pointer items-center justify-center rounded-sm border border-gray-200 text-[16px] text-[#5542f6]">
+            <div className="mt-6 mb-6 flex h-12 w-[90%] cursor-pointer items-center justify-center rounded-sm border border-gray-200 text-[16px] text-[#5542f6]">
               <AiOutlineCloudUpload className="mr-2 ml-2 h-5 w-5" />
               <p>上传/下载</p>
             </div>
