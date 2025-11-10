@@ -3,6 +3,7 @@ import {
   AiFillFileText,
   AiOutlineCloudUpload,
   AiOutlineDelete,
+  AiOutlineEllipsis,
   AiOutlineStar,
   AiTwotoneClockCircle,
 } from 'react-icons/ai';
@@ -78,11 +79,156 @@ export default function Home() {
           </aside>
 
           {/* 主内容区 */}
-          <main className="bg-white">
-            <h1 className="mb-4 text-xl font-semibold">Main Content</h1>
+          <main className="flex w-[70%] flex-col bg-white">
+            {/* 活动 */}
+            <div className="w-full pl-4">
+              <h1 className="py-8 text-3xl font-semibold text-[#2e2c34]">
+                我的云
+              </h1>
+              <span className="text-sm text-[#2e2c34]">从你的活动来看</span>
+              <div className="mt-4 h-0 w-full border border-gray-200"></div>
+              {/* 自适应网格 */}
+              <div className="mt-4 ml-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="flex h-32 max-w-56 cursor-pointer flex-col rounded-2xl bg-[#fbfafc] p-4 transition duration-175 hover:bg-gray-100">
+                  <img src="#" alt="" className="my-2 h-10 w-10 bg-gray-200" />
+                  <h2 className="text-gray-800">设计21</h2>
+                  <span className="text-sm text-gray-600">23 Oct 2025</span>
+                </div>
+                <div className="flex h-32 max-w-56 cursor-pointer flex-col rounded-2xl bg-[#fbfafc] p-4 transition duration-175 hover:bg-gray-100">
+                  <img src="#" alt="" className="my-2 h-10 w-10 bg-gray-200" />
+                  <h2 className="text-gray-800">设计21</h2>
+                  <span className="text-sm text-gray-600">23 Oct 2025</span>
+                </div>
+                <div className="flex h-32 max-w-56 cursor-pointer flex-col rounded-2xl bg-[#fbfafc] p-4 transition duration-175 hover:bg-gray-100">
+                  <img src="#" alt="" className="my-2 h-10 w-10 bg-gray-200" />
+                  <h2 className="text-gray-800">设计21</h2>
+                  <span className="text-sm text-gray-600">23 Oct 2025</span>
+                </div>
+                <div className="flex h-32 max-w-56 cursor-pointer flex-col rounded-2xl bg-[#fbfafc] p-4 transition duration-175 hover:bg-gray-100">
+                  <img src="#" alt="" className="my-2 h-10 w-10 bg-gray-200" />
+                  <h2 className="text-gray-800">设计21</h2>
+                  <span className="text-sm text-gray-600">23 Oct 2025</span>
+                </div>
+              </div>
+            </div>
+            {/* 最近上传 */}
+            <div className="mt-4 w-full pl-4">
+              <p className="text-sm text-[#2e2c34]">最近上传</p>
+              <div className="mt-4 h-0 w-full border border-gray-200"></div>
 
-            {/* 自适应网格 */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+              <ul className="flex w-full cursor-pointer transition duration-300 hover:bg-gray-100">
+                <li className="flex h-24 w-full flex-row border-b border-gray-200">
+                  <div className="flex flex-1 items-center">
+                    <img
+                      src="#"
+                      alt=""
+                      className="mx-4 h-8 w-8 rounded-lg bg-gray-200"
+                    />
+                    <p className="text-gray-700">4张图片</p>
+                  </div>
+                  <div className="flex w-full flex-1 flex-row items-center">
+                    <span className="mr-8 text-sm text-gray-500">
+                      添加于2025年11月30日
+                    </span>
+                    <div className="flex flex-4">
+                      <img
+                        src="#"
+                        alt=""
+                        className="mx-2 h-4 w-4 rounded-lg bg-gray-200"
+                      />
+                      <span className="text-sm text-gray-500">参考文献</span>
+                    </div>
+                    <div className="flex flex-1 transition duration-150 hover:scale-120">
+                      <AiOutlineEllipsis className="h-8 w-8" />
+                    </div>
+                  </div>
+                </li>
+              </ul>
+              <ul className="flex w-full cursor-pointer transition duration-300 hover:bg-gray-100">
+                <li className="flex h-24 w-full flex-row border-b border-gray-200">
+                  <div className="flex flex-1 items-center">
+                    <img
+                      src="#"
+                      alt=""
+                      className="mx-4 h-8 w-8 rounded-lg bg-gray-200"
+                    />
+                    <p className="text-gray-700">4张图片</p>
+                  </div>
+                  <div className="flex w-full flex-1 flex-row items-center">
+                    <span className="mr-8 text-sm text-gray-500">
+                      添加于2025年11月30日
+                    </span>
+                    <div className="flex flex-4">
+                      <img
+                        src="#"
+                        alt=""
+                        className="mx-2 h-4 w-4 rounded-lg bg-gray-200"
+                      />
+                      <span className="text-sm text-gray-500">参考文献</span>
+                    </div>
+                    <div className="flex flex-1 transition duration-150 hover:scale-120">
+                      <AiOutlineEllipsis className="h-8 w-8" />
+                    </div>
+                  </div>
+                </li>
+              </ul>
+              <ul className="flex w-full cursor-pointer transition duration-300 hover:bg-gray-100">
+                <li className="flex h-24 w-full flex-row border-b border-gray-200">
+                  <div className="flex flex-1 items-center">
+                    <img
+                      src="#"
+                      alt=""
+                      className="mx-4 h-8 w-8 rounded-lg bg-gray-200"
+                    />
+                    <p className="text-gray-700">4张图片</p>
+                  </div>
+                  <div className="flex w-full flex-1 flex-row items-center">
+                    <span className="mr-8 text-sm text-gray-500">
+                      添加于2025年11月30日
+                    </span>
+                    <div className="flex flex-4">
+                      <img
+                        src="#"
+                        alt=""
+                        className="mx-2 h-4 w-4 rounded-lg bg-gray-200"
+                      />
+                      <span className="text-sm text-gray-500">参考文献</span>
+                    </div>
+                    <div className="flex flex-1 transition duration-150 hover:scale-120">
+                      <AiOutlineEllipsis className="h-8 w-8" />
+                    </div>
+                  </div>
+                </li>
+              </ul>
+              <ul className="flex w-full cursor-pointer transition duration-300 hover:bg-gray-100">
+                <li className="flex h-24 w-full flex-row border-b border-gray-200">
+                  <div className="flex flex-1 items-center">
+                    <img
+                      src="#"
+                      alt=""
+                      className="mx-4 h-8 w-8 rounded-lg bg-gray-200"
+                    />
+                    <p className="text-gray-700">4张图片</p>
+                  </div>
+                  <div className="flex w-full flex-1 flex-row items-center">
+                    <span className="mr-8 text-sm text-gray-500">
+                      添加于2025年11月30日
+                    </span>
+                    <div className="flex flex-4">
+                      <img
+                        src="#"
+                        alt=""
+                        className="mx-2 h-4 w-4 rounded-lg bg-gray-200"
+                      />
+                      <span className="text-sm text-gray-500">参考文献</span>
+                    </div>
+                    <div className="flex flex-1 transition duration-150 hover:scale-120">
+                      <AiOutlineEllipsis className="h-8 w-8" />
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </main>
         </div>
       </div>
