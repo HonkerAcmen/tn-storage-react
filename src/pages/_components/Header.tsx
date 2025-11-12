@@ -11,10 +11,13 @@ export default function Header() {
 
   return (
     <div className="flex h-16 w-full flex-row justify-between border-b border-gray-200 bg-white">
+      {/* 左侧：LOGO + 搜索 */}
       <div className="flex items-center justify-center">
-        <h2 className="mr-16 ml-4 cursor-pointer text-[24px] font-bold text-[#2e2c34]">
+        <h2 className="animate-gradient mr-16 ml-4 cursor-pointer bg-linear-to-r from-red-500 via-yellow-500 to-blue-500 bg-[length:200%_200%] bg-clip-text text-[24px] font-bold text-transparent">
           TNStorage
         </h2>
+
+        {/* 搜索框 */}
         <div
           className="relative z-10 flex h-8 w-72 flex-row items-center rounded-2xl border border-gray-200"
           onBlur={() => setClickSearch(false)}
@@ -22,65 +25,46 @@ export default function Header() {
           <AiOutlineSearch className="mr-2 ml-2" />
           <input
             type="text"
-            className={`h-8 w-72 text-sm focus:outline-none`}
+            className="h-8 w-72 text-sm focus:outline-none"
             placeholder="搜索"
             onFocus={() => setClickSearch(!clickSearch)}
           />
-          {clickSearch ? (
-            <div className="absolute top-8 left-4 h-64 w-64 rounded-2xl bg-white p-4 shadow-sm">
+          {clickSearch && (
+            <div className="animate-fadein absolute top-8 left-4 h-64 w-64 rounded-2xl bg-white p-4 shadow-sm">
               <span className="text-[12px] text-gray-400">最近使用</span>
               <ul className="mt-2 flex h-full w-full flex-col">
-                <li className="flex w-full cursor-pointer flex-row items-center rounded-lg py-2 transition hover:bg-gray-100">
-                  <img
-                    src="#"
-                    alt=""
-                    className="mr-2 ml-2 h-8 w-8 rounded-lg bg-gray-200"
-                  />
-                  <div className="ml-2">
-                    <h2 className="">新文件.jpg</h2>
-                    <span className="text-[12px] text-gray-400">
-                      22分钟之前
-                    </span>
-                  </div>
-                </li>
-                <li className="flex w-full cursor-pointer flex-row items-center rounded-lg py-2 transition hover:bg-gray-100">
-                  <img
-                    src="#"
-                    alt=""
-                    className="mr-2 ml-2 h-8 w-8 rounded-lg bg-gray-200"
-                  />
-                  <div className="ml-2">
-                    <h2 className="">新文件.jpg</h2>
-                    <span className="text-[12px] text-gray-400">
-                      22分钟之前
-                    </span>
-                  </div>
-                </li>
-                <li className="flex w-full cursor-pointer flex-row items-center rounded-lg py-2 transition hover:bg-gray-100">
-                  <img
-                    src="#"
-                    alt=""
-                    className="mr-2 ml-2 h-8 w-8 rounded-lg bg-gray-200"
-                  />
-                  <div className="ml-2">
-                    <h2 className="">新文件.jpg</h2>
-                    <span className="text-[12px] text-gray-400">
-                      22分钟之前
-                    </span>
-                  </div>
-                </li>
+                {[1, 2, 3].map((i) => (
+                  <li
+                    key={i}
+                    className="flex w-full cursor-pointer flex-row items-center rounded-lg py-2 transition hover:bg-gray-100"
+                  >
+                    <img
+                      src="#"
+                      alt=""
+                      className="mr-2 ml-2 h-8 w-8 rounded-lg bg-gray-200"
+                    />
+                    <div className="ml-2">
+                      <h2>新文件{i}.jpg</h2>
+                      <span className="text-[12px] text-gray-400">
+                        22分钟之前
+                      </span>
+                    </div>
+                  </li>
+                ))}
               </ul>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
+
       <div className="mr-4 flex items-center">
-        <AiFillSetting className="mr-6 h-6 w-6 cursor-pointer transition hover:rotate-90" />
+        <AiFillSetting className="mr-6 h-6 w-6 cursor-pointer transition-transform duration-500 hover:rotate-360 hover:text-[#5542f6] hover:drop-shadow-md" />
+
         <div className="relative flex items-center">
           <img
             src="#"
             alt=""
-            className="mr-6 h-12 w-12 cursor-pointer rounded-4xl bg-gray-200"
+            className="mr-6 h-12 w-12 cursor-pointer rounded-full bg-gray-200"
           />
           <div
             className="flex cursor-pointer items-center"
@@ -91,9 +75,10 @@ export default function Header() {
             <p className="mr-2">管理员</p>
             <AiFillCaretDown className="h-3 w-3 text-gray-500" />
           </div>
-          {clickProfile === true ? (
-            <div className="absolute top-16 right-2 h-22 w-40 rounded-2xl border border-gray-200 bg-white">
-              <ul className="flex h-full w-full flex-col">
+
+          {clickProfile && (
+            <div className="animate-fadein absolute top-16 right-2 w-40 rounded-2xl border border-gray-200 bg-white shadow-md">
+              <ul className="flex h-24 flex-col">
                 <li className="flex h-[50%] cursor-pointer items-center justify-center rounded-t-2xl border-b border-gray-200 transition hover:bg-gray-100">
                   个人主页
                 </li>
@@ -102,9 +87,40 @@ export default function Header() {
                 </li>
               </ul>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
+
+      {/* 自定义动画样式 */}
+      <style jsx>{`
+        @keyframes gradient {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+        @keyframes fadein {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-gradient {
+          animation: gradient 4s ease infinite;
+        }
+        .animate-fadein {
+          animation: fadein 0.3s ease;
+        }
+      `}</style>
     </div>
   );
 }
