@@ -16,7 +16,7 @@ export default function Header() {
           TNStorage
         </h2>
         <div
-          className="relative flex h-8 w-72 flex-row items-center rounded-2xl border border-gray-200"
+          className="relative z-10 flex h-8 w-72 flex-row items-center rounded-2xl border border-gray-200"
           onBlur={() => setClickSearch(false)}
         >
           <AiOutlineSearch className="mr-2 ml-2" />
