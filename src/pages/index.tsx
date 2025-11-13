@@ -68,7 +68,7 @@ export default function Home() {
         </aside>
 
         {/* 主内容区 */}
-        <main className="flex w-[70%] flex-col bg-white">
+        <main className="bg-white">
           {renderMap[seleId] ?? <div>未知选项</div>}
         </main>
       </div>
