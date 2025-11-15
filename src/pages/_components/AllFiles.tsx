@@ -10,8 +10,8 @@ export default function AllFiles() {
   const [seleRadioItem, setSeleRadioItem] = useState(0);
   return (
     <div>
-      <div className="mt-4 flex flex-row justify-between p-2">
-        <p className="text-4xl font-semibold">所有文件</p>
+      <div className="mt-4 flex flex-row justify-between p-6">
+        <p className="text-3xl font-semibold text-[#2e2c34]">所有文件</p>
         <div className="mr-8 flex flex-row gap-6">
           <div className="flex h-10 w-20 items-center justify-center">
             <div
