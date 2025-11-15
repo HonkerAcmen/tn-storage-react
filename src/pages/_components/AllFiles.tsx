@@ -1,3 +1,4 @@
+import Modal from '@/components/Modal';
 import { useState } from 'react';
 import {
   AiOutlineAppstore,
@@ -74,39 +75,27 @@ export default function AllFiles() {
               </span>
             </p>
             <AiOutlineCaretDown className="text-gray-500" />
-            {seleMenuItem ? (
-              <ul className="animate-fadein absolute top-10 w-60 rounded-lg border border-gray-200">
-                {MenuItemsName.map((item) => (
-                  <li
-                    key={item.key}
-                    className="p-2 transition duration-150 hover:bg-gray-200"
-                    onClick={() => setMenuItemName(item)}
-                  >
-                    {item.name}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+
+            <Modal
+              open={seleMenuItem}
+              position={{ top: 'top-10' }}
+              size={{ width: 'w-60' }}
+              onClose={() => setSeleMenuItem(false)}
+              className="animate-fadein"
+            >
+              {MenuItemsName.map((item) => (
+                <li
+                  key={item.key}
+                  className="w-full list-none rounded-lg p-2 transition duration-150 hover:bg-gray-200"
+                  onClick={() => setMenuItemName(item)}
+                >
+                  {item.name}
+                </li>
+              ))}
+            </Modal>
           </div>
         </div>
       </div>
-
-      {/* 自定义动画样式 */}
-      <style jsx>{`
-        @keyframes fadein {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadein {
-          animation: fadein 0.3s ease;
-        }
-      `}</style>
     </div>
   );
 }
