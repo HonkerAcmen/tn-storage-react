@@ -10,6 +10,7 @@ import Header from './_components/Header';
 import { ConfigProvider, Menu, MenuProps } from 'antd';
 import MyCloud from './_components/MyCloud';
 import { JSX, useState } from 'react';
+import AllFiles from './_components/AllFiles';
 
 export default function Home() {
   const [seleId, setSeleId] = useState('sub1');
@@ -26,7 +27,7 @@ export default function Home() {
 
   const renderMap: Record<string, JSX.Element> = {
     sub1: <MyCloud />,
-    sub2: <div>所有文件</div>,
+    sub2: <AllFiles />,
     sub3: <div>最近的</div>,
     sub4: <div>收藏</div>,
     sub5: <div>已删除文件</div>,
