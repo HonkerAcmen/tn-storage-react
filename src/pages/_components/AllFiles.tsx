@@ -5,9 +5,43 @@ import {
   AiOutlineMenu,
 } from 'react-icons/ai';
 
+interface MenuItemNameProps {
+  key: number;
+  name: string;
+  icon: unknown;
+}
+
 export default function AllFiles() {
   const [seleMenuItem, setSeleMenuItem] = useState(false);
   const [seleRadioItem, setSeleRadioItem] = useState(0);
+  const [MenuItemName, setMenuItemName] = useState<MenuItemNameProps>({
+    key: 1,
+    name: '最新添加',
+    icon: <AiOutlineAppstore />,
+  });
+  const MenuItemsName: MenuItemNameProps[] = [
+    {
+      key: 1,
+      name: '最新添加',
+      icon: <AiOutlineAppstore />,
+    },
+    {
+      key: 2,
+      name: '最旧添加',
+      icon: <AiOutlineAppstore />,
+    },
+    {
+      key: 3,
+      name: '名称',
+      icon: <AiOutlineAppstore />,
+    },
+    {
+      key: 4,
+      name: '类型',
+      icon: <AiOutlineAppstore />,
+    },
+  ];
+
   return (
     <div>
       <div className="mt-4 flex flex-row justify-between p-6">
@@ -35,13 +69,23 @@ export default function AllFiles() {
           >
             <p className="text-xs text-gray-500">
               分组方式:{' '}
-              <span className="ml-2 text-sm text-gray-800">添加日期</span>
+              <span className="ml-2 text-sm text-gray-800">
+                {MenuItemName?.name}
+              </span>
             </p>
             <AiOutlineCaretDown className="text-gray-500" />
             {seleMenuItem ? (
-              <div className="animate-fadein absolute top-10 h-32 w-60 bg-amber-50">
-                aaa
-              </div>
+              <ul className="animate-fadein absolute top-10 w-60 rounded-lg border border-gray-200">
+                {MenuItemsName.map((item) => (
+                  <li
+                    key={item.key}
+                    className="p-2 transition duration-150 hover:bg-gray-200"
+                    onClick={() => setMenuItemName(item)}
+                  >
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
             ) : null}
           </div>
         </div>
