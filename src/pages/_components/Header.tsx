@@ -30,31 +30,35 @@ export default function Header() {
             placeholder="搜索"
             onFocus={() => setClickSearch(!clickSearch)}
           />
-          {clickSearch && (
-            <div className="animate-fadein absolute top-8 left-4 h-64 w-64 rounded-2xl bg-white p-4 shadow-sm">
-              <span className="text-[12px] text-gray-400">最近使用</span>
-              <ul className="mt-2 flex h-full w-full flex-col">
-                {[1, 2, 3].map((i) => (
-                  <li
-                    key={i}
-                    className="flex w-full cursor-pointer flex-row items-center rounded-lg py-2 transition hover:bg-gray-100"
-                  >
-                    <img
-                      src="#"
-                      alt=""
-                      className="mr-2 ml-2 h-8 w-8 rounded-lg bg-gray-200"
-                    />
-                    <div className="ml-2">
-                      <h2>新文件{i}.jpg</h2>
-                      <span className="text-[12px] text-gray-400">
-                        22分钟之前
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+
+          <Modal
+            open={clickSearch}
+            onClose={() => setClickSearch(false)}
+            position={{ top: 'top-8', left: 'left-4' }}
+            size={{ height: 'h-64', width: 'w-64' }}
+          >
+            <span className="text-[12px] text-gray-400">最近使用</span>
+            <ul className="mt-2 flex h-full w-full flex-col">
+              {[1, 2, 3].map((i) => (
+                <li
+                  key={i}
+                  className="flex w-full cursor-pointer flex-row items-center rounded-lg py-2 transition hover:bg-gray-100"
+                >
+                  <img
+                    src="#"
+                    alt=""
+                    className="mr-2 ml-2 h-8 w-8 rounded-lg bg-gray-200"
+                  />
+                  <div className="ml-2">
+                    <h2>新文件{i}.jpg</h2>
+                    <span className="text-[12px] text-gray-400">
+                      22分钟之前
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Modal>
         </div>
       </div>
 
@@ -118,9 +122,6 @@ export default function Header() {
         }
         .animate-gradient {
           animation: gradient 4s ease infinite;
-        }
-        .animate-fadein {
-          animation: fadein 0.3s ease;
         }
       `}</style>
     </div>
