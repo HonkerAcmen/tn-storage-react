@@ -1,3 +1,4 @@
+import Modal from '@/components/Modal';
 import { useState } from 'react';
 import {
   AiFillCaretDown,
@@ -76,18 +77,19 @@ export default function Header() {
             <AiFillCaretDown className="h-3 w-3 text-gray-500" />
           </div>
 
-          {clickProfile && (
-            <div className="animate-fadein absolute top-16 right-2 w-40 rounded-2xl border border-gray-200 bg-white shadow-md">
-              <ul className="flex h-24 flex-col">
-                <li className="flex h-[50%] cursor-pointer items-center justify-center rounded-t-2xl border-b border-gray-200 transition hover:bg-gray-100">
-                  个人主页
-                </li>
-                <li className="flex h-[50%] cursor-pointer items-center justify-center rounded-b-2xl transition hover:bg-gray-100">
-                  退出系统
-                </li>
-              </ul>
-            </div>
-          )}
+          <Modal
+            open={clickProfile}
+            onClose={() => setClickProfile(false)}
+            position={{ top: 'top-16', right: 'right-2' }}
+            size={{ width: 'w-40' }}
+          >
+            <li className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100">
+              个人主页
+            </li>
+            <li className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100">
+              退出系统
+            </li>
+          </Modal>
         </div>
       </div>
 
