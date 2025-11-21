@@ -1,6 +1,7 @@
 import Modal from '@/components/Modal';
-import { FileSystemNode } from '@/types/fileSystem';
+import { FileNode, FileSystemNode } from '@/types/fileSystem';
 import { Breadcrumb } from 'antd';
+import { useRouter } from 'next/router';
 import { JSX, useState } from 'react';
 import {
   AiFillFileExcel,
@@ -27,6 +28,9 @@ interface MenuItemNameProps {
 export default function AllFiles() {
   const [seleMenuItem, setSeleMenuItem] = useState(false);
   const [seleRadioItem, setSeleRadioItem] = useState(0);
+
+  const router = useRouter();
+
   const [MenuItemName, setMenuItemName] = useState<MenuItemNameProps>({
     key: 1,
     name: '最新添加',
@@ -256,6 +260,7 @@ export default function AllFiles() {
       updatedAt: new Date('2025-02-05T16:40:30'),
     },
   ];
+
   const randerMap: Record<string, JSX.Element> = {
     txt: <AiFillFileText className="h-20 w-20 text-gray-400" />,
     pdf: <AiFillFilePdf className="h-20 w-20 text-red-400" />,
@@ -273,6 +278,14 @@ export default function AllFiles() {
     log: <AiFillFileText className="h-20 w-20 text-gray-400" />,
     other: <AiFillFileUnknown className="h-20 w-20 text-gray-400" />,
   };
+  function handleChick(item: FileSystemNode) {
+    if (item.type === 'folder') {
+      router.push(`/drive/folder/${item.id}`);
+    } else {
+      // 预览逻辑
+      console.log('preview');
+    }
+  }
   return (
     <div>
       {/* 头部 */}
@@ -334,6 +347,7 @@ export default function AllFiles() {
           <li
             key={i}
             className="flex h-60 w-60 cursor-pointer flex-col items-center justify-center rounded-lg border border-gray-200 transition duration-150 hover:bg-gray-100"
+            onClick={() => handleChick(v)}
           >
             {v.type === 'folder' ? (
               <div className="flex flex-col items-center justify-center">
