@@ -54,6 +54,7 @@ export default function AllFiles() {
   type newFileSystemType = withOutChildren | FileNode;
 
   const newFileDatas: newFileSystemType[] = fileDatas.map((item) =>
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     item.type === 'folder' ? (({ children, ...rest }) => rest)(item) : item
   );
 
@@ -75,7 +76,6 @@ export default function AllFiles() {
     other: <AiFillFileUnknown className="h-20 w-20 text-gray-400" />,
   };
 
-  // 修复拼写错误: handleChick -> handleClick
   function handleClick(item: newFileSystemType) {
     if (item.type === 'folder') {
       // 核心修复：使用 router.pathname 保持当前主路由不变，仅更新参数
@@ -96,6 +96,7 @@ export default function AllFiles() {
   // 处理面包屑导航点击
   const handleBreadcrumbClick = () => {
     // 移除 folderId 参数，回到根目录
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { folderId, name, ...restQuery } = router.query;
     router.push(
       {
@@ -207,10 +208,10 @@ export default function AllFiles() {
               <Breadcrumb.Item>{folderName}</Breadcrumb.Item>
             </Breadcrumb>
           )}
-          <FolderPage
+          {/* <FolderPage
             folderId={folderId as string}
             // viewMode={seleRadioItem} // 如果 FolderPage 支持，建议传入
-          />
+          /> */}
         </div>
       )}
     </div>

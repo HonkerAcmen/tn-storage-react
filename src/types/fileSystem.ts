@@ -50,6 +50,15 @@ export interface FolderNode extends BaseNode {
  */
 export type FileSystemNode = FileNode | FolderNode;
 
+// /**
+//  * @function traverse 递归遍历目录函数
+//  * @param nodes 需要递归的节点
+//  */
+// export function traverse(nodes: FileSystemNode[]) {
+//   for (const node of nodes) {
+//   }
+// }
+
 /**
  * API 返回类型（可用于 React Query）
  */
