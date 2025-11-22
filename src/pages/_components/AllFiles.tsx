@@ -35,7 +35,7 @@ export default function AllFiles() {
 
   const router = useRouter();
   const folderId = router.query.folderId;
-
+  const folderName = router.query.name;
   const [MenuItemName, setMenuItemName] = useState<MenuItemNameProps>({
     key: 1,
     name: '最新添加',
@@ -83,7 +83,7 @@ export default function AllFiles() {
       router.push(
         {
           pathname: router.pathname,
-          query: { ...router.query, folderId: item.id },
+          query: { ...router.query, folderId: item.id, name: item.name },
         },
         undefined,
         { shallow: true }
@@ -96,7 +96,7 @@ export default function AllFiles() {
   // 处理面包屑导航点击
   const handleBreadcrumbClick = () => {
     // 移除 folderId 参数，回到根目录
-    const { folderId, ...restQuery } = router.query;
+    const { folderId, name, ...restQuery } = router.query;
     router.push(
       {
         pathname: router.pathname,
@@ -108,22 +108,11 @@ export default function AllFiles() {
   };
 
   return (
-    <div>
+    <div className="ml-4">
       {/* 头部 Header - 保持不变 */}
-      <div className="mt-4 flex flex-row justify-between p-6">
+      <div className="mt-4 flex flex-row justify-between">
         <div className="flex flex-col">
           <p className="text-3xl font-semibold text-[#2e2c34]">所有文件</p>
-          {folderId && (
-            <Breadcrumb className="mt-2">
-              <Breadcrumb.Item
-                onClick={handleBreadcrumbClick}
-                className="cursor-pointer transition hover:text-[#5542f6]"
-              >
-                根目录
-              </Breadcrumb.Item>
-              <Breadcrumb.Item>当前文件夹 ({folderId})</Breadcrumb.Item>
-            </Breadcrumb>
-          )}
         </div>
 
         <div className="mr-8 flex flex-row gap-6">
@@ -206,10 +195,23 @@ export default function AllFiles() {
            建议将 seleRadioItem (视图模式) 传给 FolderPage，
            这样切换到文件夹内也能保持网格/列表样式。
         */
-        <FolderPage
-          folderId={folderId as string}
-          // viewMode={seleRadioItem} // 如果 FolderPage 支持，建议传入
-        />
+        <div className="mt-4 flex h-10 w-50 flex-col">
+          {folderId && (
+            <Breadcrumb>
+              <Breadcrumb.Item
+                onClick={handleBreadcrumbClick}
+                className="cursor-pointer rounded-md px-2 py-1 transition hover:bg-gray-200 hover:text-gray-500"
+              >
+                根目录
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>{folderName}</Breadcrumb.Item>
+            </Breadcrumb>
+          )}
+          <FolderPage
+            folderId={folderId as string}
+            // viewMode={seleRadioItem} // 如果 FolderPage 支持，建议传入
+          />
+        </div>
       )}
     </div>
   );
