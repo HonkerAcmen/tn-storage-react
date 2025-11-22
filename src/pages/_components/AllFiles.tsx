@@ -1,8 +1,10 @@
 import Modal from '@/components/Modal';
-import { FileNode, FileSystemNode } from '@/types/fileSystem';
-import { Breadcrumb } from 'antd';
+import { fileDatas } from '@/mock';
+import { FileNode } from '@/types/fileSystem';
+import { Breadcrumb } from 'antd'; // 已引入，现在我们将使用它
 import { useRouter } from 'next/router';
 import { JSX, useState } from 'react';
+import { FolderNode } from '../../types/fileSystem';
 import {
   AiFillFileExcel,
   AiFillFilePdf,
@@ -18,6 +20,7 @@ import {
   AiOutlineFileJpg,
   AiOutlineMenu,
 } from 'react-icons/ai';
+import FolderPage from './FolderPage';
 
 interface MenuItemNameProps {
   key: number;
@@ -27,241 +30,34 @@ interface MenuItemNameProps {
 
 export default function AllFiles() {
   const [seleMenuItem, setSeleMenuItem] = useState(false);
-  const [seleRadioItem, setSeleRadioItem] = useState(0);
+  // 0: 列表模式, 1: 网格模式 (通常 0 代表 list, 1 代表 grid，根据你的图标逻辑调整)
+  const [seleRadioItem, setSeleRadioItem] = useState(1);
 
   const router = useRouter();
+  const folderId = router.query.folderId;
 
   const [MenuItemName, setMenuItemName] = useState<MenuItemNameProps>({
     key: 1,
     name: '最新添加',
     icon: <AiOutlineAppstore />,
   });
+
   const MenuItemsName: MenuItemNameProps[] = [
-    {
-      key: 1,
-      name: '最新添加',
-      icon: <AiOutlineAppstore />,
-    },
-    {
-      key: 2,
-      name: '最旧添加',
-      icon: <AiOutlineAppstore />,
-    },
-    {
-      key: 3,
-      name: '名称',
-      icon: <AiOutlineAppstore />,
-    },
-    {
-      key: 4,
-      name: '类型',
-      icon: <AiOutlineAppstore />,
-    },
+    { key: 1, name: '最新添加', icon: <AiOutlineAppstore /> },
+    { key: 2, name: '最旧添加', icon: <AiOutlineAppstore /> },
+    { key: 3, name: '名称', icon: <AiOutlineAppstore /> },
+    { key: 4, name: '类型', icon: <AiOutlineAppstore /> },
   ];
 
   // 生成假的文件系统数据
-  const fileDatas: FileSystemNode[] = [
-    {
-      id: '1',
-      name: '项目文档',
-      createdAt: new Date('2025-01-10T09:20:30'),
-      updatedAt: new Date('2025-03-15T14:40:20'),
-      type: 'folder',
-      children: [
-        {
-          id: '1-1',
-          name: '需求规格说明书',
-          type: 'file',
-          size: 89600, // 约87.5KB
-          ext: 'docx',
-          createdAt: new Date('2025-01-12T10:15:00'),
-          updatedAt: new Date('2025-02-20T16:30:45'),
-        },
-        {
-          id: '1-2',
-          name: '技术架构设计',
-          type: 'file',
-          size: 122880, // 120KB
-          ext: 'pdf',
-          createdAt: new Date('2025-01-18T09:30:10'),
-          updatedAt: new Date('2025-03-10T11:25:30'),
-        },
-        {
-          id: '1-3',
-          name: '会议纪要',
-          type: 'folder',
-          createdAt: new Date('2025-01-20T15:00:00'),
-          updatedAt: new Date('2025-03-12T10:05:15'),
-          children: [
-            {
-              id: '1-3-1',
-              name: '第一次需求评审',
-              type: 'file',
-              size: 40960, // 40KB
-              ext: 'txt',
-              createdAt: new Date('2025-01-21T09:00:00'),
-              updatedAt: new Date('2025-01-21T10:15:20'),
-            },
-            {
-              id: '1-3-2',
-              name: '架构评审会议',
-              type: 'file',
-              size: 61440, // 60KB
-              ext: 'docx',
-              createdAt: new Date('2025-02-05T14:20:00'),
-              updatedAt: new Date('2025-02-05T16:40:30'),
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: '2',
-      name: '开发资源',
-      createdAt: new Date('2025-01-05T08:10:00'),
-      updatedAt: new Date('2025-03-18T15:30:00'),
-      type: 'folder',
-      children: [
-        {
-          id: '2-1',
-          name: '图片素材',
-          type: 'folder',
-          createdAt: new Date('2025-01-06T10:00:00'),
-          updatedAt: new Date('2025-03-10T12:00:00'),
-          children: [
-            {
-              id: '2-1-1',
-              name: 'logo',
-              type: 'file',
-              size: 262144, // 256KB
-              ext: 'png',
-              createdAt: new Date('2025-01-06T10:10:00'),
-              updatedAt: new Date('2025-02-10T11:20:00'),
-            },
-            {
-              id: '2-1-2',
-              name: '背景图',
-              type: 'file',
-              size: 1048576, // 1MB
-              ext: 'jpg',
-              createdAt: new Date('2025-01-08T09:00:00'),
-              updatedAt: new Date('2025-03-05T14:00:00'),
-            },
-          ],
-        },
-        {
-          id: '2-2',
-          name: '代码库',
-          type: 'file',
-          size: 5242880, // 5MB
-          ext: 'zip',
-          createdAt: new Date('2025-01-10T11:00:00'),
-          updatedAt: new Date('2025-03-18T15:25:00'),
-        },
-        {
-          id: '2-3',
-          name: '依赖包',
-          type: 'file',
-          size: 10485760, // 10MB
-          ext: 'tar',
-          createdAt: new Date('2025-01-12T13:00:00'),
-          updatedAt: new Date('2025-03-15T16:00:00'),
-        },
-      ],
-    },
-    {
-      id: '3',
-      name: '音视频文件',
-      createdAt: new Date('2025-02-01T14:00:00'),
-      updatedAt: new Date('2025-03-20T10:00:00'),
-      type: 'folder',
-      children: [
-        {
-          id: '3-1',
-          name: '宣传音频',
-          type: 'file',
-          size: 12800, // 与示例中一致的大小
-          ext: 'mp3',
-          createdAt: new Date('2025-02-02T09:00:00'),
-          updatedAt: new Date('2025-02-05T11:00:00'),
-        },
-        {
-          id: '3-2',
-          name: '产品演示',
-          type: 'file',
-          size: 52428800, // 50MB
-          ext: 'mp4',
-          createdAt: new Date('2025-02-10T15:00:00'),
-          updatedAt: new Date('2025-03-19T14:30:00'),
-        },
-        {
-          id: '3-3',
-          name: '背景音乐',
-          type: 'folder',
-          createdAt: new Date('2025-02-15T10:00:00'),
-          updatedAt: new Date('2025-03-10T13:00:00'),
-          children: [
-            {
-              id: '3-3-1',
-              name: '轻松旋律',
-              type: 'file',
-              size: 204800, // 200KB
-              ext: 'wav',
-              createdAt: new Date('2025-02-15T10:10:00'),
-              updatedAt: new Date('2025-02-20T12:00:00'),
-            },
-            {
-              id: '3-3-2',
-              name: '科技感音效',
-              type: 'file',
-              size: 102400, // 100KB
-              ext: 'mp3',
-              createdAt: new Date('2025-02-18T09:00:00'),
-              updatedAt: new Date('2025-03-01T11:00:00'),
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: '4',
-      name: '临时文件',
-      createdAt: new Date('2025-03-01T10:00:00'),
-      updatedAt: new Date('2025-03-20T09:00:00'),
-      type: 'folder',
-      children: [
-        {
-          id: '4-1',
-          name: '数据统计',
-          type: 'file',
-          size: 73728, // 72KB
-          ext: 'xlsx',
-          createdAt: new Date('2025-03-02T11:00:00'),
-          updatedAt: new Date('2025-03-15T10:00:00'),
-        },
-        {
-          id: '4-2',
-          name: '测试日志',
-          type: 'file',
-          size: 153600, // 150KB
-          ext: 'log',
-          createdAt: new Date('2025-03-10T14:00:00'),
-          updatedAt: new Date('2025-03-20T08:30:00'),
-        },
-      ],
-    },
-    {
-      id: '5',
-      name: '架构评审会议',
-      type: 'file',
-      size: 61440, // 60KB
-      ext: 'xlsx',
-      createdAt: new Date('2025-02-05T14:20:00'),
-      updatedAt: new Date('2025-02-05T16:40:30'),
-    },
-  ];
+  type withOutChildren = Omit<FolderNode, 'children'>;
+  type newFileSystemType = withOutChildren | FileNode;
 
-  const randerMap: Record<string, JSX.Element> = {
+  const newFileDatas: newFileSystemType[] = fileDatas.map((item) =>
+    item.type === 'folder' ? (({ children, ...rest }) => rest)(item) : item
+  );
+
+  const renderMap: Record<string, JSX.Element> = {
     txt: <AiFillFileText className="h-20 w-20 text-gray-400" />,
     pdf: <AiFillFilePdf className="h-20 w-20 text-red-400" />,
     jpg: <AiOutlineFileJpg className="h-20 w-20 text-gray-400" />,
@@ -278,19 +74,58 @@ export default function AllFiles() {
     log: <AiFillFileText className="h-20 w-20 text-gray-400" />,
     other: <AiFillFileUnknown className="h-20 w-20 text-gray-400" />,
   };
-  function handleChick(item: FileSystemNode) {
+
+  // 修复拼写错误: handleChick -> handleClick
+  function handleClick(item: newFileSystemType) {
     if (item.type === 'folder') {
-      router.push(`/drive/folder/${item.id}`);
+      // 核心修复：使用 router.pathname 保持当前主路由不变，仅更新参数
+      // shallow: true 避免运行 getServerSideProps (根据你的数据获取策略决定是否保留)
+      router.push(
+        {
+          pathname: router.pathname,
+          query: { ...router.query, folderId: item.id },
+        },
+        undefined,
+        { shallow: true }
+      );
     } else {
-      // 预览逻辑
-      console.log('preview');
+      console.log('preview', item.name);
     }
   }
+
+  // 处理面包屑导航点击
+  const handleBreadcrumbClick = () => {
+    // 移除 folderId 参数，回到根目录
+    const { folderId, ...restQuery } = router.query;
+    router.push(
+      {
+        pathname: router.pathname,
+        query: restQuery,
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
+
   return (
     <div>
-      {/* 头部 */}
+      {/* 头部 Header - 保持不变 */}
       <div className="mt-4 flex flex-row justify-between p-6">
-        <p className="text-3xl font-semibold text-[#2e2c34]">所有文件</p>
+        <div className="flex flex-col">
+          <p className="text-3xl font-semibold text-[#2e2c34]">所有文件</p>
+          {folderId && (
+            <Breadcrumb className="mt-2">
+              <Breadcrumb.Item
+                onClick={handleBreadcrumbClick}
+                className="cursor-pointer transition hover:text-[#5542f6]"
+              >
+                根目录
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>当前文件夹 ({folderId})</Breadcrumb.Item>
+            </Breadcrumb>
+          )}
+        </div>
+
         <div className="mr-8 flex flex-row gap-6">
           <div className="flex h-10 w-20 items-center justify-center">
             <div
@@ -341,30 +176,41 @@ export default function AllFiles() {
         </div>
       </div>
 
-      {/* 内容 */}
-      <ul className="grid w-full gap-6 p-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
-        {fileDatas.map((v, i) => (
-          <li
-            key={i}
-            className="flex h-60 w-60 cursor-pointer flex-col items-center justify-center rounded-lg border border-gray-200 transition duration-150 hover:bg-gray-100"
-            onClick={() => handleChick(v)}
-          >
-            {v.type === 'folder' ? (
-              <div className="flex flex-col items-center justify-center">
-                <AiFillFolder className="h-20 w-20 text-amber-400" />
-                <span className="text-sm text-gray-600">{v.name}</span>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center">
-                {randerMap[v.ext]}
-                <span className="text-sm text-gray-600">
-                  {v.name}.{v.ext}
-                </span>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+      {/* 内容区域 - 路由跳转后 Header 不变，下方内容变化 */}
+      {!folderId ? (
+        <ul className="grid w-full gap-6 p-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
+          {newFileDatas.map((v, i) => (
+            <li
+              key={i}
+              className="flex h-60 w-60 cursor-pointer flex-col items-center justify-center rounded-lg border border-gray-200 transition duration-150 hover:bg-gray-100"
+              onClick={() => handleClick(v)}
+            >
+              {v.type === 'folder' ? (
+                <div className="flex flex-col items-center justify-center">
+                  <AiFillFolder className="h-20 w-20 text-amber-400" />
+                  <span className="text-sm text-gray-600">{v.name}</span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center">
+                  {renderMap[v.ext] || renderMap['other']}
+                  <span className="text-sm text-gray-600">
+                    {v.name}.{v.ext}
+                  </span>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        /* 这里是子页面渲染逻辑
+           建议将 seleRadioItem (视图模式) 传给 FolderPage，
+           这样切换到文件夹内也能保持网格/列表样式。
+        */
+        <FolderPage
+          folderId={folderId as string}
+          // viewMode={seleRadioItem} // 如果 FolderPage 支持，建议传入
+        />
+      )}
     </div>
   );
 }
