@@ -10,7 +10,7 @@ import Header from './_components/Header';
 import { ConfigProvider, Menu, MenuProps } from 'antd';
 import MyCloud from './_components/MyCloud';
 import { JSX, useState } from 'react';
-import AllFiles from './_components/AllFiles';
+import AllFiles from './_components/FilesHandle/AllFiles';
 
 export default function Home() {
   const [seleId, setSeleId] = useState('sub1');
