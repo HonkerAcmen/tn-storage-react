@@ -63,8 +63,7 @@ export default function MyCloud() {
         {/* 活动 */}
         <section>
           <h1 className="py-4 text-3xl font-semibold text-[#2e2c34]">我的云</h1>
-          <p className="text-sm text-[#2e2c34]">从你的活动来看</p>
-          <div className="my-4 border-t border-gray-200"></div>
+          <p className="mb-4 text-sm text-[#2e2c34]">从你的活动来看</p>
 
           {/* 自适应网格卡片 */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -73,7 +72,7 @@ export default function MyCloud() {
               .map((_, i) => (
                 <div
                   key={i}
-                  className="flex h-32 cursor-pointer flex-col rounded-2xl bg-[#fbfafc] p-4 transition duration-175 hover:bg-gray-100"
+                  className="flex h-32 cursor-pointer flex-col rounded-2xl border border-gray-100 p-4 transition duration-175 hover:bg-gray-100"
                 >
                   <AiFillFolder className="my-2 h-10 w-10 text-amber-400" />
                   <h2 className="text-gray-800">设计{i + 1}</h2>
@@ -85,10 +84,9 @@ export default function MyCloud() {
 
         {/* 最近上传 */}
         <section>
-          <p className="text-sm text-[#2e2c34]">最近上传</p>
-          <div className="my-4 border-t border-gray-200"></div>
+          <p className="mb-4 text-sm text-[#2e2c34]">最近上传</p>
 
-          <ul className="flex flex-col divide-y divide-gray-200">
+          <ul className="flex flex-col">
             {[
               { icon: <AiFillFileImage />, name: '图片' },
               { icon: <AiFillFilePdf />, name: 'PDF 文件' },
@@ -96,7 +94,7 @@ export default function MyCloud() {
             ].map((item, i) => (
               <li
                 key={i}
-                className="flex h-20 items-center justify-between px-2 transition hover:bg-gray-50"
+                className="hover:bg-graymask-b-to-blue-100 mb-2 flex h-20 items-center justify-between rounded-lg border border-gray-100 px-4 py-1 transition hover:bg-gray-100"
               >
                 <div className="flex items-center space-x-3">
                   <div className="text-gray-400">{item.icon}</div>
@@ -117,8 +115,7 @@ export default function MyCloud() {
 
         {/* 已收藏 */}
         <section>
-          <p className="text-sm text-[#2e2c34]">已收藏</p>
-          <div className="my-4 border-t border-gray-200"></div>
+          <p className="mb-4 text-sm text-[#2e2c34]">已收藏</p>
 
           <ul className="flex flex-col divide-y divide-gray-200">
             {Array(3)
@@ -126,7 +123,7 @@ export default function MyCloud() {
               .map((_, i) => (
                 <li
                   key={i}
-                  className="flex h-16 cursor-pointer items-center justify-between transition hover:bg-gray-50"
+                  className="mb-2 flex h-16 cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-1 transition duration-150 hover:bg-gray-50"
                 >
                   <div className="flex items-center space-x-3">
                     <AiFillFolder className="h-8 w-8 text-amber-400" />
