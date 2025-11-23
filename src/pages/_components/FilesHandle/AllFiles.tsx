@@ -35,8 +35,8 @@ export default function AllFiles() {
   return (
     <div className="ml-4">
       {/* 头部 Header - 保持不变 */}
-      <div className="mt-4 flex flex-row justify-between">
-        <div className="flex flex-col">
+      <div className="mt-4 flex flex-row items-center justify-between">
+        <div className="mb-4 flex flex-col">
           <p className="text-3xl font-semibold text-[#2e2c34]">所有文件</p>
         </div>
 

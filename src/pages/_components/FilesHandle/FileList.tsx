@@ -18,10 +18,11 @@ import {
 import { fileDatas } from '../../../mock/index';
 import {
   FileSystemNode,
+  findPathToNode,
   getChildrenByParentId,
 } from '../../../types/fileSystem';
 
-// 1. 优化：将 renderMap 移出组件，避免重复创建对象
+// 将 renderMap 移出组件，避免重复创建对象
 // 使用 Record 类型增强类型安全
 const ICON_SIZE_CLASS = 'h-16 w-16'; // 统一调整图标大小，避免太突兀
 const RENDER_MAP: Record<string, JSX.Element> = {
@@ -39,46 +40,18 @@ const RENDER_MAP: Record<string, JSX.Element> = {
   other: <AiFillFileUnknown className={`${ICON_SIZE_CLASS} text-gray-400`} />,
 };
 
-// 2. 新增算法：查找从根节点到目标节点的路径 (用于面包屑)
-function findPathToNode(
-  root: FileSystemNode,
-  targetId: string
-): FileSystemNode[] {
-  const path: FileSystemNode[] = [];
-
-  function dfs(node: FileSystemNode): boolean {
-    path.push(node); // 将当前节点加入路径
-
-    if (node.id === targetId) {
-      return true; // 找到目标，停止递归
-    }
-
-    if (node.type === 'folder' && node.children) {
-      for (const child of node.children) {
-        if (dfs(child)) return true; // 如果在子节点中找到了，直接返回 true
-      }
-    }
-
-    path.pop(); // 回溯：如果该节点及其子节点都不是目标，将其移出路径
-    return false;
-  }
-
-  dfs(root);
-  return path;
-}
-
 export default function FileList() {
   const router = useRouter();
 
   // 获取当前文件夹ID，默认为根节点ID '1'
   const currentFolderId = (router.query.folderId as string) || '1';
 
-  // 3. 核心逻辑：计算当前层级的文件 (使用你之前的函数)
+  // 计算当前层级的文件 (使用你之前的函数)
   const siblings = useMemo(() => {
     return getChildrenByParentId(fileDatas, currentFolderId);
   }, [currentFolderId]);
 
-  // 4. 核心逻辑：计算面包屑路径 (使用新算法)
+  // 计算面包屑路径 (使用新算法)
   const breadcrumbPath = useMemo(() => {
     return findPathToNode(fileDatas, currentFolderId);
   }, [currentFolderId]);
@@ -91,7 +64,7 @@ export default function FileList() {
     router.push(
       {
         pathname: router.pathname,
-        // 注意：这里去掉了 name 参数，因为我们现在通过 ID 动态计算路径，不再依赖 URL 里的 name
+        // 通过 ID 动态计算路径，不再依赖 URL 里的 name
         query: { ...router.query, folderId: targetId },
       },
       undefined,
@@ -121,8 +94,8 @@ export default function FileList() {
               onClick={() => !isLast && handleNavigate(node.id)}
               className={
                 !isLast
-                  ? 'cursor-pointer rounded-md px-2 py-1 transition hover:bg-gray-200 hover:text-gray-600'
-                  : ''
+                  ? 'cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600'
+                  : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
               }
             >
               {node.name === 'root' ? '根目录' : node.name}
@@ -134,7 +107,7 @@ export default function FileList() {
       <ul className="grid w-full grid-cols-2 gap-6 p-4 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
         {siblings.map((v) => (
           <li
-            // 6. 优化：使用唯一 id 作为 key，而不是 index
+            // 使用唯一 id 作为 key，而不是 index
             key={v.id}
             className="flex cursor-pointer flex-col items-center justify-start rounded-xl border border-transparent p-4 transition-all duration-200 hover:border-gray-200 hover:bg-gray-100"
             onClick={() => handleItemClick(v)}
@@ -145,7 +118,7 @@ export default function FileList() {
                   className={`${ICON_SIZE_CLASS} text-yellow-400`}
                 />
               ) : (
-                // 7. 优化：使用 ?. 链式调用防止 ext 不存在导致的崩溃
+                // 使用 ?. 链式调用防止 ext 不存在导致的崩溃
                 RENDER_MAP[v.ext || ''] || RENDER_MAP['other']
               )}
             </div>
