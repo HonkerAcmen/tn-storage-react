@@ -15,7 +15,7 @@ import EChart from '@/components/Echart';
 export default function MyCloud() {
   const saveData = [
     {
-      key: '1',
+      key: 1,
       name: '文件',
       fileNumber: 120,
       fileSize: 1.2 * 1024 * 1024,
@@ -94,7 +94,7 @@ export default function MyCloud() {
             ].map((item, i) => (
               <li
                 key={i}
-                className="hover:bg-graymask-b-to-blue-100 mb-2 flex h-20 items-center justify-between rounded-lg border border-gray-100 px-4 py-1 transition hover:bg-gray-100"
+                className="hover:bg-graymask-b-to-blue-100 mb-2 flex h-20 cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-1 transition hover:bg-gray-100"
               >
                 <div className="flex items-center space-x-3">
                   <div className="text-gray-400">{item.icon}</div>
@@ -166,28 +166,30 @@ export default function MyCloud() {
             }}
           />
         </div>
-        {saveData.map((item) => (
-          <div
-            key={item.key}
-            className="mt-4 flex flex-row items-center justify-between"
-          >
-            <div className="flex">
-              <div
-                className={`mr-4 flex h-14 w-14 items-center justify-center rounded-lg`}
-                style={{ backgroundColor: item.iconBg }}
-              >
-                {item.icon}
+        <ul className="mt-4">
+          {saveData.map((item, i) => (
+            <li
+              key={i}
+              className={`relative mb-4 flex cursor-pointer flex-row items-center justify-between rounded-lg border border-gray-100 px-4 py-2 transition duration-150 hover:bg-gray-100`}
+            >
+              <div className="flex">
+                <div
+                  className={`mr-4 flex h-14 w-14 items-center justify-center rounded-lg`}
+                  style={{ backgroundColor: item.iconBg }}
+                >
+                  {item.icon}
+                </div>
+                <div className="flex flex-col justify-center">
+                  <p className="text-gray-800">{item.name}</p>
+                  <span className="text-gray-500">{item.fileNumber} files</span>
+                </div>
               </div>
-              <div className="flex flex-col justify-center">
-                <p className="text-gray-800">{item.name}</p>
-                <span className="text-gray-500">{item.fileNumber} files</span>
-              </div>
-            </div>
-            <span className="text-gray-600">
-              {item.fileSize / 1024 / 1024} GB
-            </span>
-          </div>
-        ))}
+              <span className="text-gray-600">
+                {item.fileSize / 1024 / 1024} GB
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
