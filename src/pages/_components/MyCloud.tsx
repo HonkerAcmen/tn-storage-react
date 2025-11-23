@@ -57,7 +57,7 @@ export default function MyCloud() {
   ];
 
   return (
-    <div className="grid w-full grid-cols-12 gap-6 p-6">
+    <div className="grid w-full gap-6 p-6 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12">
       {/* ================= 左侧内容 ================= */}
       <div className="col-span-8 flex flex-col space-y-8">
         {/* 活动 */}

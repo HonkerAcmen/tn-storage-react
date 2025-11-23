@@ -14,6 +14,7 @@ import AllFiles from './_components/FilesHandle/AllFiles';
 
 export default function Home() {
   const [seleId, setSeleId] = useState('sub1');
+  const [downloadChick, setDownloadChick] = useState(false);
 
   const menuItems = [
     { key: 'sub1', label: '我的云', icon: <AiFillCloud /> },
@@ -42,9 +43,12 @@ export default function Home() {
       <div className="grid flex-1 grid-cols-[240px_1fr]">
         {/* 左侧边栏 */}
         <aside className="flex flex-col items-center border-r border-gray-200 bg-white">
-          <div className="mt-6 mb-6 flex h-12 w-[90%] cursor-pointer items-center justify-center rounded-sm border border-gray-200 text-[16px] text-gray-600">
-            <AiOutlineCloudUpload className="mr-2 ml-2 h-5 w-5" />
-            <p>上传/下载</p>
+          <div
+            onClick={() => setDownloadChick(!downloadChick)}
+            className="relative mt-6 mb-6 flex h-12 w-[90%] cursor-pointer items-center justify-center rounded-sm border border-gray-200 text-[16px] text-gray-600 transition duration-150 hover:bg-gray-100"
+          >
+            <AiOutlineCloudUpload className="mr-2 ml-2 flex h-5 w-5 flex-1" />
+            <p className="flex flex-2">上传/下载</p>
           </div>
 
           <ConfigProvider
