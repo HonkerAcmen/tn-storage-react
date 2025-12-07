@@ -77,7 +77,7 @@ export default function Header() {
             onFocus={() => setClickProfile(!clickProfile)}
             onBlur={() => setClickProfile(false)}
           >
-            <p className="mr-2">管理员</p>
+            <p className="mr-2 whitespace-nowrap">管理员</p>
             <AiFillCaretDown className="h-3 w-3 text-gray-500" />
           </div>
 

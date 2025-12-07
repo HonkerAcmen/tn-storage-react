@@ -50,14 +50,60 @@ export interface FolderNode extends BaseNode {
  */
 export type FileSystemNode = FileNode | FolderNode;
 
-// /**
-//  * @function traverse 递归遍历目录函数
-//  * @param nodes 需要递归的节点
-//  */
-// export function traverse(nodes: FileSystemNode[]) {
-//   for (const node of nodes) {
-//   }
-// }
+/**
+ * @function getChildrenByParentId 根据父节点 ID 查找其下的所有子节点
+ * @param root 根节点
+ * @param parentId 父节点ID
+ * @returns 返回该父节点下的所有子节点
+ */
+export function getChildrenByParentId(root: FileSystemNode, parentId: string): FileSystemNode[] {
+
+  function dfs(node: FileSystemNode, id: string):FileSystemNode | null {
+    if (node.id === id) return node;
+
+    if (node.type === 'folder' && node.children){
+      for (const child of node.children){
+        const found = dfs(child, id)
+        if (found) return found
+      }
+    }
+
+    return null
+  }
+
+  const result = dfs(root, parentId);
+  return result?.type === 'folder' ? result.children : [];
+}
+
+
+// 查找从根节点到目标节点的路径 (用于面包屑)
+export function findPathToNode(
+  root: FileSystemNode,
+  targetId: string
+): FileSystemNode[] {
+  const path: FileSystemNode[] = [];
+
+  function dfs(node: FileSystemNode): boolean {
+    path.push(node); // 将当前节点加入路径
+
+    if (node.id === targetId) {
+      return true; // 找到目标，停止递归
+    }
+
+    if (node.type === 'folder' && node.children) {
+      for (const child of node.children) {
+        if (dfs(child)) return true; // 如果在子节点中找到了，直接返回 true
+      }
+    }
+
+    path.pop(); // 回溯：如果该节点及其子节点都不是目标，将其移出路径
+    return false;
+  }
+
+  dfs(root);
+  return path;
+}
+
 
 /**
  * API 返回类型（可用于 React Query）
