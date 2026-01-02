@@ -5,10 +5,12 @@ import {
   AiFillSetting,
   AiOutlineSearch,
 } from 'react-icons/ai';
+import Settings from './Settings';
 
 export default function Header() {
   const [clickProfile, setClickProfile] = useState(false);
   const [clickSearch, setClickSearch] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   return (
     <div className="flex h-16 w-full flex-row justify-between border-b border-gray-200 bg-white">
@@ -63,7 +65,10 @@ export default function Header() {
       </div>
 
       <div className="mr-4 flex items-center">
-        <AiFillSetting className="mr-6 h-6 w-6 cursor-pointer transition-transform duration-500 hover:rotate-360 hover:text-[#5542f6] hover:drop-shadow-md" />
+        <AiFillSetting
+          onClick={() => setShowSettings(true)}
+          className="mr-6 h-6 w-6 cursor-pointer transition-transform duration-500 hover:rotate-360 hover:text-[#5542f6] hover:drop-shadow-md"
+        />
 
         <div className="relative flex items-center">
           <img
@@ -96,6 +101,9 @@ export default function Header() {
           </Modal>
         </div>
       </div>
+
+      {/* 设置页面 */}
+      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
 
       {/* 自定义动画样式 */}
       <style jsx>{`
