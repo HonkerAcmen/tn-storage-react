@@ -6,11 +6,13 @@ import {
   AiOutlineSearch,
 } from 'react-icons/ai';
 import Settings from './Settings';
+import Profile from './Profile';
 
 export default function Header() {
   const [clickProfile, setClickProfile] = useState(false);
   const [clickSearch, setClickSearch] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   return (
     <div className="flex h-16 w-full flex-row justify-between border-b border-gray-200 bg-white">
@@ -80,7 +82,15 @@ export default function Header() {
             className="flex cursor-pointer items-center"
             tabIndex={0}
             onFocus={() => setClickProfile(!clickProfile)}
-            onBlur={() => setClickProfile(false)}
+            onBlur={(e) => {
+              // 延迟关闭，确保点击事件能正确触发
+              const currentTarget = e.currentTarget;
+              setTimeout(() => {
+                if (!currentTarget.contains(document.activeElement)) {
+                  setClickProfile(false);
+                }
+              }, 200);
+            }}
           >
             <p className="mr-2 whitespace-nowrap">管理员</p>
             <AiFillCaretDown className="h-3 w-3 text-gray-500" />
@@ -92,7 +102,14 @@ export default function Header() {
             position={{ top: 'top-16', right: 'right-2' }}
             size={{ width: 'w-40' }}
           >
-            <li className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100">
+            <li
+              onClick={(e) => {
+                e.stopPropagation();
+                setClickProfile(false);
+                setShowProfile(true);
+              }}
+              className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100"
+            >
               个人主页
             </li>
             <li className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100">
@@ -104,6 +121,9 @@ export default function Header() {
 
       {/* 设置页面 */}
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+
+      {/* 个人主页 */}
+      {showProfile && <Profile onClose={() => setShowProfile(false)} />}
 
       {/* 自定义动画样式 */}
       <style jsx>{`
