@@ -32,50 +32,14 @@ import {
 import { FileSystemNode } from '../../../types/fileSystem';
 import { findPathToNode } from '../../../types/fileSystem';
 import { fileDatas } from '../../../mock/index';
+import { getFileIcon } from '../../../utils/fileIcons';
+import { formatFileSize, formatDateTime, getFileDisplayName } from '../../../utils/fileUtils';
 
 interface FileDetailsModalProps {
   open: boolean;
   file: FileSystemNode | null;
   onClose: () => void;
   onUpdate?: (fileId: string, updates: Partial<FileSystemNode>) => void;
-}
-
-// 文件图标映射
-const ICON_SIZE_CLASS = 'h-16 w-16';
-const FILE_ICON_MAP: Record<string, JSX.Element> = {
-  txt: <AiFillFileText className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-  pdf: <AiFillFilePdf className={`${ICON_SIZE_CLASS} text-red-400`} />,
-  jpg: <AiOutlineFileJpg className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-  png: <AiOutlineFileImage className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-  mp4: <AiFillPlaySquare className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-  mp3: <AiFillMuted className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-  json: <AiFillFileText className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-  zip: <AiFillFileZip className={`${ICON_SIZE_CLASS} text-amber-400`} />,
-  doc: <AiFillFileText className={`${ICON_SIZE_CLASS} text-blue-400`} />,
-  docx: <AiFillFileText className={`${ICON_SIZE_CLASS} text-blue-400`} />,
-  xlsx: <AiFillFileExcel className={`${ICON_SIZE_CLASS} text-green-400`} />,
-  other: <AiFillFileUnknown className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-};
-
-// 格式化文件大小
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-}
-
-// 格式化日期时间
-function formatDateTime(date: Date): string {
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
 }
 
 // 获取文件路径
@@ -175,7 +139,7 @@ export default function FileDetailsModal({
               <AiFillFolder className="h-8 w-8 text-amber-400" />
             ) : (
               <div className="text-gray-400">
-                {FILE_ICON_MAP[file.ext || ''] || FILE_ICON_MAP['other']}
+                {getFileIcon(file.ext, 'small')}
               </div>
             )}
             <span className="text-lg font-semibold">文件详情</span>
@@ -189,20 +153,19 @@ export default function FileDetailsModal({
           {/* 文件图标和名称 */}
           <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-gray-50 p-6">
             <div className="mb-4">
-              {file.type === 'folder' ? (
-                <AiFillFolder className="h-24 w-24 text-amber-400" />
-              ) : (
-                <div className="text-gray-400">
-                  {FILE_ICON_MAP[file.ext || ''] || FILE_ICON_MAP['other']}
-                </div>
-              )}
+            {file.type === 'folder' ? (
+              <AiFillFolder className="h-24 w-24 text-amber-400" />
+            ) : (
+              <div className="text-gray-400">
+                {getFileIcon(file.ext, 'large')}
+              </div>
+            )}
             </div>
             {
               <>
-                <h3 className="mb-2 text-xl font-semibold text-gray-800">
-                  {file.name}
-                  {file.type === 'file' && file.ext ? `.${file.ext}` : ''}
-                </h3>
+          <h3 className="mb-2 text-xl font-semibold text-gray-800">
+            {getFileDisplayName(file)}
+          </h3>
                 <Space>
                   {file.type === 'file' ? (
                     <Tag color="blue">文件</Tag>
@@ -235,10 +198,7 @@ export default function FileDetailsModal({
                   <Input placeholder="请输入名称" />
                 </Form.Item>
               ) : (
-                <span>
-                  {file.name}
-                  {file.type === 'file' && file.ext ? `.${file.ext}` : ''}
-                </span>
+                <span>{getFileDisplayName(file)}</span>
               )}
             </Descriptions.Item>
 

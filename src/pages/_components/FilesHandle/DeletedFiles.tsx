@@ -1,125 +1,23 @@
 import { useState, useMemo } from 'react';
-import type { JSX } from 'react';
-import {
-  Typography,
-  Space,
-  Tag,
-  Empty,
-  Button,
-  message,
-  Dropdown,
-  Modal,
-} from 'antd';
+import { Empty, Button, message, Modal } from 'antd';
 import type { MenuProps } from 'antd';
 import {
-  AiFillFileExcel,
-  AiFillFilePdf,
-  AiFillFileText,
-  AiFillFileUnknown,
-  AiFillFileZip,
-  AiFillFolder,
-  AiFillMuted,
-  AiFillPlaySquare,
-  AiOutlineFileImage,
-  AiOutlineFileJpg,
-  AiOutlineEllipsis,
   AiOutlineRest,
   AiOutlineDelete,
   AiOutlineInfoCircle,
   AiOutlineClockCircle,
 } from 'react-icons/ai';
-import { fileDatas } from '../../../mock/index';
 import { FileSystemNode } from '../../../types/fileSystem';
 import FileDetailsModal from './FileDetailsModal';
+import FileListItem from '../../../components/FileListItem';
+import { useDeletedFiles } from '../../../hooks/useDeletedFiles';
+import { formatDate } from '../../../utils/fileUtils';
 
-const { Text } = Typography;
 const { confirm } = Modal;
 
-// 文件图标映射
-const ICON_SIZE_CLASS = 'h-6 w-6';
-const FILE_ICON_MAP: Record<string, JSX.Element> = {
-  txt: <AiFillFileText className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-  pdf: <AiFillFilePdf className={`${ICON_SIZE_CLASS} text-red-400`} />,
-  jpg: <AiOutlineFileJpg className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-  png: <AiOutlineFileImage className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-  mp4: <AiFillPlaySquare className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-  mp3: <AiFillMuted className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-  json: <AiFillFileText className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-  zip: <AiFillFileZip className={`${ICON_SIZE_CLASS} text-amber-400`} />,
-  doc: <AiFillFileText className={`${ICON_SIZE_CLASS} text-blue-400`} />,
-  docx: <AiFillFileText className={`${ICON_SIZE_CLASS} text-blue-400`} />,
-  xlsx: <AiFillFileExcel className={`${ICON_SIZE_CLASS} text-green-400`} />,
-  other: <AiFillFileUnknown className={`${ICON_SIZE_CLASS} text-gray-400`} />,
-};
-
-// 已删除文件的数据结构
-interface DeletedFileItem {
-  file: FileSystemNode;
-  deletedAt: Date;
-}
-
-// 从 localStorage 获取已删除文件列表
-function getDeletedFilesFromStorage(): DeletedFileItem[] {
-  if (typeof window === 'undefined') return [];
-  const stored = localStorage.getItem('deletedFiles');
-  if (stored) {
-    const parsed = JSON.parse(stored);
-    // 将日期字符串转换回 Date 对象
-    return parsed.map((item: DeletedFileItem) => ({
-      file: {
-        ...item.file,
-        createdAt: new Date(item.file.createdAt),
-        updatedAt: new Date(item.file.updatedAt),
-      },
-      deletedAt: new Date(item.deletedAt),
-    }));
-  }
-  return [];
-}
-
-// 初始化默认已删除文件数据
-function initializeDefaultDeletedFiles(): DeletedFileItem[] {
-  if (typeof window === 'undefined') return [];
-  const allFiles = getAllFiles(fileDatas);
-  const defaultDeleted = allFiles.slice(0, 3).map((file) => ({
-    file,
-    deletedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000), // 随机删除时间（最近7天内）
-  }));
-  saveDeletedFilesToStorage(defaultDeleted);
-  return defaultDeleted;
-}
-
-// 保存已删除文件列表到 localStorage
-function saveDeletedFilesToStorage(deletedFiles: DeletedFileItem[]): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem('deletedFiles', JSON.stringify(deletedFiles));
-}
-
-// 递归获取所有文件
-function getAllFiles(node: FileSystemNode): FileSystemNode[] {
-  const files: FileSystemNode[] = [];
-
-  if (node.type === 'file') {
-    files.push(node);
-  } else if (node.type === 'folder' && node.children) {
-    node.children.forEach((child) => {
-      files.push(...getAllFiles(child));
-    });
-  }
-
-  return files;
-}
-
-// 格式化文件大小
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-}
-
-// 格式化删除时间
+/**
+ * 格式化删除时间
+ */
 function formatDeletedTime(date: Date): string {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
@@ -142,14 +40,8 @@ function formatDeletedTime(date: Date): string {
 }
 
 export default function DeletedFiles() {
-  // 初始化已删除文件列表
-  const [deletedFiles, setDeletedFiles] = useState<DeletedFileItem[]>(() => {
-    const stored = getDeletedFilesFromStorage();
-    if (stored.length === 0) {
-      return initializeDefaultDeletedFiles();
-    }
-    return stored;
-  });
+  const { deletedFiles, removeDeletedFile, clearDeletedFiles } =
+    useDeletedFiles();
 
   // 详情模态框状态
   const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
@@ -173,11 +65,7 @@ export default function DeletedFiles() {
 
   // 恢复文件
   const handleRestore = (fileId: string) => {
-    const newDeletedFiles = deletedFiles.filter(
-      (item) => item.file.id !== fileId
-    );
-    setDeletedFiles(newDeletedFiles);
-    saveDeletedFilesToStorage(newDeletedFiles);
+    removeDeletedFile(fileId);
     message.success('文件已恢复');
   };
 
@@ -190,11 +78,7 @@ export default function DeletedFiles() {
       okType: 'danger',
       cancelText: '取消',
       onOk() {
-        const newDeletedFiles = deletedFiles.filter(
-          (item) => item.file.id !== fileId
-        );
-        setDeletedFiles(newDeletedFiles);
-        saveDeletedFilesToStorage(newDeletedFiles);
+        removeDeletedFile(fileId);
         message.success('文件已永久删除');
       },
     });
@@ -209,8 +93,7 @@ export default function DeletedFiles() {
       okType: 'danger',
       cancelText: '取消',
       onOk() {
-        setDeletedFiles([]);
-        saveDeletedFilesToStorage([]);
+        clearDeletedFiles();
         message.success('回收站已清空');
       },
     });
@@ -274,15 +157,6 @@ export default function DeletedFiles() {
     ];
   };
 
-  // 格式化时间
-  const formatTime = (date: Date): string => {
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
   return (
     <div className="ml-4">
       <div className="mt-4 mb-6 flex items-center justify-between">
@@ -321,43 +195,21 @@ export default function DeletedFiles() {
           {sortedDeletedFiles.map((deletedItem) => {
             const item = deletedItem.file;
             return (
-              <li
+              <FileListItem
                 key={item.id}
-                className="mb-2 flex cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-3 transition hover:bg-gray-50"
-              >
-                <div className="flex items-center space-x-3">
-                  {item.type === 'folder' ? (
-                    <AiFillFolder className="h-8 w-8 text-amber-400" />
-                  ) : (
-                    <div className="text-gray-400">
-                      {FILE_ICON_MAP[item.ext || ''] || FILE_ICON_MAP['other']}
-                    </div>
-                  )}
-                  <div className="flex flex-col">
-                    <Space>
-                      <Text className="text-gray-800">
-                        {item.name}
-                        {item.type === 'file' && item.ext ? `.${item.ext}` : ''}
-                      </Text>
-                      {item.type === 'file' && (
-                        <Tag color="blue">{formatFileSize(item.size)}</Tag>
-                      )}
-                      {item.type === 'folder' && (
-                        <Tag color="orange">文件夹</Tag>
-                      )}
-                    </Space>
-                    <Space className="mt-1">
-                      <Text type="secondary" className="text-xs">
-                        <AiOutlineClockCircle className="mr-1 inline" />
-                        {formatDeletedTime(deletedItem.deletedAt)}
-                      </Text>
-                      <Text type="secondary" className="text-xs">
-                        • 创建于 {formatTime(item.createdAt)}
-                      </Text>
-                    </Space>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
+                file={item}
+                menuItems={getFileMenuItems(item)}
+                showSize
+                showType
+                showTime
+                timeValue={
+                  <>
+                    <AiOutlineClockCircle className="mr-1 inline" />
+                    {formatDeletedTime(deletedItem.deletedAt)} • 创建于{' '}
+                    {formatDate(item.createdAt)}
+                  </>
+                }
+                actions={
                   <Button
                     type="text"
                     icon={<AiOutlineRest className="h-5 w-5 text-blue-500" />}
@@ -369,22 +221,8 @@ export default function DeletedFiles() {
                   >
                     恢复
                   </Button>
-                  <Dropdown
-                    menu={{ items: getFileMenuItems(item) }}
-                    trigger={['click']}
-                    placement="bottomRight"
-                  >
-                    <Button
-                      type="text"
-                      icon={
-                        <AiOutlineEllipsis className="h-5 w-5 text-gray-600" />
-                      }
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex items-center justify-center"
-                    />
-                  </Dropdown>
-                </div>
-              </li>
+                }
+              />
             );
           })}
         </ul>
@@ -405,20 +243,7 @@ export default function DeletedFiles() {
 }
 
 // 导出删除文件相关的工具函数，供其他组件使用
-export function addToDeletedFiles(file: FileSystemNode): void {
-  const deletedFiles = getDeletedFilesFromStorage();
-  const deletedItem: DeletedFileItem = {
-    file,
-    deletedAt: new Date(),
-  };
-  deletedFiles.push(deletedItem);
-  saveDeletedFilesToStorage(deletedFiles);
-}
-
-export function removeFromDeletedFiles(fileId: string): void {
-  const deletedFiles = getDeletedFilesFromStorage();
-  const newDeletedFiles = deletedFiles.filter(
-    (item) => item.file.id !== fileId
-  );
-  saveDeletedFilesToStorage(newDeletedFiles);
-}
+export {
+  useDeletedFiles,
+  type DeletedFileItem,
+} from '../../../hooks/useDeletedFiles';
