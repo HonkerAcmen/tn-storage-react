@@ -21,7 +21,7 @@ export default function RecentFiles() {
       .slice(0, 20);
   }, [allFiles]);
 
-  // 最近创建的文件（按 createdAt 排序）
+  // 最近上传的文件（按 createdAt 排序）
   const recentlyCreated = useMemo(() => {
     return [...allFiles]
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
@@ -67,7 +67,7 @@ export default function RecentFiles() {
       label: (
         <span className="flex items-center space-x-2">
           <AiOutlineClockCircle />
-          <span>最近创建</span>
+          <span>最近上传</span>
         </span>
       ),
       children: (
@@ -78,11 +78,11 @@ export default function RecentFiles() {
               file={item}
               showSize
               showTime
-              timeValue={`${formatRelativeTime(item.createdAt)} • 创建于 ${formatDate(item.createdAt)}`}
+              timeValue={`${formatRelativeTime(item.createdAt)} • 上传于 ${formatDate(item.createdAt)}`}
               actions={
                 item.type === 'file' && (
                   <Tag color="green" className="mr-2">
-                    新建
+                    新上传
                   </Tag>
                 )
               }
@@ -127,7 +127,7 @@ export default function RecentFiles() {
       <div className="mt-4 mb-6">
         <h1 className="text-3xl font-semibold text-[#2e2c34]">最近的</h1>
         <p className="mt-2 text-sm text-gray-500">
-          查看最近访问、创建或修改的文件
+          查看最近访问、上传或修改的文件
         </p>
       </div>
 

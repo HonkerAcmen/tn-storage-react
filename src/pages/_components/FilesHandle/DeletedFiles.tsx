@@ -191,7 +191,7 @@ export default function DeletedFiles() {
           className="py-12"
         />
       ) : (
-        <ul className="flex flex-col space-y-2">
+        <ul className="mr-8 flex flex-col space-y-2">
           {sortedDeletedFiles.map((deletedItem) => {
             const item = deletedItem.file;
             return (

@@ -156,7 +156,7 @@ export default function Favorites() {
           className="py-12"
         />
       ) : (
-        <ul className="flex flex-col space-y-2">
+        <ul className="mr-8 flex flex-col space-y-2">
           {favoriteFiles.map((item) => (
             <FileListItem
               key={item.id}
