@@ -39,7 +39,7 @@ interface FileDetailsModalProps {
   open: boolean;
   file: FileSystemNode | null;
   onClose: () => void;
-  onUpdate?: (fileId: string, updates: Partial<FileSystemNode>) => void;
+  onUpdate?: (fileId: string, updates: Partial<FileSystemNode>) => Promise<void>;
 }
 
 export default function FileDetailsModal({
@@ -101,7 +101,7 @@ export default function FileDetailsModal({
 
       // 调用更新回调
       if (onUpdate) {
-        onUpdate(file.id, {
+        await onUpdate(file.id, {
           name: newName,
           updatedAt: new Date(),
         });

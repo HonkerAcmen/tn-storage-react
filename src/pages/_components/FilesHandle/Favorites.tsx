@@ -30,12 +30,16 @@ export default function Favorites() {
   }, [allFiles, favoriteIds]);
 
   // 处理文件更新
-  const handleFileUpdate = (
+  const handleFileUpdate = async (
     fileId: string,
     updates: Partial<FileSystemNode>
   ) => {
-    updateFile(fileId, updates);
-    message.success('文件信息已更新');
+    try {
+      await updateFile(fileId, updates);
+      message.success('文件信息已更新');
+    } catch {
+      message.error('更新文件失败');
+    }
   };
 
   // 取消收藏

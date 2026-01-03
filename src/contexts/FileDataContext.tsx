@@ -8,14 +8,15 @@ import {
   useEffect,
 } from 'react';
 import type { FileSystemNode } from '../types/fileSystem';
-import { generateFileSystem } from '../mock/randomFileData';
 import { getAllFiles, updateNodeInTree } from '../utils/fileSystemUtils';
+import { getFileSystemTree, updateFile as updateFileAPI, deleteFile as deleteFileAPI } from '../services/fileService';
 
 interface FileDataContextType {
   fileTree: FileSystemNode;
   allFiles: FileSystemNode[];
-  updateFile: (fileId: string, updates: Partial<FileSystemNode>) => void;
-  deleteFile: (fileId: string) => void;
+  loading: boolean;
+  updateFile: (fileId: string, updates: Partial<FileSystemNode>) => Promise<void>;
+  deleteFile: (fileId: string) => Promise<void>;
   refreshFiles: () => void;
 }
 
@@ -34,16 +35,30 @@ const emptyRoot: FileSystemNode = {
 };
 
 export function FileDataProvider({ children }: { children: ReactNode }) {
-  // 在服务器端使用空数据，在客户端挂载后生成真实数据
+  // 在服务器端使用空数据，在客户端挂载后加载数据
   const [fileTree, setFileTree] = useState<FileSystemNode>(emptyRoot);
   const [isMounted, setIsMounted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // 在客户端挂载后生成数据，每次刷新使用新的种子
+  // 在客户端挂载后加载数据
   useEffect(() => {
     setIsMounted(true);
-    // 使用时间戳作为种子，确保每次刷新都生成不同的数据
-    const seed = Date.now();
-    setFileTree(generateFileSystem(3, 6, seed));
+    loadFileSystem();
+  }, []);
+
+  // 加载文件系统数据
+  const loadFileSystem = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    
+    setLoading(true);
+    try {
+      const data = await getFileSystemTree();
+      setFileTree(data);
+    } catch (error) {
+      console.error('Failed to load file system:', error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   // 获取所有文件
@@ -51,54 +66,99 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
 
   // 更新文件
   const updateFile = useCallback(
-    (fileId: string, updates: Partial<FileSystemNode>) => {
-      setFileTree((prevTree) => {
-        const updatedTree = updateNodeInTree(prevTree, fileId, updates);
-        return updatedTree || prevTree;
-      });
+    async (fileId: string, updates: Partial<FileSystemNode>) => {
+      try {
+        // 调用 API 更新文件
+        await updateFileAPI(fileId, updates);
+        
+        // 更新本地状态
+        setFileTree((prevTree) => {
+          const updatedTree = updateNodeInTree(prevTree, fileId, updates);
+          return updatedTree || prevTree;
+        });
+      } catch (error) {
+        console.error('Failed to update file:', error);
+        // 即使 API 调用失败，也更新本地状态（用于假数据模式）
+        setFileTree((prevTree) => {
+          const updatedTree = updateNodeInTree(prevTree, fileId, updates);
+          return updatedTree || prevTree;
+        });
+      }
     },
     []
   );
 
   // 删除文件（从树中移除）
-  const deleteFile = useCallback((fileId: string) => {
-    setFileTree((prevTree) => {
-      const removeNodeFromTree = (
-        node: FileSystemNode
-      ): FileSystemNode | null => {
-        if (node.id === fileId) {
-          return null; // 删除当前节点
-        }
-        if (node.type === 'folder' && node.children) {
-          const filteredChildren = node.children
-            .map(removeNodeFromTree)
-            .filter((child): child is FileSystemNode => child !== null);
-          return {
-            ...node,
-            children: filteredChildren,
+  const deleteFile = useCallback(
+    async (fileId: string) => {
+      try {
+        // 调用 API 删除文件
+        await deleteFileAPI(fileId);
+        
+        // 更新本地状态
+        setFileTree((prevTree) => {
+          const removeNodeFromTree = (
+            node: FileSystemNode
+          ): FileSystemNode | null => {
+            if (node.id === fileId) {
+              return null; // 删除当前节点
+            }
+            if (node.type === 'folder' && node.children) {
+              const filteredChildren = node.children
+                .map(removeNodeFromTree)
+                .filter((child): child is FileSystemNode => child !== null);
+              return {
+                ...node,
+                children: filteredChildren,
+              };
+            }
+            return node;
           };
-        }
-        return node;
-      };
-      const result = removeNodeFromTree(prevTree);
-      return result || prevTree;
-    });
-  }, []);
+          const result = removeNodeFromTree(prevTree);
+          return result || prevTree;
+        });
+      } catch (error) {
+        console.error('Failed to delete file:', error);
+        // 即使 API 调用失败，也更新本地状态（用于假数据模式）
+        setFileTree((prevTree) => {
+          const removeNodeFromTree = (
+            node: FileSystemNode
+          ): FileSystemNode | null => {
+            if (node.id === fileId) {
+              return null;
+            }
+            if (node.type === 'folder' && node.children) {
+              const filteredChildren = node.children
+                .map(removeNodeFromTree)
+                .filter((child): child is FileSystemNode => child !== null);
+              return {
+                ...node,
+                children: filteredChildren,
+              };
+            }
+            return node;
+          };
+          const result = removeNodeFromTree(prevTree);
+          return result || prevTree;
+        });
+      }
+    },
+    []
+  );
 
   // 刷新文件（重新加载）
   const refreshFiles = useCallback(() => {
     if (isMounted) {
-      // 使用新的时间戳作为种子，生成新的数据
-      const seed = Date.now();
-      setFileTree(generateFileSystem(3, 6, seed));
+      loadFileSystem();
     }
-  }, [isMounted]);
+  }, [isMounted, loadFileSystem]);
 
   return (
     <FileDataContext.Provider
       value={{
         fileTree,
         allFiles,
+        loading,
         updateFile,
         deleteFile,
         refreshFiles,
