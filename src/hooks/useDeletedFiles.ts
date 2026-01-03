@@ -36,6 +36,9 @@ function getDeletedFilesFromStorage(): DeletedFileItem[] {
  * 初始化默认已删除文件数据
  */
 function initializeDefaultDeletedFiles(): DeletedFileItem[] {
+  if (!fileDatas) {
+    return [];
+  }
   const allFiles = getAllFiles(fileDatas);
   const defaultDeleted = allFiles.slice(0, 3).map((file) => ({
     file,

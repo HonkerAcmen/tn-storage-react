@@ -23,6 +23,9 @@ function saveFavoritesToStorage(favorites: string[]): void {
  * 初始化默认收藏数据
  */
 function initializeDefaultFavorites(): string[] {
+  if (!fileDatas) {
+    return [];
+  }
   const allFiles = getAllFiles(fileDatas);
   const defaultFavorites = allFiles.slice(0, 5).map((file) => file.id);
   saveFavoritesToStorage(defaultFavorites);
