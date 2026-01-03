@@ -7,12 +7,14 @@ import {
 } from 'react-icons/ai';
 import Settings from './Settings';
 import Profile from './Profile';
+import SearchResults from './SearchResults';
 
 export default function Header() {
   const [clickProfile, setClickProfile] = useState(false);
-  const [clickSearch, setClickSearch] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   return (
     <div className="flex h-16 w-full flex-row justify-between border-b border-gray-200 bg-white">
@@ -23,46 +25,36 @@ export default function Header() {
         </h2>
 
         {/* 搜索框 */}
-        <div
-          className="relative z-10 flex h-8 w-72 flex-row items-center rounded-2xl border border-gray-200"
-          onBlur={() => setClickSearch(false)}
-        >
-          <AiOutlineSearch className="mr-2 ml-2" />
+        <div className="relative z-10 flex h-8 w-72 flex-row items-center rounded-2xl border border-gray-200">
+          <AiOutlineSearch className="mr-2 ml-2 text-gray-400" />
           <input
             type="text"
             className="h-8 w-72 text-sm focus:outline-none"
-            placeholder="搜索"
-            onFocus={() => setClickSearch(!clickSearch)}
+            placeholder="搜索文件和文件夹..."
+            value={searchKeyword}
+            onChange={(e) => {
+              const keyword = e.target.value;
+              setSearchKeyword(keyword);
+              // 如果有搜索关键词，自动打开搜索结果页面
+              if (keyword.trim()) {
+                setShowSearchResults(true);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchKeyword.trim()) {
+                setShowSearchResults(true);
+              } else if (e.key === 'Escape') {
+                setShowSearchResults(false);
+                setSearchKeyword('');
+              }
+            }}
+            onFocus={() => {
+              // 如果已经有搜索关键词，聚焦时打开搜索结果页面
+              if (searchKeyword.trim()) {
+                setShowSearchResults(true);
+              }
+            }}
           />
-
-          <Modal
-            open={clickSearch}
-            onClose={() => setClickSearch(false)}
-            position={{ top: 'top-8', left: 'left-4' }}
-            size={{ height: 'h-64', width: 'w-64' }}
-          >
-            <span className="text-[12px] text-gray-400">最近使用</span>
-            <ul className="mt-2 flex h-full w-full flex-col">
-              {[1, 2, 3].map((i) => (
-                <li
-                  key={i}
-                  className="flex w-full cursor-pointer flex-row items-center rounded-lg py-2 transition hover:bg-gray-100"
-                >
-                  <img
-                    src="#"
-                    alt=""
-                    className="mr-2 ml-2 h-8 w-8 rounded-lg bg-gray-200"
-                  />
-                  <div className="ml-2">
-                    <h2>新文件{i}.jpg</h2>
-                    <span className="text-[12px] text-gray-400">
-                      22分钟之前
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </Modal>
         </div>
       </div>
 
@@ -124,6 +116,19 @@ export default function Header() {
 
       {/* 个人主页 */}
       {showProfile && <Profile onClose={() => setShowProfile(false)} />}
+
+      {/* 搜索结果页面 */}
+      {showSearchResults && (
+        <SearchResults
+          open={showSearchResults}
+          searchKeyword={searchKeyword}
+          onClose={() => {
+            setShowSearchResults(false);
+            setSearchKeyword('');
+          }}
+          onSearchChange={(keyword) => setSearchKeyword(keyword)}
+        />
+      )}
 
       {/* 自定义动画样式 */}
       <style jsx>{`

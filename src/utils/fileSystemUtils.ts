@@ -18,6 +18,47 @@ export function getAllFiles(node: FileSystemNode): FileSystemNode[] {
 }
 
 /**
+ * 递归获取所有节点（文件和文件夹）
+ */
+export function getAllNodes(node: FileSystemNode): FileSystemNode[] {
+  const nodes: FileSystemNode[] = [];
+
+  // 跳过根节点
+  if (node.name !== 'root') {
+    nodes.push(node);
+  }
+
+  if (node.type === 'folder' && node.children) {
+    node.children.forEach((child) => {
+      nodes.push(...getAllNodes(child));
+    });
+  }
+
+  return nodes;
+}
+
+/**
+ * 搜索文件和文件夹
+ */
+export function searchNodes(
+  root: FileSystemNode,
+  keyword: string
+): FileSystemNode[] {
+  if (!keyword.trim()) {
+    return [];
+  }
+
+  const allNodes = getAllNodes(root);
+  const lowerKeyword = keyword.toLowerCase();
+
+  return allNodes.filter((node) => {
+    const displayName =
+      node.type === 'file' && node.ext ? `${node.name}.${node.ext}` : node.name;
+    return displayName.toLowerCase().includes(lowerKeyword);
+  });
+}
+
+/**
  * 根据ID查找节点
  */
 export function findNodeById(
