@@ -21,24 +21,24 @@ interface SearchResultsProps {
 
 export default function SearchResults({
   open,
-  searchKeyword: initialKeyword,
+  searchKeyword: initialKeyword = '',
   onClose,
   onSearchChange,
 }: SearchResultsProps) {
   const { fileTree, updateFile } = useFileData();
   const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState(initialKeyword);
+  const [searchKeyword, setSearchKeyword] = useState(initialKeyword || '');
   const inputRef = useRef<HTMLInputElement>(null);
 
   // 同步外部传入的搜索关键词
   useEffect(() => {
-    setSearchKeyword(initialKeyword);
+    setSearchKeyword(initialKeyword || '');
   }, [initialKeyword]);
 
   // 执行搜索
   const searchResults = useMemo(() => {
-    if (!searchKeyword.trim()) {
+    if (!searchKeyword || !searchKeyword.trim()) {
       return [];
     }
     return searchNodes(fileTree, searchKeyword);
@@ -127,7 +127,7 @@ export default function SearchResults({
               </h3>
             </div>
 
-            {!searchKeyword.trim() ? (
+            {!searchKeyword || !searchKeyword.trim() ? (
               <div className="flex h-64 items-center justify-center">
                 <Empty
                   description="请输入搜索关键词"
