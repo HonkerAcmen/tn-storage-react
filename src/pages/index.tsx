@@ -11,10 +11,11 @@ import { ConfigProvider, Menu, MenuProps } from 'antd';
 import MyCloud from './_components/MyCloud';
 import { JSX, useState } from 'react';
 import AllFiles from './_components/FilesHandle/AllFiles';
+import UploadModal from './_components/UploadModal';
 
 export default function Home() {
   const [seleId, setSeleId] = useState('sub1');
-  const [downloadChick, setDownloadChick] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const menuItems = [
     { key: 'sub1', label: '我的云', icon: <AiFillCloud /> },
@@ -44,11 +45,11 @@ export default function Home() {
         {/* 左侧边栏 */}
         <aside className="flex flex-col items-center border-r border-gray-200 bg-white">
           <div
-            onClick={() => setDownloadChick(!downloadChick)}
+            onClick={() => setShowUploadModal(true)}
             className="relative mt-6 mb-6 flex h-12 w-[90%] cursor-pointer items-center justify-center rounded-sm border border-gray-200 text-[16px] text-gray-600 transition duration-150 hover:bg-gray-100"
           >
             <AiOutlineCloudUpload className="mr-2 ml-2 flex h-5 w-5 flex-1" />
-            <p className="flex flex-2">上传/下载</p>
+            <p className="flex flex-2">上传</p>
           </div>
 
           <ConfigProvider
@@ -78,6 +79,12 @@ export default function Home() {
           {renderMap[seleId] ?? <div>未知选项</div>}
         </main>
       </div>
+
+      {/* 上传模态框 */}
+      <UploadModal
+        open={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+      />
     </div>
   );
 }
