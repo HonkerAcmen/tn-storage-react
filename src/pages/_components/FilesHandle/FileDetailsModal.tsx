@@ -31,9 +31,9 @@ import {
 } from 'react-icons/ai';
 import { FileSystemNode } from '../../../types/fileSystem';
 import { findPathToNode } from '../../../types/fileSystem';
-import { fileDatas } from '../../../mock/index';
 import { getFileIcon } from '../../../utils/fileIcons';
 import { formatFileSize, formatDateTime, getFileDisplayName } from '../../../utils/fileUtils';
+import { useFileData } from '../../../contexts/FileDataContext';
 
 interface FileDetailsModalProps {
   open: boolean;
@@ -42,20 +42,21 @@ interface FileDetailsModalProps {
   onUpdate?: (fileId: string, updates: Partial<FileSystemNode>) => void;
 }
 
-// 获取文件路径
-function getFilePath(nodeId: string): string {
-  const path = findPathToNode(fileDatas, nodeId);
-  return path
-    .map((node) => (node.name === 'root' ? '根目录' : node.name))
-    .join(' / ');
-}
-
 export default function FileDetailsModal({
   open,
   file,
   onClose,
   onUpdate,
 }: FileDetailsModalProps) {
+  const { fileTree } = useFileData();
+
+  // 获取文件路径
+  const getFilePath = (nodeId: string): string => {
+    const path = findPathToNode(fileTree, nodeId);
+    return path
+      .map((node) => (node.name === 'root' ? '根目录' : node.name))
+      .join(' / ');
+  };
   const [isEditing, setIsEditing] = useState(false);
   const [form] = Form.useForm();
   const previousFileIdRef = useRef<string | null>(null);

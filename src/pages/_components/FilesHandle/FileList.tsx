@@ -14,13 +14,12 @@ import {
   AiOutlineFileJpg,
 } from 'react-icons/ai';
 
-// 假设这些是你之前定义的类型和数据
-import { fileDatas } from '../../../mock/index';
 import {
   FileSystemNode,
   findPathToNode,
   getChildrenByParentId,
 } from '../../../types/fileSystem';
+import { useFileData } from '../../../contexts/FileDataContext';
 
 // 将 renderMap 移出组件，避免重复创建对象
 // 使用 Record 类型增强类型安全
@@ -42,19 +41,20 @@ const RENDER_MAP: Record<string, JSX.Element> = {
 
 export default function FileList() {
   const router = useRouter();
+  const { fileTree } = useFileData();
 
   // 获取当前文件夹ID，默认为根节点ID '1'
   const currentFolderId = (router.query.folderId as string) || '1';
 
   // 计算当前层级的文件 (使用你之前的函数)
   const siblings = useMemo(() => {
-    return getChildrenByParentId(fileDatas, currentFolderId);
-  }, [currentFolderId]);
+    return getChildrenByParentId(fileTree, currentFolderId);
+  }, [fileTree, currentFolderId]);
 
   // 计算面包屑路径 (使用新算法)
   const breadcrumbPath = useMemo(() => {
-    return findPathToNode(fileDatas, currentFolderId);
-  }, [currentFolderId]);
+    return findPathToNode(fileTree, currentFolderId);
+  }, [fileTree, currentFolderId]);
 
   // 统一导航处理
   function handleNavigate(targetId: string) {

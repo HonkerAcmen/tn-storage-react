@@ -12,6 +12,7 @@ import FileDetailsModal from './FileDetailsModal';
 import FileListItem from '../../../components/FileListItem';
 import { useDeletedFiles } from '../../../hooks/useDeletedFiles';
 import { formatDate } from '../../../utils/fileUtils';
+import { useFileData } from '../../../contexts/FileDataContext';
 
 const { confirm } = Modal;
 
@@ -42,6 +43,7 @@ function formatDeletedTime(date: Date): string {
 export default function DeletedFiles() {
   const { deletedFiles, removeDeletedFile, clearDeletedFiles } =
     useDeletedFiles();
+  const { updateFile } = useFileData();
 
   // 详情模态框状态
   const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
@@ -59,8 +61,8 @@ export default function DeletedFiles() {
     fileId: string,
     updates: Partial<FileSystemNode>
   ) => {
+    updateFile(fileId, updates);
     message.success('文件信息已更新');
-    console.log('更新文件:', fileId, updates);
   };
 
   // 恢复文件

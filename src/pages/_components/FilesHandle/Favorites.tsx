@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Empty, Button, message, Dropdown } from 'antd';
+import { Empty, Button, message } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   AiFillStar,
@@ -8,27 +8,21 @@ import {
   AiOutlineEdit,
   AiOutlineDelete,
   AiOutlineInfoCircle,
-  AiOutlineEllipsis,
 } from 'react-icons/ai';
-import { fileDatas } from '../../../mock/index';
 import { FileSystemNode } from '../../../types/fileSystem';
 import FileDetailsModal from './FileDetailsModal';
 import FileListItem from '../../../components/FileListItem';
 import { useFavorites } from '../../../hooks/useFavorites';
-import { getAllFiles } from '../../../utils/fileUtils';
 import { formatDate } from '../../../utils/fileUtils';
+import { useFileData } from '../../../contexts/FileDataContext';
 
 export default function Favorites() {
   const { favoriteIds, removeFavorite } = useFavorites();
+  const { allFiles, updateFile } = useFileData();
 
   // 详情模态框状态
   const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-
-  // 获取所有文件
-  const allFiles = useMemo(() => {
-    return getAllFiles(fileDatas);
-  }, []);
 
   // 获取收藏的文件
   const favoriteFiles = useMemo(() => {
@@ -40,8 +34,8 @@ export default function Favorites() {
     fileId: string,
     updates: Partial<FileSystemNode>
   ) => {
+    updateFile(fileId, updates);
     message.success('文件信息已更新');
-    console.log('更新文件:', fileId, updates);
   };
 
   // 取消收藏

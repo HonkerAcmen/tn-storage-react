@@ -2,17 +2,13 @@ import { useState, useMemo } from 'react';
 import { Tabs, Tag } from 'antd';
 import type { TabsProps } from 'antd';
 import { AiOutlineClockCircle } from 'react-icons/ai';
-import { fileDatas } from '../../../mock/index';
 import FileListItem from '../../../components/FileListItem';
-import { getAllFiles, formatRelativeTime, formatDate } from '../../../utils/fileUtils';
+import { formatRelativeTime, formatDate } from '../../../utils/fileUtils';
+import { useFileData } from '../../../contexts/FileDataContext';
 
 export default function RecentFiles() {
   const [activeTab, setActiveTab] = useState('recent');
-
-  // 获取所有文件
-  const allFiles = useMemo(() => {
-    return getAllFiles(fileDatas);
-  }, []);
+  const { allFiles } = useFileData();
 
   // 最近访问的文件（按 updatedAt 排序）
   const recentlyAccessed = useMemo(() => {
