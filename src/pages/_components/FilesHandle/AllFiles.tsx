@@ -273,7 +273,10 @@ export default function AllFiles() {
                 <li
                   key={item.key}
                   className="w-full list-none rounded-lg p-2 transition duration-150 hover:bg-gray-200"
-                  onClick={() => setMenuItemName(item)}
+                  onClick={() => {
+                    setMenuItemName(item);
+                    setSeleMenuItem(false); // 点击后关闭下拉菜单
+                  }}
                 >
                   {item.name}
                 </li>

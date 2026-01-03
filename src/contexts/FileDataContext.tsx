@@ -5,9 +5,10 @@ import {
   useCallback,
   ReactNode,
   useMemo,
+  useEffect,
 } from 'react';
 import type { FileSystemNode } from '../types/fileSystem';
-import { fileDatas as initialFileDatas } from '../mock/index';
+import { generateFileSystem } from '../mock/randomFileData';
 import { getAllFiles, updateNodeInTree } from '../utils/fileSystemUtils';
 
 interface FileDataContextType {
@@ -22,8 +23,28 @@ const FileDataContext = createContext<FileDataContextType | undefined>(
   undefined
 );
 
+// 创建一个空的根节点作为初始状态（用于服务器端渲染）
+const emptyRoot: FileSystemNode = {
+  id: '1',
+  name: 'root',
+  type: 'folder',
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+  children: [],
+};
+
 export function FileDataProvider({ children }: { children: ReactNode }) {
-  const [fileTree, setFileTree] = useState<FileSystemNode>(initialFileDatas);
+  // 在服务器端使用空数据，在客户端挂载后生成真实数据
+  const [fileTree, setFileTree] = useState<FileSystemNode>(emptyRoot);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // 在客户端挂载后生成数据，每次刷新使用新的种子
+  useEffect(() => {
+    setIsMounted(true);
+    // 使用时间戳作为种子，确保每次刷新都生成不同的数据
+    const seed = Date.now();
+    setFileTree(generateFileSystem(3, 6, seed));
+  }, []);
 
   // 获取所有文件
   const allFiles = useMemo(() => getAllFiles(fileTree), [fileTree]);
@@ -66,8 +87,12 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
 
   // 刷新文件（重新加载）
   const refreshFiles = useCallback(() => {
-    setFileTree(initialFileDatas);
-  }, []);
+    if (isMounted) {
+      // 使用新的时间戳作为种子，生成新的数据
+      const seed = Date.now();
+      setFileTree(generateFileSystem(3, 6, seed));
+    }
+  }, [isMounted]);
 
   return (
     <FileDataContext.Provider
