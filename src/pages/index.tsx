@@ -11,6 +11,8 @@ import { ConfigProvider, Menu, MenuProps } from 'antd';
 import MyCloud from './_components/MyCloud';
 import { JSX, useState } from 'react';
 import AllFiles from './_components/FilesHandle/AllFiles';
+import RecentFiles from './_components/FilesHandle/RecentFiles';
+import Favorites from './_components/FilesHandle/Favorites';
 import UploadModal from './_components/UploadModal';
 
 export default function Home() {
@@ -30,8 +32,8 @@ export default function Home() {
   const renderMap: Record<string, JSX.Element> = {
     sub1: <MyCloud />,
     sub2: <AllFiles />,
-    sub3: <div>最近的</div>,
-    sub4: <div>收藏</div>,
+    sub3: <RecentFiles />,
+    sub4: <Favorites />,
     sub5: <div>已删除文件</div>,
   };
 
