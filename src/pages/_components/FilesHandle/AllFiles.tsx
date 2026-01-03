@@ -1,6 +1,5 @@
-import Modal from '@/components/Modal';
 import { useState, useMemo } from 'react';
-import { Empty, Button, message } from 'antd';
+import { Empty, Button, message, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   AiOutlineAppstore,
@@ -13,15 +12,18 @@ import {
   AiOutlineEdit,
   AiOutlineDelete,
   AiOutlineInfoCircle,
+  AiOutlineEllipsis,
+  AiFillFolder,
 } from 'react-icons/ai';
 import { FileSystemNode } from '../../../types/fileSystem';
-import FileList from './FileList';
 import FileListItem from '../../../components/FileListItem';
 import FileDetailsModal from './FileDetailsModal';
 import { useFavorites } from '../../../hooks/useFavorites';
 import { formatDate } from '../../../utils/fileUtils';
 import { useDeletedFiles } from '../../../hooks/useDeletedFiles';
 import { useFileData } from '../../../contexts/FileDataContext';
+import { getFileIcon, ICON_SIZE_LARGE } from '../../../utils/fileIcons';
+import { getFileDisplayName } from '../../../utils/fileUtils';
 
 interface MenuItemNameProps {
   key: number;
@@ -32,7 +34,6 @@ interface MenuItemNameProps {
 type SortType = 'latest' | 'oldest' | 'name' | 'type';
 
 export default function AllFiles() {
-  const [seleMenuItem, setSeleMenuItem] = useState(false);
   // 0: 列表模式, 1: 网格模式
   const [seleRadioItem, setSeleRadioItem] = useState(1);
 
@@ -43,11 +44,21 @@ export default function AllFiles() {
   });
 
   const MenuItemsName: MenuItemNameProps[] = [
-    { key: 1, name: '最新添加', icon: <AiOutlineAppstore /> },
-    { key: 2, name: '最旧添加', icon: <AiOutlineAppstore /> },
-    { key: 3, name: '名称', icon: <AiOutlineAppstore /> },
-    { key: 4, name: '类型', icon: <AiOutlineAppstore /> },
+    { key: 1, name: '最新添加', icon: '' },
+    { key: 2, name: '最旧添加', icon: '' },
+    { key: 3, name: '名称', icon: '' },
+    { key: 4, name: '类型', icon: '' },
   ];
+
+  // 转换为 Dropdown 的 items 格式
+  const sortMenuItems: MenuProps['items'] = MenuItemsName.map((item) => ({
+    key: item.key.toString(),
+    label: item.name,
+    icon: item.icon as React.ReactNode,
+    onClick: () => {
+      setMenuItemName(item);
+    },
+  }));
 
   // 收藏和删除文件管理
   const { toggleFavorite, isFavorite } = useFavorites();
@@ -252,41 +263,21 @@ export default function AllFiles() {
           </div>
 
           {/* 分组方式选择 */}
-          <div
-            className="relative flex w-64 cursor-pointer items-center justify-between rounded-lg border border-gray-200 p-2"
-            tabIndex={0}
-            onFocus={() => setSeleMenuItem(!seleMenuItem)}
-            onBlur={() => setSeleMenuItem(false)}
+          <Dropdown
+            menu={{ items: sortMenuItems }}
+            trigger={['click']}
+            placement="bottomLeft"
           >
-            <p className="text-xs text-gray-500">
-              分组方式:{' '}
-              <span className="ml-2 text-sm text-gray-800">
-                {MenuItemName?.name}
-              </span>
-            </p>
-            <AiOutlineCaretDown className="text-gray-500" />
-
-            <Modal
-              open={seleMenuItem}
-              position={{ top: 'top-10' }}
-              size={{ width: 'w-60' }}
-              onClose={() => setSeleMenuItem(false)}
-              className="animate-fadein"
-            >
-              {MenuItemsName.map((item) => (
-                <li
-                  key={item.key}
-                  className="w-full list-none rounded-lg p-2 transition duration-150 hover:bg-gray-200"
-                  onClick={() => {
-                    setMenuItemName(item);
-                    setSeleMenuItem(false); // 点击后关闭下拉菜单
-                  }}
-                >
-                  {item.name}
-                </li>
-              ))}
-            </Modal>
-          </div>
+            <div className="flex w-64 cursor-pointer items-center justify-between rounded-lg border border-gray-200 p-2 transition duration-150 hover:bg-gray-50">
+              <p className="text-xs text-gray-500">
+                分组方式:{' '}
+                <span className="ml-2 text-sm text-gray-800">
+                  {MenuItemName?.name}
+                </span>
+              </p>
+              <AiOutlineCaretDown className="text-gray-500" />
+            </div>
+          </Dropdown>
         </div>
       </div>
 
@@ -337,9 +328,98 @@ export default function AllFiles() {
             ))}
           </ul>
         )
+      ) : // 网格模式
+      sortedFiles.length === 0 ? (
+        <Empty
+          description={
+            <div>
+              <p className="text-gray-500">暂无文件</p>
+              <p className="mt-2 text-sm text-gray-400">
+                上传文件后，文件将显示在这里
+              </p>
+            </div>
+          }
+          className="py-12"
+        />
       ) : (
-        // 网格模式
-        <FileList />
+        <ul className="grid w-full grid-cols-2 gap-6 p-4 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+          {sortedFiles.map((item) => (
+            <li
+              key={item.id}
+              className="group relative flex cursor-pointer flex-col items-center justify-start rounded-xl border border-transparent p-4 transition-all duration-200 hover:border-gray-200 hover:bg-gray-100"
+              onClick={() => {
+                if (item.type === 'folder') {
+                  // 可以添加文件夹打开逻辑
+                  message.info(`打开文件夹: ${item.name}`);
+                } else {
+                  // 打开文件详情
+                  setSelectedFile(item);
+                  setShowDetails(true);
+                }
+              }}
+            >
+              {/* 上方图标文字 */}
+              <div className="mb-3 flex flex-col items-center justify-center">
+                {item.type === 'folder' ? (
+                  <AiFillFolder
+                    className={`${ICON_SIZE_LARGE} text-amber-400`}
+                  />
+                ) : (
+                  <div className="text-gray-400">
+                    {getFileIcon(item.ext, 'large')}
+                  </div>
+                )}
+                <span className="line-clamp-2 text-center text-sm break-all text-gray-700">
+                  {getFileDisplayName(item)}
+                </span>
+              </div>
+
+              {/* 下方收藏按钮和更多选项 */}
+              <div className="flex flex-row justify-between opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="w-full px-2">
+                  {/* 收藏按钮 */}
+                  <div className="mt-2 flex items-center justify-center">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={
+                        isFavorite(item.id) ? (
+                          <AiFillStar className="h-4 w-4 text-amber-400" />
+                        ) : (
+                          <AiOutlineStar className="h-4 w-4 text-gray-400" />
+                        )
+                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFileAction('favorite', item);
+                      }}
+                      className="flex items-center justify-center"
+                    />
+                  </div>
+                </div>
+
+                {/* 右下角功能按钮 */}
+                <div className="mt-2">
+                  <Dropdown
+                    menu={{ items: getFileMenuItems(item) }}
+                    trigger={['click']}
+                    placement="bottomRight"
+                  >
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={
+                        <AiOutlineEllipsis className="h-4 w-4 text-gray-600" />
+                      }
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center justify-center bg-white shadow-md hover:bg-gray-50"
+                    />
+                  </Dropdown>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
 
       {/* 文件详情模态框 */}
