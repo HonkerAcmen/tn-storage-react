@@ -86,8 +86,8 @@ export default function SearchResults({
 
   return (
     <>
-      <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-gray-400/50">
-        <div className="relative flex h-[85vh] w-[90vw] max-w-4xl flex-col rounded-2xl bg-white shadow-2xl">
+      <div className="search-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-400/50">
+        <div className="search-modal relative flex h-[85vh] w-[90vw] max-w-4xl flex-col rounded-2xl bg-white shadow-2xl">
           {/* 头部 */}
           <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
             <div className="flex flex-1 items-center space-x-4">
@@ -184,6 +184,37 @@ export default function SearchResults({
           onUpdate={handleFileUpdate}
         />
       )}
+
+      {/* 过渡动画样式 */}
+      <style jsx>{`
+        .search-overlay {
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        .search-modal {
+          animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+      `}</style>
     </>
   );
 }

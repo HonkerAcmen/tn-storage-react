@@ -24,38 +24,13 @@ export default function Header() {
           TNStorage
         </h2>
 
-        {/* 搜索框 */}
-        <div className="relative z-10 flex h-8 w-72 flex-row items-center rounded-2xl border border-gray-200">
-          <AiOutlineSearch className="mr-2 ml-2 text-gray-400" />
-          <input
-            type="text"
-            className="h-8 w-72 text-sm focus:outline-none"
-            placeholder="搜索文件和文件夹..."
-            value={searchKeyword}
-            onChange={(e) => {
-              const keyword = e.target.value;
-              setSearchKeyword(keyword);
-              // 如果有搜索关键词，自动打开搜索结果页面
-              if (keyword.trim()) {
-                setShowSearchResults(true);
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && searchKeyword.trim()) {
-                setShowSearchResults(true);
-              } else if (e.key === 'Escape') {
-                setShowSearchResults(false);
-                setSearchKeyword('');
-              }
-            }}
-            onFocus={() => {
-              // 如果已经有搜索关键词，聚焦时打开搜索结果页面
-              if (searchKeyword.trim()) {
-                setShowSearchResults(true);
-              }
-            }}
-          />
-        </div>
+        {/* 搜索按钮 */}
+        <button
+          onClick={() => setShowSearchResults(true)}
+          className="relative z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-200 transition duration-300 hover:scale-120 hover:rotate-15 hover:border-[#5542f6] hover:bg-gray-50 hover:text-[#5542f6]"
+        >
+          <AiOutlineSearch className="h-5 w-5 text-gray-600" />
+        </button>
       </div>
 
       <div className="mr-4 flex items-center">
