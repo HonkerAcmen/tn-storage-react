@@ -13,6 +13,7 @@ import { JSX, useState } from 'react';
 import AllFiles from './_components/FilesHandle/AllFiles';
 import RecentFiles from './_components/FilesHandle/RecentFiles';
 import Favorites from './_components/FilesHandle/Favorites';
+import DeletedFiles from './_components/FilesHandle/DeletedFiles';
 import UploadModal from './_components/UploadModal';
 
 export default function Home() {
@@ -34,7 +35,7 @@ export default function Home() {
     sub2: <AllFiles />,
     sub3: <RecentFiles />,
     sub4: <Favorites />,
-    sub5: <div>已删除文件</div>,
+    sub5: <DeletedFiles />,
   };
 
   return (
