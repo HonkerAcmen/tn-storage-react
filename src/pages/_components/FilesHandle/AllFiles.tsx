@@ -19,15 +19,9 @@ import {
 import FileListItem from '@/components/FileListItem';
 import FileDetailsModal from './FileDetailsModal';
 import { useFileActions, useFileMenu } from '@/features/files/hooks';
-import {
-  formatDate,
-  getFileDisplayName,
-} from '@/utils/format/formatters';
+import { formatDate, getFileDisplayName } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
-import {
-  getFileIcon,
-  ICON_SIZE_LARGE,
-} from '@/components/files/FileIcon';
+import { getFileIcon, ICON_SIZE_LARGE } from '@/components/files/FileIcon';
 import { Breadcrumb } from 'antd';
 
 interface MenuItemNameProps {
@@ -40,9 +34,9 @@ type SortType = 'latest' | 'oldest' | 'name' | 'type';
 
 export default function AllFiles() {
   const router = useRouter();
-  const { fileTree, allFiles, updateFile } = useFileData();
+  const { fileTree, updateFile } = useFileData();
 
-  // 获取当前文件夹ID，如果没有则显示所有文件
+  // 获取当前文件夹ID，如果没有则在根路径下显示根目录的直接子节点
   const currentFolderId = router.query.folderId as string | undefined;
 
   // 0: 列表模式, 1: 网格模式
@@ -88,13 +82,16 @@ export default function AllFiles() {
 
   // 获取当前要显示的文件列表
   const currentFiles = useMemo(() => {
-    // 如果有 folderId，显示文件夹内容
+    // 如果有 folderId，显示该文件夹的直接子节点
     if (currentFolderId) {
       return getChildrenByParentId(fileTree, currentFolderId);
     }
-    // 否则显示所有文件
-    return allFiles;
-  }, [currentFolderId, fileTree, allFiles]);
+    // 否则显示根目录的直接子节点（不是所有文件）
+    if (fileTree.type === 'folder' && fileTree.children) {
+      return fileTree.children;
+    }
+    return [];
+  }, [currentFolderId, fileTree]);
 
   // 计算面包屑路径
   const breadcrumbPath = useMemo(() => {
