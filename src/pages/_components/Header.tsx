@@ -8,6 +8,7 @@ import {
 import Settings from './Settings';
 import Profile from './Profile';
 import SearchResults from './SearchResults';
+import { logout } from '@/utils/auth';
 
 export default function Header() {
   const [clickProfile, setClickProfile] = useState(false);
@@ -79,7 +80,10 @@ export default function Header() {
             >
               个人主页
             </li>
-            <li className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100">
+            <li
+              onClick={() => logout()}
+              className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100"
+            >
               退出系统
             </li>
           </Modal>

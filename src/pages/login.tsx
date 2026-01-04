@@ -7,26 +7,24 @@ import {
   AiOutlineMail,
   AiOutlinePhone,
 } from 'react-icons/ai';
-import { useRouter } from 'next/router';
+import { LoginRequest } from '@/types/Request/auth';
+import { useLogin } from '@/network/hooks/login';
 
 export default function Login() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
-
+  const login = useLogin();
   // 登录表单提交
-  const onLoginFinish = async (values: any) => {
+  const onLoginFinish = async (values: LoginRequest) => {
     setLoading(true);
     try {
-      // 这里可以调用登录 API
-      console.log('登录信息:', values);
-      
-      // 模拟 API 调用
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      message.success('登录成功！');
-      // 跳转到主页
-      router.push('/');
-    } catch (error) {
+      await login.mutateAsync(values);
+
+      // 确保 token 已保存到 localStorage
+      if (localStorage.getItem('token')) {
+        message.success('登录成功！');
+        window.location.href = '/';
+      }
+    } catch {
       message.error('登录失败，请检查用户名和密码');
     } finally {
       setLoading(false);
@@ -34,19 +32,26 @@ export default function Login() {
   };
 
   // 注册表单提交
-  const onRegisterFinish = async (values: any) => {
+  const onRegisterFinish = async (values: {
+    username: string;
+    email: string;
+    phone: string;
+    password: string;
+    confirmPassword: string;
+    agreement: boolean;
+  }) => {
     setLoading(true);
     try {
       // 这里可以调用注册 API
       console.log('注册信息:', values);
-      
+
       // 模拟 API 调用
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+
       message.success('注册成功！请登录');
       // 切换到登录标签页
       setActiveTab('login');
-    } catch (error) {
+    } catch {
       message.error('注册失败，请稍后重试');
     } finally {
       setLoading(false);
@@ -95,9 +100,9 @@ export default function Login() {
 
           <Form.Item>
             <div className="flex items-center justify-between">
-              <Form.Item name="remember" valuePropName="checked" noStyle>
+              {/* <Form.Item name="remember" valuePropName="checked" noStyle>
                 <Checkbox>记住我</Checkbox>
-              </Form.Item>
+              </Form.Item> */}
               <a className="text-[#5542f6] hover:text-[#4532e6]" href="#">
                 忘记密码？
               </a>
@@ -261,4 +266,3 @@ export default function Login() {
     </div>
   );
 }
-
