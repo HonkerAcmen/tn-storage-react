@@ -180,17 +180,30 @@ export default function MyCloud() {
               >
                 <div className="mb-2">
                   {item.type === 'folder' ? (
-                    <AiFillFolder className="h-10 w-10 text-amber-400" />
+                    <div>
+                      <AiFillFolder className="h-10 w-10 text-amber-400" />
+                      <h2 className="line-clamp-1 text-gray-800">
+                        {item.name}
+                      </h2>
+                      <span className="text-sm text-gray-600">
+                        {formatDate(item.createdAt)}
+                      </span>
+                    </div>
                   ) : (
-                    <div className="text-gray-400">
-                      {getFileIcon(item.ext, 'small')}
+                    <div>
+                      <div className="text-gray-400">
+                        {getFileIcon(item.ext, 'medium')}
+                      </div>
+                      <h2 className="line-clamp-1 text-gray-800">
+                        {item.name}.{item.ext}
+                      </h2>
+                      <span className="text-sm text-gray-600">
+                        {formatDate(item.createdAt)}
+                      </span>
                     </div>
                   )}
                 </div>
-                <h2 className="line-clamp-1 text-gray-800">{item.name}</h2>
-                <span className="text-sm text-gray-600">
-                  {formatDate(item.createdAt)}
-                </span>
+
                 {/* 右下角功能按钮 */}
                 <div className="absolute right-2 bottom-2 opacity-0 transition-opacity group-hover:opacity-100">
                   <Dropdown
@@ -251,10 +264,7 @@ export default function MyCloud() {
                 </div>
                 <div className="flex items-center space-x-4 text-sm text-gray-500">
                   <span>添加于 {formatDate(item.createdAt)}</span>
-                  <div className="flex items-center space-x-1">
-                    <AiFillFolder className="text-amber-400" />
-                    <span>参考文献</span>
-                  </div>
+
                   {/* 右下角功能按钮 */}
                   <div className="opacity-0 transition-opacity group-hover:opacity-100">
                     <Dropdown
