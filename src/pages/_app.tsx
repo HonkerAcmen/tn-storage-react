@@ -1,7 +1,7 @@
 import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import { FileDataProvider } from '@/contexts/FileDataContext';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, App as AntApp, message } from 'antd';
 import { useEffect } from 'react';
 import { isAuthed } from '@/utils/auth';
 import { useRouter } from 'next/router';
@@ -10,6 +10,16 @@ import { QueryProvider } from '@/providers/QueryProvider';
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const isLoginPage = router.pathname === '/login';
+
+  // 配置 message
+  useEffect(() => {
+    message.config({
+      top: 100,
+      duration: 2,
+      maxCount: 3,
+      rtl: false,
+    });
+  }, []);
 
   // 路由守卫
   useEffect(() => {
@@ -47,9 +57,11 @@ export default function App({ Component, pageProps }: AppProps) {
           },
         }}
       >
-        <FileDataProvider>
-          <Component {...pageProps} />
-        </FileDataProvider>
+        <AntApp>
+          <FileDataProvider>
+            <Component {...pageProps} />
+          </FileDataProvider>
+        </AntApp>
       </ConfigProvider>
     </QueryProvider>
   );

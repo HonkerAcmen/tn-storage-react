@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Form, Input, Button, Tabs, message, Checkbox } from 'antd';
+import { Form, Input, Button, Tabs, Checkbox, App } from 'antd';
 import type { TabsProps } from 'antd';
 import {
   AiOutlineUser,
@@ -8,11 +8,14 @@ import {
   AiOutlinePhone,
 } from 'react-icons/ai';
 import { LoginRequest } from '@/types/Request/auth';
-import { useLogin } from '@/network/hooks/login';
+import { useLogin, useRegister } from '@/network/hooks/login';
 
 export default function Login() {
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const login = useLogin();
+  const register = useRegister();
+
   // 登录表单提交
   const onLoginFinish = async (values: LoginRequest) => {
     setLoading(true);
@@ -22,7 +25,10 @@ export default function Login() {
       // 确保 token 已保存到 localStorage
       if (localStorage.getItem('token')) {
         message.success('登录成功！');
-        window.location.href = '/';
+        // 延迟跳转，确保 message 能够显示（增加延迟时间）
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
       }
     } catch {
       message.error('登录失败，请检查用户名和密码');
@@ -42,12 +48,7 @@ export default function Login() {
   }) => {
     setLoading(true);
     try {
-      // 这里可以调用注册 API
-      console.log('注册信息:', values);
-
-      // 模拟 API 调用
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      await register.mutateAsync(values);
       message.success('注册成功！请登录');
       // 切换到登录标签页
       setActiveTab('login');
