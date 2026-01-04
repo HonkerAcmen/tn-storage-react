@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import { Empty, Button, message } from 'antd';
 import type { MenuProps } from 'antd';
 import {
@@ -17,8 +18,21 @@ import { formatDate } from '../../../utils/fileUtils';
 import { useFileData } from '../../../contexts/FileDataContext';
 
 export default function Favorites() {
+  const router = useRouter();
   const { favoriteIds, removeFavorite } = useFavorites();
   const { allFiles, updateFile } = useFileData();
+
+  // 处理文件夹点击 - 导航到"所有文件"视图
+  const handleFolderClick = (folderId: string) => {
+    router.push(
+      {
+        pathname: router.pathname,
+        query: { ...router.query, view: 'sub2', folderId },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
 
   // 详情模态框状态
   const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
@@ -175,6 +189,11 @@ export default function Favorites() {
                   className="flex items-center justify-center"
                 />
               }
+              onClick={() => {
+                if (item.type === 'folder') {
+                  handleFolderClick(item.id);
+                }
+              }}
             />
           ))}
         </ul>

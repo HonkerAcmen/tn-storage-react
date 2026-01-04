@@ -9,7 +9,8 @@ import {
 import Header from './_components/Header';
 import { ConfigProvider, Menu, MenuProps } from 'antd';
 import MyCloud from './_components/MyCloud';
-import { JSX, useState } from 'react';
+import { JSX, useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import AllFiles from './_components/FilesHandle/AllFiles';
 import RecentFiles from './_components/FilesHandle/RecentFiles';
 import Favorites from './_components/FilesHandle/Favorites';
@@ -17,8 +18,16 @@ import DeletedFiles from './_components/FilesHandle/DeletedFiles';
 import UploadModal from './_components/UploadModal';
 
 export default function Home() {
+  const router = useRouter();
   const [seleId, setSeleId] = useState('sub1');
   const [showUploadModal, setShowUploadModal] = useState(false);
+
+  // 从 URL 参数读取视图
+  useEffect(() => {
+    if (router.query.view && typeof router.query.view === 'string') {
+      setSeleId(router.query.view);
+    }
+  }, [router.query.view]);
 
   const menuItems = [
     { key: 'sub1', label: '我的云', icon: <AiFillCloud /> },
@@ -28,7 +37,23 @@ export default function Home() {
     { key: 'sub5', label: '已删除文件', icon: <AiOutlineDelete /> },
   ];
 
-  const onClick: MenuProps['onClick'] = (e) => setSeleId(e.key);
+  const onClick: MenuProps['onClick'] = (e) => {
+    setSeleId(e.key);
+    // 更新 URL 参数
+    const newQuery = { ...router.query, view: e.key };
+    // 如果切换到非 MyCloud 视图，清除 folderId
+    if (e.key !== 'sub1') {
+      delete newQuery.folderId;
+    }
+    router.push(
+      {
+        pathname: router.pathname,
+        query: newQuery,
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
 
   const renderMap: Record<string, JSX.Element> = {
     sub1: <MyCloud />,

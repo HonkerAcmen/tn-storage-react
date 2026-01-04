@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import { Button, Dropdown, message } from 'antd';
 import type { MenuProps } from 'antd';
 import {
@@ -30,6 +31,7 @@ import FileDetailsModal from './FilesHandle/FileDetailsModal';
 import type { FileSystemNode } from '../../types/fileSystem';
 
 export default function MyCloud() {
+  const router = useRouter();
   const { allFiles, updateFile } = useFileData();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addDeletedFile } = useDeletedFiles();
@@ -49,6 +51,18 @@ export default function MyCloud() {
     } catch {
       message.error('更新文件失败');
     }
+  };
+
+  // 处理文件夹点击 - 导航到"所有文件"视图
+  const handleFolderClick = (folderId: string) => {
+    router.push(
+      {
+        pathname: router.pathname,
+        query: { ...router.query, view: 'sub2', folderId },
+      },
+      undefined,
+      { shallow: true }
+    );
   };
 
   // 处理文件操作
@@ -275,6 +289,11 @@ export default function MyCloud() {
               <div
                 key={item.id}
                 className="group relative flex h-32 cursor-pointer flex-col rounded-2xl border border-gray-100 p-4 transition duration-175 hover:bg-gray-100"
+                onClick={() => {
+                  if (item.type === 'folder') {
+                    handleFolderClick(item.id);
+                  }
+                }}
               >
                 <div className="mb-2">
                   {item.type === 'folder' ? (
@@ -318,6 +337,11 @@ export default function MyCloud() {
               <li
                 key={item.id}
                 className="group relative mb-2 flex h-20 cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-1 transition hover:bg-gray-100"
+                onClick={() => {
+                  if (item.type === 'folder') {
+                    handleFolderClick(item.id);
+                  }
+                }}
               >
                 <div className="flex items-center space-x-3">
                   <div className="text-gray-400">
@@ -368,6 +392,11 @@ export default function MyCloud() {
               <li
                 key={item.id}
                 className="group relative mb-2 flex h-16 cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-1 transition duration-150 hover:bg-gray-50"
+                onClick={() => {
+                  if (item.type === 'folder') {
+                    handleFolderClick(item.id);
+                  }
+                }}
               >
                 <div className="flex items-center space-x-3">
                   {item.type === 'folder' ? (

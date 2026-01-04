@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import { Empty, Button, message, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import {
@@ -15,7 +16,11 @@ import {
   AiOutlineEllipsis,
   AiFillFolder,
 } from 'react-icons/ai';
-import { FileSystemNode } from '../../../types/fileSystem';
+import {
+  FileSystemNode,
+  findPathToNode,
+  getChildrenByParentId,
+} from '../../../types/fileSystem';
 import FileListItem from '../../../components/FileListItem';
 import FileDetailsModal from './FileDetailsModal';
 import { useFavorites } from '../../../hooks/useFavorites';
@@ -24,6 +29,7 @@ import { useDeletedFiles } from '../../../hooks/useDeletedFiles';
 import { useFileData } from '../../../contexts/FileDataContext';
 import { getFileIcon, ICON_SIZE_LARGE } from '../../../utils/fileIcons';
 import { getFileDisplayName } from '../../../utils/fileUtils';
+import { Breadcrumb } from 'antd';
 
 interface MenuItemNameProps {
   key: number;
@@ -34,6 +40,12 @@ interface MenuItemNameProps {
 type SortType = 'latest' | 'oldest' | 'name' | 'type';
 
 export default function AllFiles() {
+  const router = useRouter();
+  const { fileTree, allFiles, updateFile } = useFileData();
+
+  // 获取当前文件夹ID，如果没有则显示所有文件
+  const currentFolderId = router.query.folderId as string | undefined;
+
   // 0: 列表模式, 1: 网格模式
   const [seleRadioItem, setSeleRadioItem] = useState(1);
 
@@ -64,16 +76,36 @@ export default function AllFiles() {
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addDeletedFile } = useDeletedFiles();
 
-  // 全局文件数据
-  const { allFiles, updateFile } = useFileData();
-
   // 详情模态框状态
   const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
+  // 获取当前要显示的文件列表
+  const currentFiles = useMemo(() => {
+    // 如果有 folderId，显示文件夹内容
+    if (currentFolderId) {
+      return getChildrenByParentId(fileTree, currentFolderId);
+    }
+    // 否则显示所有文件
+    return allFiles;
+  }, [currentFolderId, fileTree, allFiles]);
+
+  // 计算面包屑路径
+  const breadcrumbPath = useMemo(() => {
+    if (!currentFolderId) return [];
+    const path = findPathToNode(fileTree, currentFolderId);
+    // 确保路径包含根目录，如果第一个节点不是根目录，则添加根目录
+    if (path.length > 0 && path[0].id !== '1') {
+      // 如果路径不包含根目录，我们需要找到根目录
+      // 但通常 findPathToNode 应该总是从根开始，所以这里主要是确保逻辑正确
+      return path;
+    }
+    return path;
+  }, [fileTree, currentFolderId]);
+
   // 根据分组方式排序文件
   const sortedFiles = useMemo(() => {
-    const files = [...allFiles];
+    const files = [...currentFiles];
     const sortType: SortType =
       MenuItemName.key === 1
         ? 'latest'
@@ -111,7 +143,7 @@ export default function AllFiles() {
       default:
         return files;
     }
-  }, [allFiles, MenuItemName.key]);
+  }, [currentFiles, MenuItemName.key]);
 
   // 处理文件更新
   const handleFileUpdate = async (
@@ -123,6 +155,40 @@ export default function AllFiles() {
       message.success('文件信息已更新');
     } catch {
       message.error('更新文件失败');
+    }
+  };
+
+  // 处理文件夹点击 - 在当前页面进入文件夹
+  const handleFolderClick = (folderId: string) => {
+    router.push(
+      {
+        pathname: router.pathname,
+        query: { ...router.query, view: 'sub2', folderId },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
+
+  // 处理面包屑导航
+  const handleBreadcrumbClick = (targetId: string) => {
+    if (targetId === '1') {
+      // 点击根目录，清除 folderId
+      const newQuery: Record<string, string | string[] | undefined> = {
+        ...router.query,
+        view: 'sub2',
+      };
+      delete newQuery.folderId;
+      router.push(
+        {
+          pathname: router.pathname,
+          query: newQuery,
+        },
+        undefined,
+        { shallow: true }
+      );
+    } else {
+      handleFolderClick(targetId);
     }
   };
 
@@ -241,7 +307,7 @@ export default function AllFiles() {
             所有文件
           </p>
           <p className="mt-2 text-sm text-gray-500">
-            查看和管理所有文件和文件夹
+            {currentFolderId ? '查看文件夹内容' : '查看和管理所有文件和文件夹'}
           </p>
         </div>
 
@@ -281,6 +347,38 @@ export default function AllFiles() {
         </div>
       </div>
 
+      {/* 面包屑导航 */}
+      {currentFolderId && (
+        <Breadcrumb className="mb-4 px-4">
+          {/* 总是显示根目录按钮 */}
+          <Breadcrumb.Item
+            onClick={() => handleBreadcrumbClick('1')}
+            className="cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600"
+          >
+            所有文件
+          </Breadcrumb.Item>
+          {/* 显示路径中的其他节点（排除根节点，因为已经在上面显示了） */}
+          {breadcrumbPath
+            .filter((node) => node.id !== '1')
+            .map((node, index, filteredPath) => {
+              const isLast = index === filteredPath.length - 1;
+              return (
+                <Breadcrumb.Item
+                  key={node.id}
+                  onClick={() => !isLast && handleBreadcrumbClick(node.id)}
+                  className={
+                    !isLast
+                      ? 'cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600'
+                      : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
+                  }
+                >
+                  {node.name}
+                </Breadcrumb.Item>
+              );
+            })}
+        </Breadcrumb>
+      )}
+
       {/* 内容区域 */}
       {seleRadioItem === 0 ? (
         // 列表模式
@@ -297,7 +395,7 @@ export default function AllFiles() {
             className="py-12"
           />
         ) : (
-          <ul className="mr-8 flex flex-col space-y-2">
+          <ul className="mt-2 mr-8 flex flex-col space-y-2">
             {sortedFiles.map((item) => (
               <FileListItem
                 key={item.id}
@@ -324,6 +422,14 @@ export default function AllFiles() {
                     className="flex items-center justify-center"
                   />
                 }
+                onClick={() => {
+                  if (item.type === 'folder') {
+                    handleFolderClick(item.id);
+                  } else {
+                    setSelectedFile(item);
+                    setShowDetails(true);
+                  }
+                }}
               />
             ))}
           </ul>
@@ -349,8 +455,7 @@ export default function AllFiles() {
               className="group relative flex cursor-pointer flex-col items-center justify-start rounded-xl border border-transparent p-4 transition-all duration-200 hover:border-gray-200 hover:bg-gray-100"
               onClick={() => {
                 if (item.type === 'folder') {
-                  // 可以添加文件夹打开逻辑
-                  message.info(`打开文件夹: ${item.name}`);
+                  handleFolderClick(item.id);
                 } else {
                   // 打开文件详情
                   setSelectedFile(item);

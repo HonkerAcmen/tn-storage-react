@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import { Empty, Button, message, Modal } from 'antd';
 import type { MenuProps } from 'antd';
 import {
@@ -41,9 +42,22 @@ function formatDeletedTime(date: Date): string {
 }
 
 export default function DeletedFiles() {
+  const router = useRouter();
   const { deletedFiles, removeDeletedFile, clearDeletedFiles } =
     useDeletedFiles();
   const { updateFile } = useFileData();
+
+  // 处理文件夹点击 - 导航到"所有文件"视图
+  const handleFolderClick = (folderId: string) => {
+    router.push(
+      {
+        pathname: router.pathname,
+        query: { ...router.query, view: 'sub2', folderId },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
 
   // 详情模态框状态
   const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
@@ -228,6 +242,11 @@ export default function DeletedFiles() {
                     恢复
                   </Button>
                 }
+                onClick={() => {
+                  if (item.type === 'folder') {
+                    handleFolderClick(item.id);
+                  }
+                }}
               />
             );
           })}

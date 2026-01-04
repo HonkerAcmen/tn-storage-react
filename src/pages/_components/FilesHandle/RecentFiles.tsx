@@ -1,14 +1,29 @@
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import { Tabs, Tag } from 'antd';
 import type { TabsProps } from 'antd';
 import { AiOutlineClockCircle } from 'react-icons/ai';
 import FileListItem from '../../../components/FileListItem';
 import { formatRelativeTime, formatDate } from '../../../utils/fileUtils';
 import { useFileData } from '../../../contexts/FileDataContext';
+import type { FileSystemNode } from '../../../types/fileSystem';
 
 export default function RecentFiles() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('recent');
   const { allFiles } = useFileData();
+
+  // 处理文件夹点击 - 导航到"所有文件"视图
+  const handleFolderClick = (folderId: string) => {
+    router.push(
+      {
+        pathname: router.pathname,
+        query: { ...router.query, view: 'sub2', folderId },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
 
   // 最近访问的文件（按 updatedAt 排序）
   const recentlyAccessed = useMemo(() => {
@@ -53,6 +68,11 @@ export default function RecentFiles() {
               showSize
               showTime
               timeValue={`${formatRelativeTime(item.updatedAt)} • 修改于 ${formatDate(item.updatedAt)}`}
+              onClick={() => {
+                if (item.type === 'folder') {
+                  handleFolderClick(item.id);
+                }
+              }}
             />
           ))}
         </ul>
@@ -82,6 +102,11 @@ export default function RecentFiles() {
                   </Tag>
                 )
               }
+              onClick={() => {
+                if (item.type === 'folder') {
+                  handleFolderClick(item.id);
+                }
+              }}
             />
           ))}
         </ul>
@@ -111,6 +136,11 @@ export default function RecentFiles() {
                   </Tag>
                 )
               }
+              onClick={() => {
+                if (item.type === 'folder') {
+                  handleFolderClick(item.id);
+                }
+              }}
             />
           ))}
         </ul>
