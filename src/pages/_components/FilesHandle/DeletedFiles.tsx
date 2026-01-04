@@ -10,7 +10,7 @@ import {
 import { FileSystemNode } from '@/types/fileSystem';
 import FileDetailsModal from './FileDetailsModal';
 import FileListItem from '@/components/FileListItem';
-import { useDeletedFiles, useFileActions } from '@/features/files/hooks';
+import { useDeletedFiles } from '@/features/files/hooks';
 import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 
@@ -44,12 +44,6 @@ export default function DeletedFiles() {
   const { deletedFiles, removeDeletedFile, clearDeletedFiles } =
     useDeletedFiles();
   const { updateFile } = useFileData();
-  const { handleFolderNavigation } = useFileActions();
-
-  // 处理文件夹点击 - 导航到"所有文件"视图
-  const handleFolderClick = (folderId: string) => {
-    handleFolderNavigation(folderId, 'sub2');
-  };
 
   // 详情模态框状态
   const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
@@ -235,9 +229,9 @@ export default function DeletedFiles() {
                   </Button>
                 }
                 onClick={() => {
-                  if (item.type === 'folder') {
-                    handleFolderClick(item.id);
-                  }
+                  // 点击已删除的文件或文件夹时，打开详情
+                  setSelectedFile(item);
+                  setShowDetails(true);
                 }}
               />
             );

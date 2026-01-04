@@ -226,34 +226,40 @@ export default function AllFiles() {
 
       {/* 面包屑导航 */}
       {currentFolderId && (
-        <Breadcrumb className="mb-4 px-4">
-          {/* 总是显示根目录按钮 */}
-          <Breadcrumb.Item
-            onClick={() => handleBreadcrumbClick('1')}
-            className="cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600"
-          >
-            所有文件
-          </Breadcrumb.Item>
-          {/* 显示路径中的其他节点（排除根节点，因为已经在上面显示了） */}
-          {breadcrumbPath
-            .filter((node) => node.id !== '1')
-            .map((node, index, filteredPath) => {
-              const isLast = index === filteredPath.length - 1;
-              return (
-                <Breadcrumb.Item
-                  key={node.id}
-                  onClick={() => !isLast && handleBreadcrumbClick(node.id)}
-                  className={
-                    !isLast
-                      ? 'cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600'
-                      : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
-                  }
+        <Breadcrumb
+          className="mb-4 px-4"
+          items={[
+            {
+              title: (
+                <span
+                  onClick={() => handleBreadcrumbClick('1')}
+                  className="cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600"
                 >
-                  {node.name}
-                </Breadcrumb.Item>
-              );
-            })}
-        </Breadcrumb>
+                  所有文件
+                </span>
+              ),
+            },
+            ...breadcrumbPath
+              .filter((node) => node.id !== '1')
+              .map((node, index, filteredPath) => {
+                const isLast = index === filteredPath.length - 1;
+                return {
+                  title: (
+                    <span
+                      onClick={() => !isLast && handleBreadcrumbClick(node.id)}
+                      className={
+                        !isLast
+                          ? 'cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600'
+                          : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
+                      }
+                    >
+                      {node.name}
+                    </span>
+                  ),
+                };
+              }),
+          ]}
+        />
       )}
 
       {/* 内容区域 */}
@@ -409,6 +415,7 @@ export default function AllFiles() {
                         },
                         onFolderNavigate: handleFolderClick,
                       }),
+                      onClick: (e) => e.domEvent.stopPropagation(),
                     }}
                     trigger={['click']}
                     placement="bottomRight"

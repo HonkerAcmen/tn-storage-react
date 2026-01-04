@@ -205,7 +205,10 @@ export default function MyCloud() {
                 </div>
 
                 {/* 右下角功能按钮 */}
-                <div className="absolute right-2 bottom-2 opacity-0 transition-opacity group-hover:opacity-100">
+                <div
+                  className="absolute right-2 bottom-2 opacity-0 transition-opacity group-hover:opacity-100"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Dropdown
                     menu={{
                       items: getFileMenuItems(item, {
@@ -215,6 +218,9 @@ export default function MyCloud() {
                         },
                         onFolderNavigate: handleFolderClick,
                       }),
+                      onClick: (e) => {
+                        e.domEvent.stopPropagation();
+                      },
                     }}
                     trigger={['click']}
                     placement="bottomRight"
@@ -266,7 +272,10 @@ export default function MyCloud() {
                   <span>添加于 {formatDate(item.createdAt)}</span>
 
                   {/* 右下角功能按钮 */}
-                  <div className="opacity-0 transition-opacity group-hover:opacity-100">
+                  <div
+                    className="opacity-0 transition-opacity group-hover:opacity-100"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Dropdown
                       menu={{
                         items: getFileMenuItems(item, {
@@ -276,6 +285,9 @@ export default function MyCloud() {
                           },
                           onFolderNavigate: handleFolderClick,
                         }),
+                        onClick: (e) => {
+                          e.domEvent.stopPropagation();
+                        },
                       }}
                       trigger={['click']}
                       placement="bottomRight"
@@ -327,7 +339,10 @@ export default function MyCloud() {
                 <div className="flex items-center space-x-2">
                   <AiFillStar className="mr-2 h-6 w-6 text-amber-400" />
                   {/* 右下角功能按钮 */}
-                  <div className="opacity-0 transition-opacity group-hover:opacity-100">
+                  <div
+                    className="opacity-0 transition-opacity group-hover:opacity-100"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Dropdown
                       menu={{
                         items: getFileMenuItems(item, {
@@ -337,6 +352,9 @@ export default function MyCloud() {
                           },
                           onFolderNavigate: handleFolderClick,
                         }),
+                        onClick: (e) => {
+                          e.domEvent.stopPropagation();
+                        },
                       }}
                       trigger={['click']}
                       placement="bottomRight"

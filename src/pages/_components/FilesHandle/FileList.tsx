@@ -84,25 +84,27 @@ export default function FileList() {
   return (
     <div className="flex flex-col gap-4">
       {/* 5. 修复面包屑：基于路径数组渲染 */}
-      <Breadcrumb className="mt-4 px-4">
-        {breadcrumbPath.map((node, index) => {
+      <Breadcrumb
+        className="mt-4 px-4"
+        items={breadcrumbPath.map((node, index) => {
           // 是否是最后一个节点（当前目录）
           const isLast = index === breadcrumbPath.length - 1;
-          return (
-            <Breadcrumb.Item
-              key={node.id}
-              onClick={() => !isLast && handleNavigate(node.id)}
-              className={
-                !isLast
-                  ? 'cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600'
-                  : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
-              }
-            >
-              {node.name === 'root' ? '根目录' : node.name}
-            </Breadcrumb.Item>
-          );
+          return {
+            title: (
+              <span
+                onClick={() => !isLast && handleNavigate(node.id)}
+                className={
+                  !isLast
+                    ? 'cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600'
+                    : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
+                }
+              >
+                {node.name === 'root' ? '根目录' : node.name}
+              </span>
+            ),
+          };
         })}
-      </Breadcrumb>
+      />
 
       <ul className="grid w-full grid-cols-2 gap-6 p-4 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
         {siblings.map((v) => (

@@ -42,9 +42,7 @@ export default function FileListItem({
         {file.type === 'folder' ? (
           <AiFillFolder className={`${ICON_SIZE_MEDIUM} text-amber-400`} />
         ) : (
-          <div className="text-gray-400">
-            {getFileIcon(file.ext, 'small')}
-          </div>
+          <div className="text-gray-400">{getFileIcon(file.ext, 'small')}</div>
         )}
         <div className="flex flex-col">
           <Space>
@@ -76,7 +74,10 @@ export default function FileListItem({
         {actions}
         {menuItems && (
           <Dropdown
-            menu={{ items: menuItems }}
+            menu={{
+              items: menuItems,
+              onClick: (e) => e.domEvent.stopPropagation(),
+            }}
             trigger={['click']}
             placement="bottomRight"
           >
@@ -92,4 +93,3 @@ export default function FileListItem({
     </li>
   );
 }
-

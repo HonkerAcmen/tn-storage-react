@@ -97,20 +97,22 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
 
   // 删除文件（从树中移除）
   const deleteFile = useCallback(async (fileId: string) => {
-    try {
-      // 调用 API 删除文件
-      await deleteFileAPI(fileId);
+    // 先立即更新本地状态，确保 UI 快速响应
+    setFileTree((prevTree) => {
+      const updatedTree = deleteNodeFromTree(prevTree, fileId);
+      // 如果删除的是根节点，返回空根节点而不是 null
+      if (!updatedTree) {
+        return emptyRoot;
+      }
+      return updatedTree;
+    });
 
-      // 更新本地状态
-      setFileTree((prevTree) => {
-        return deleteNodeFromTree(prevTree, fileId) || prevTree;
-      });
+    // 然后调用 API 删除文件（异步操作，不阻塞 UI 更新）
+    try {
+      await deleteFileAPI(fileId);
     } catch (error) {
-      console.error('Failed to delete file:', error);
-      // 即使 API 调用失败，也更新本地状态（用于假数据模式）
-      setFileTree((prevTree) => {
-        return deleteNodeFromTree(prevTree, fileId) || prevTree;
-      });
+      console.error('Failed to delete file via API:', error);
+      // API 调用失败时，本地状态已经更新，保持删除状态
     }
   }, []);
 

@@ -30,10 +30,18 @@ export default function SearchResults({
   const [showDetails, setShowDetails] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState(initialKeyword || '');
   const inputRef = useRef<HTMLInputElement>(null);
+  const prevInitialKeywordRef = useRef<string>(initialKeyword || '');
 
-  // 同步外部传入的搜索关键词
+  // 同步外部传入的搜索关键词（使用异步更新避免级联渲染）
   useEffect(() => {
-    setSearchKeyword(initialKeyword || '');
+    const currentInitial = initialKeyword || '';
+    if (prevInitialKeywordRef.current !== currentInitial) {
+      prevInitialKeywordRef.current = currentInitial;
+      // 使用 setTimeout 异步更新，避免同步 setState
+      setTimeout(() => {
+        setSearchKeyword(currentInitial);
+      }, 0);
+    }
   }, [initialKeyword]);
 
   // 执行搜索
@@ -160,7 +168,7 @@ export default function SearchResults({
                         }}
                         className="flex items-center justify-center rounded-lg px-3 py-1 text-sm text-gray-600 transition hover:bg-gray-100 hover:text-[#5542f6]"
                       >
-                        <AiOutlineInfoCircle className="h-4 w-4 mr-1" />
+                        <AiOutlineInfoCircle className="mr-1 h-4 w-4" />
                         详情
                       </button>
                     }
@@ -218,4 +226,3 @@ export default function SearchResults({
     </>
   );
 }
-

@@ -15,7 +15,7 @@ export function useFileActions() {
   const router = useRouter();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addDeletedFile } = useDeletedFiles();
-  const { updateFile } = useFileData();
+  const { updateFile, deleteFile } = useFileData();
 
   /**
    * 处理文件操作
@@ -40,8 +40,15 @@ export function useFileActions() {
           fileOperations.renameFile(item, updateFile);
           break;
         case 'delete':
+          // 先添加到已删除列表
           addDeletedFile(item);
+          // 立即显示成功消息（因为删除操作会立即更新 UI）
           message.success(`已删除 ${item.name}`);
+          // 然后从文件树中删除（这会立即更新 UI）
+          deleteFile(item.id).catch((error) => {
+            console.error('Failed to delete file from tree:', error);
+            // 如果删除失败，可以在这里处理错误（但本地状态已经更新）
+          });
           break;
         case 'details':
           options?.onDetailsOpen?.(item);
@@ -61,7 +68,7 @@ export function useFileActions() {
           break;
       }
     },
-    [toggleFavorite, isFavorite, addDeletedFile, updateFile]
+    [toggleFavorite, isFavorite, addDeletedFile, updateFile, deleteFile]
   );
 
   /**
