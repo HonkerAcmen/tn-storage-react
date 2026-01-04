@@ -13,25 +13,20 @@ import {
 import { FileSystemNode } from '../../../types/fileSystem';
 import FileDetailsModal from './FileDetailsModal';
 import FileListItem from '../../../components/FileListItem';
-import { useFavorites } from '../../../hooks/useFavorites';
-import { formatDate } from '../../../utils/fileUtils';
+import { useFileActions, useFileMenu, useFavorites } from '../../../features/files/hooks';
+import { formatDate } from '../../../utils/format/formatters';
 import { useFileData } from '../../../contexts/FileDataContext';
 
 export default function Favorites() {
   const router = useRouter();
   const { favoriteIds, removeFavorite } = useFavorites();
   const { allFiles, updateFile } = useFileData();
+  const { handleFileAction, handleFolderNavigation } = useFileActions();
+  const { getFileMenuItems } = useFileMenu();
 
   // 处理文件夹点击 - 导航到"所有文件"视图
   const handleFolderClick = (folderId: string) => {
-    router.push(
-      {
-        pathname: router.pathname,
-        query: { ...router.query, view: 'sub2', folderId },
-      },
-      undefined,
-      { shallow: true }
-    );
+    handleFolderNavigation(folderId, 'sub2');
   };
 
   // 详情模态框状态
@@ -62,90 +57,6 @@ export default function Favorites() {
     message.success('已取消收藏');
   };
 
-  // 处理文件操作
-  const handleFileAction = (action: string, item: FileSystemNode) => {
-    switch (action) {
-      case 'download':
-        message.info(`正在下载 ${item.name}...`);
-        break;
-      case 'share':
-        message.info(`正在分享 ${item.name}...`);
-        break;
-      case 'rename':
-        message.info(`重命名 ${item.name}...`);
-        break;
-      case 'delete':
-        message.warning(`删除 ${item.name}...`);
-        break;
-      case 'details':
-        setSelectedFile(item);
-        setShowDetails(true);
-        break;
-      default:
-        break;
-    }
-  };
-
-  // 获取文件操作菜单
-  const getFileMenuItems = (item: FileSystemNode): MenuProps['items'] => {
-    return [
-      {
-        key: 'download',
-        label: (
-          <div className="flex items-center space-x-2">
-            <AiOutlineDownload className="h-4 w-4" />
-            <span>下载</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('download', item),
-      },
-      {
-        key: 'share',
-        label: (
-          <div className="flex items-center space-x-2">
-            <AiOutlineShareAlt className="h-4 w-4" />
-            <span>分享</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('share', item),
-      },
-      {
-        key: 'rename',
-        label: (
-          <div className="flex items-center space-x-2">
-            <AiOutlineEdit className="h-4 w-4" />
-            <span>重命名</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('rename', item),
-      },
-      {
-        key: 'details',
-        label: (
-          <div className="flex items-center space-x-2">
-            <AiOutlineInfoCircle className="h-4 w-4" />
-            <span>查看详情</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('details', item),
-      },
-      {
-        type: 'divider',
-      },
-      {
-        key: 'delete',
-        label: (
-          <div className="flex items-center space-x-2 text-red-500">
-            <AiOutlineDelete className="h-4 w-4" />
-            <span>删除</span>
-          </div>
-        ),
-        danger: true,
-        onClick: () => handleFileAction('delete', item),
-      },
-    ];
-  };
-
   return (
     <div className="ml-4">
       <div className="mt-4 mb-6">
@@ -173,7 +84,13 @@ export default function Favorites() {
             <FileListItem
               key={item.id}
               file={item}
-              menuItems={getFileMenuItems(item)}
+              menuItems={getFileMenuItems(item, {
+                onDetailsOpen: (file: FileSystemNode) => {
+                  setSelectedFile(file);
+                  setShowDetails(true);
+                },
+                onFolderNavigate: handleFolderClick,
+              })}
               showSize
               showType
               showTime

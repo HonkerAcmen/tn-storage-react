@@ -8,11 +8,6 @@ import {
   AiOutlineMenu,
   AiFillStar,
   AiOutlineStar,
-  AiOutlineDownload,
-  AiOutlineShareAlt,
-  AiOutlineEdit,
-  AiOutlineDelete,
-  AiOutlineInfoCircle,
   AiOutlineEllipsis,
   AiFillFolder,
 } from 'react-icons/ai';
@@ -23,12 +18,16 @@ import {
 } from '../../../types/fileSystem';
 import FileListItem from '../../../components/FileListItem';
 import FileDetailsModal from './FileDetailsModal';
-import { useFavorites } from '../../../hooks/useFavorites';
-import { formatDate } from '../../../utils/fileUtils';
-import { useDeletedFiles } from '../../../hooks/useDeletedFiles';
+import { useFileActions, useFileMenu } from '../../../features/files/hooks';
+import {
+  formatDate,
+  getFileDisplayName,
+} from '../../../utils/format/formatters';
 import { useFileData } from '../../../contexts/FileDataContext';
-import { getFileIcon, ICON_SIZE_LARGE } from '../../../utils/fileIcons';
-import { getFileDisplayName } from '../../../utils/fileUtils';
+import {
+  getFileIcon,
+  ICON_SIZE_LARGE,
+} from '../../../components/files/FileIcon';
 import { Breadcrumb } from 'antd';
 
 interface MenuItemNameProps {
@@ -72,9 +71,16 @@ export default function AllFiles() {
     },
   }));
 
-  // 收藏和删除文件管理
-  const { toggleFavorite, isFavorite } = useFavorites();
-  const { addDeletedFile } = useDeletedFiles();
+  // 文件操作 hooks
+  const fileActions = useFileActions();
+  const fileMenu = useFileMenu();
+  const {
+    handleFileAction,
+    handleFolderNavigation,
+    handleBackToRoot,
+    isFavorite,
+  } = fileActions;
+  const { getFileMenuItems } = fileMenu;
 
   // 详情模态框状态
   const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
@@ -160,142 +166,16 @@ export default function AllFiles() {
 
   // 处理文件夹点击 - 在当前页面进入文件夹
   const handleFolderClick = (folderId: string) => {
-    router.push(
-      {
-        pathname: router.pathname,
-        query: { ...router.query, view: 'sub2', folderId },
-      },
-      undefined,
-      { shallow: true }
-    );
+    handleFolderNavigation(folderId, 'sub2');
   };
 
   // 处理面包屑导航
   const handleBreadcrumbClick = (targetId: string) => {
     if (targetId === '1') {
-      // 点击根目录，清除 folderId
-      const newQuery: Record<string, string | string[] | undefined> = {
-        ...router.query,
-        view: 'sub2',
-      };
-      delete newQuery.folderId;
-      router.push(
-        {
-          pathname: router.pathname,
-          query: newQuery,
-        },
-        undefined,
-        { shallow: true }
-      );
+      handleBackToRoot();
     } else {
       handleFolderClick(targetId);
     }
-  };
-
-  // 处理文件操作
-  const handleFileAction = (action: string, item: FileSystemNode) => {
-    switch (action) {
-      case 'download':
-        message.info(`正在下载 ${item.name}...`);
-        break;
-      case 'share':
-        message.info(`正在分享 ${item.name}...`);
-        break;
-      case 'rename':
-        message.info(`重命名 ${item.name}...`);
-        break;
-      case 'delete':
-        addDeletedFile(item);
-        message.success(`已删除 ${item.name}`);
-        break;
-      case 'details':
-        setSelectedFile(item);
-        setShowDetails(true);
-        break;
-      case 'favorite': {
-        const wasFavorite = isFavorite(item.id);
-        toggleFavorite(item.id);
-        message.success(wasFavorite ? '已取消收藏' : '已添加到收藏');
-        break;
-      }
-      default:
-        break;
-    }
-  };
-
-  // 获取文件操作菜单
-  const getFileMenuItems = (item: FileSystemNode): MenuProps['items'] => {
-    const isFav = isFavorite(item.id);
-    return [
-      {
-        key: 'download',
-        label: (
-          <div className="flex items-center space-x-2">
-            <AiOutlineDownload className="h-4 w-4" />
-            <span>下载</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('download', item),
-      },
-      {
-        key: 'share',
-        label: (
-          <div className="flex items-center space-x-2">
-            <AiOutlineShareAlt className="h-4 w-4" />
-            <span>分享</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('share', item),
-      },
-      {
-        key: 'rename',
-        label: (
-          <div className="flex items-center space-x-2">
-            <AiOutlineEdit className="h-4 w-4" />
-            <span>重命名</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('rename', item),
-      },
-      {
-        key: 'favorite',
-        label: (
-          <div className="flex items-center space-x-2">
-            {isFav ? (
-              <AiFillStar className="h-4 w-4 text-amber-400" />
-            ) : (
-              <AiOutlineStar className="h-4 w-4" />
-            )}
-            <span>{isFav ? '取消收藏' : '添加到收藏'}</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('favorite', item),
-      },
-      {
-        key: 'details',
-        label: (
-          <div className="flex items-center space-x-2">
-            <AiOutlineInfoCircle className="h-4 w-4" />
-            <span>查看详情</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('details', item),
-      },
-      {
-        type: 'divider',
-      },
-      {
-        key: 'delete',
-        label: (
-          <div className="flex items-center space-x-2 text-red-500">
-            <AiOutlineDelete className="h-4 w-4" />
-            <span>删除</span>
-          </div>
-        ),
-        danger: true,
-        onClick: () => handleFileAction('delete', item),
-      },
-    ];
   };
 
   return (
@@ -400,7 +280,13 @@ export default function AllFiles() {
               <FileListItem
                 key={item.id}
                 file={item}
-                menuItems={getFileMenuItems(item)}
+                menuItems={getFileMenuItems(item, {
+                  onDetailsOpen: (file: FileSystemNode) => {
+                    setSelectedFile(file);
+                    setShowDetails(true);
+                  },
+                  onFolderNavigate: handleFolderClick,
+                })}
                 showSize
                 showType
                 showTime
@@ -417,7 +303,13 @@ export default function AllFiles() {
                     }
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleFileAction('favorite', item);
+                      handleFileAction('favorite', item, {
+                        onDetailsOpen: (file: FileSystemNode) => {
+                          setSelectedFile(file);
+                          setShowDetails(true);
+                        },
+                        onFolderNavigate: handleFolderClick,
+                      });
                     }}
                     className="flex items-center justify-center"
                   />
@@ -496,7 +388,13 @@ export default function AllFiles() {
                       }
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleFileAction('favorite', item);
+                        handleFileAction('favorite', item, {
+                          onDetailsOpen: (file: FileSystemNode) => {
+                            setSelectedFile(file);
+                            setShowDetails(true);
+                          },
+                          onFolderNavigate: handleFolderClick,
+                        });
                       }}
                       className="flex items-center justify-center"
                     />
@@ -506,7 +404,15 @@ export default function AllFiles() {
                 {/* 右下角功能按钮 */}
                 <div className="mt-2">
                   <Dropdown
-                    menu={{ items: getFileMenuItems(item) }}
+                    menu={{
+                      items: getFileMenuItems(item, {
+                        onDetailsOpen: (file: FileSystemNode) => {
+                          setSelectedFile(file);
+                          setShowDetails(true);
+                        },
+                        onFolderNavigate: handleFolderClick,
+                      }),
+                    }}
                     trigger={['click']}
                     placement="bottomRight"
                   >

@@ -8,7 +8,7 @@ import {
   useEffect,
 } from 'react';
 import type { FileSystemNode } from '../types/fileSystem';
-import { getAllNodes, updateNodeInTree } from '../utils/fileSystemUtils';
+import { getAllNodes, updateNodeInTree, deleteNodeFromTree } from '../utils/fileSystem/fileSystemUtils';
 import {
   getFileSystemTree,
   updateFile as updateFileAPI,
@@ -103,49 +103,13 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
 
       // 更新本地状态
       setFileTree((prevTree) => {
-        const removeNodeFromTree = (
-          node: FileSystemNode
-        ): FileSystemNode | null => {
-          if (node.id === fileId) {
-            return null; // 删除当前节点
-          }
-          if (node.type === 'folder' && node.children) {
-            const filteredChildren = node.children
-              .map(removeNodeFromTree)
-              .filter((child): child is FileSystemNode => child !== null);
-            return {
-              ...node,
-              children: filteredChildren,
-            };
-          }
-          return node;
-        };
-        const result = removeNodeFromTree(prevTree);
-        return result || prevTree;
+        return deleteNodeFromTree(prevTree, fileId) || prevTree;
       });
     } catch (error) {
       console.error('Failed to delete file:', error);
       // 即使 API 调用失败，也更新本地状态（用于假数据模式）
       setFileTree((prevTree) => {
-        const removeNodeFromTree = (
-          node: FileSystemNode
-        ): FileSystemNode | null => {
-          if (node.id === fileId) {
-            return null;
-          }
-          if (node.type === 'folder' && node.children) {
-            const filteredChildren = node.children
-              .map(removeNodeFromTree)
-              .filter((child): child is FileSystemNode => child !== null);
-            return {
-              ...node,
-              children: filteredChildren,
-            };
-          }
-          return node;
-        };
-        const result = removeNodeFromTree(prevTree);
-        return result || prevTree;
+        return deleteNodeFromTree(prevTree, fileId) || prevTree;
       });
     }
   }, []);

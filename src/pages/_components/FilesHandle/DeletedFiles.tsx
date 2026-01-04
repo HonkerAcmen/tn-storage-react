@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/router';
 import { Empty, Button, message, Modal } from 'antd';
 import type { MenuProps } from 'antd';
 import {
@@ -11,8 +10,8 @@ import {
 import { FileSystemNode } from '../../../types/fileSystem';
 import FileDetailsModal from './FileDetailsModal';
 import FileListItem from '../../../components/FileListItem';
-import { useDeletedFiles } from '../../../hooks/useDeletedFiles';
-import { formatDate } from '../../../utils/fileUtils';
+import { useDeletedFiles, useFileActions } from '../../../features/files/hooks';
+import { formatDate } from '../../../utils/format/formatters';
 import { useFileData } from '../../../contexts/FileDataContext';
 
 const { confirm } = Modal;
@@ -42,21 +41,14 @@ function formatDeletedTime(date: Date): string {
 }
 
 export default function DeletedFiles() {
-  const router = useRouter();
   const { deletedFiles, removeDeletedFile, clearDeletedFiles } =
     useDeletedFiles();
   const { updateFile } = useFileData();
+  const { handleFolderNavigation } = useFileActions();
 
   // 处理文件夹点击 - 导航到"所有文件"视图
   const handleFolderClick = (folderId: string) => {
-    router.push(
-      {
-        pathname: router.pathname,
-        query: { ...router.query, view: 'sub2', folderId },
-      },
-      undefined,
-      { shallow: true }
-    );
+    handleFolderNavigation(folderId, 'sub2');
   };
 
   // 详情模态框状态
@@ -271,4 +263,4 @@ export default function DeletedFiles() {
 export {
   useDeletedFiles,
   type DeletedFileItem,
-} from '../../../hooks/useDeletedFiles';
+} from '../../../features/files/hooks';

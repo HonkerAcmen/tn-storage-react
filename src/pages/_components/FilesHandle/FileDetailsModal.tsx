@@ -31,8 +31,8 @@ import {
 } from 'react-icons/ai';
 import { FileSystemNode } from '../../../types/fileSystem';
 import { findPathToNode } from '../../../types/fileSystem';
-import { getFileIcon } from '../../../utils/fileIcons';
-import { formatFileSize, formatDateTime, getFileDisplayName } from '../../../utils/fileUtils';
+import { getFileIcon } from '../../../components/files/FileIcon';
+import { formatFileSize, formatDateTime, getFileDisplayName } from '../../../utils/format/formatters';
 import { useFileData } from '../../../contexts/FileDataContext';
 
 interface FileDetailsModalProps {

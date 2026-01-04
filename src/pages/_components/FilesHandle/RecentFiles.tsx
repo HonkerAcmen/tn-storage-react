@@ -4,7 +4,7 @@ import { Tabs, Tag } from 'antd';
 import type { TabsProps } from 'antd';
 import { AiOutlineClockCircle } from 'react-icons/ai';
 import FileListItem from '../../../components/FileListItem';
-import { formatRelativeTime, formatDate } from '../../../utils/fileUtils';
+import { formatRelativeTime, formatDate } from '../../../utils/format/formatters';
 import { useFileData } from '../../../contexts/FileDataContext';
 import type { FileSystemNode } from '../../../types/fileSystem';
 

@@ -23,18 +23,17 @@ import {
 } from 'react-icons/ai';
 import EChart from '@/components/Echart';
 import { useFileData } from '../../contexts/FileDataContext';
-import { useFavorites } from '../../hooks/useFavorites';
-import { useDeletedFiles } from '../../hooks/useDeletedFiles';
-import { formatDate, formatFileSize } from '../../utils/fileUtils';
-import { getFileIcon } from '../../utils/fileIcons';
+import { useFileActions, useFileMenu } from '../../features/files/hooks';
+import { formatDate, formatFileSize } from '../../utils/format/formatters';
+import { getFileIcon } from '../../components/files/FileIcon';
 import FileDetailsModal from './FilesHandle/FileDetailsModal';
 import type { FileSystemNode } from '../../types/fileSystem';
 
 export default function MyCloud() {
   const router = useRouter();
   const { allFiles, updateFile } = useFileData();
-  const { toggleFavorite, isFavorite } = useFavorites();
-  const { addDeletedFile } = useDeletedFiles();
+  const { handleFileAction, handleFolderNavigation, isFavorite } = useFileActions();
+  const { getFileMenuItems } = useFileMenu();
 
   // 详情模态框状态
   const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
@@ -55,120 +54,7 @@ export default function MyCloud() {
 
   // 处理文件夹点击 - 导航到"所有文件"视图
   const handleFolderClick = (folderId: string) => {
-    router.push(
-      {
-        pathname: router.pathname,
-        query: { ...router.query, view: 'sub2', folderId },
-      },
-      undefined,
-      { shallow: true }
-    );
-  };
-
-  // 处理文件操作
-  const handleFileAction = (action: string, item: FileSystemNode) => {
-    switch (action) {
-      case 'download':
-        message.info(`正在下载 ${item.name}...`);
-        break;
-      case 'share':
-        message.info(`正在分享 ${item.name}...`);
-        break;
-      case 'rename':
-        message.info(`重命名 ${item.name}...`);
-        break;
-      case 'delete':
-        addDeletedFile(item);
-        message.success(`已删除 ${item.name}`);
-        break;
-      case 'details':
-        setSelectedFile(item);
-        setShowDetails(true);
-        break;
-      case 'favorite': {
-        const wasFavorite = isFavorite(item.id);
-        toggleFavorite(item.id);
-        message.success(wasFavorite ? '已取消收藏' : '已添加到收藏');
-        break;
-      }
-      default:
-        break;
-    }
-  };
-
-  // 获取文件操作菜单
-  const getFileMenuItems = (item: FileSystemNode): MenuProps['items'] => {
-    const isFav = isFavorite(item.id);
-    return [
-      {
-        key: 'download',
-        label: (
-          <div className="flex items-center space-x-2">
-            <AiOutlineDownload className="h-4 w-4" />
-            <span>下载</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('download', item),
-      },
-      {
-        key: 'share',
-        label: (
-          <div className="flex items-center space-x-2">
-            <AiOutlineShareAlt className="h-4 w-4" />
-            <span>分享</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('share', item),
-      },
-      {
-        key: 'rename',
-        label: (
-          <div className="flex items-center space-x-2">
-            <AiOutlineEdit className="h-4 w-4" />
-            <span>重命名</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('rename', item),
-      },
-      {
-        key: 'favorite',
-        label: (
-          <div className="flex items-center space-x-2">
-            {isFav ? (
-              <AiFillStar className="h-4 w-4 text-amber-400" />
-            ) : (
-              <AiOutlineStar className="h-4 w-4" />
-            )}
-            <span>{isFav ? '取消收藏' : '添加到收藏'}</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('favorite', item),
-      },
-      {
-        key: 'details',
-        label: (
-          <div className="flex items-center space-x-2">
-            <AiOutlineInfoCircle className="h-4 w-4" />
-            <span>查看详情</span>
-          </div>
-        ),
-        onClick: () => handleFileAction('details', item),
-      },
-      {
-        type: 'divider',
-      },
-      {
-        key: 'delete',
-        label: (
-          <div className="flex items-center space-x-2 text-red-500">
-            <AiOutlineDelete className="h-4 w-4" />
-            <span>删除</span>
-          </div>
-        ),
-        danger: true,
-        onClick: () => handleFileAction('delete', item),
-      },
-    ];
+    handleFolderNavigation(folderId, 'sub2');
   };
 
   // 获取最近上传的文件（按创建时间排序，取前4个）
@@ -311,7 +197,13 @@ export default function MyCloud() {
                 {/* 右下角功能按钮 */}
                 <div className="absolute bottom-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
                   <Dropdown
-                    menu={{ items: getFileMenuItems(item) }}
+                    menu={{ items: getFileMenuItems(item, {
+                      onDetailsOpen: (file: FileSystemNode) => {
+                        setSelectedFile(file);
+                        setShowDetails(true);
+                      },
+                      onFolderNavigate: handleFolderClick,
+                    }) }}
                     trigger={['click']}
                     placement="bottomRight"
                   >
@@ -365,7 +257,13 @@ export default function MyCloud() {
                   {/* 右下角功能按钮 */}
                   <div className="opacity-0 transition-opacity group-hover:opacity-100">
                     <Dropdown
-                      menu={{ items: getFileMenuItems(item) }}
+                      menu={{ items: getFileMenuItems(item, {
+                      onDetailsOpen: (file: FileSystemNode) => {
+                        setSelectedFile(file);
+                        setShowDetails(true);
+                      },
+                      onFolderNavigate: handleFolderClick,
+                    }) }}
                       trigger={['click']}
                       placement="bottomRight"
                     >
@@ -416,7 +314,13 @@ export default function MyCloud() {
                   {/* 右下角功能按钮 */}
                   <div className="opacity-0 transition-opacity group-hover:opacity-100">
                     <Dropdown
-                      menu={{ items: getFileMenuItems(item) }}
+                      menu={{ items: getFileMenuItems(item, {
+                      onDetailsOpen: (file: FileSystemNode) => {
+                        setSelectedFile(file);
+                        setShowDetails(true);
+                      },
+                      onFolderNavigate: handleFolderClick,
+                    }) }}
                       trigger={['click']}
                       placement="bottomRight"
                     >
