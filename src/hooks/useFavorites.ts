@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { getFromStorage, saveToStorage } from '@/utils/storage';
-import { getAllFiles } from '@/utils/fileSystem/fileSystemUtils';
-import { fileDatas } from '@/mock/index';
+import { openMock, initializeMockFavorites } from '@/mock/index';
 
 const FAVORITES_STORAGE_KEY = 'favorites';
 
@@ -21,13 +20,13 @@ function saveFavoritesToStorage(favorites: string[]): void {
 
 /**
  * 初始化默认收藏数据
+ * 只在 Mock 模式下初始化，真实环境下返回空数组
  */
 function initializeDefaultFavorites(): string[] {
-  if (!fileDatas) {
+  if (!openMock) {
     return [];
   }
-  const allFiles = getAllFiles(fileDatas);
-  const defaultFavorites = allFiles.slice(0, 5).map((file) => file.id);
+  const defaultFavorites = initializeMockFavorites();
   saveFavoritesToStorage(defaultFavorites);
   return defaultFavorites;
 }

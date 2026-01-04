@@ -84,12 +84,12 @@ export default function Home() {
             <p className="flex flex-2">上传文件</p>
           </div>
 
-          <Menu
-            onClick={onClick}
-            selectedKeys={[currentView]} // 让选中状态与当前一致
-            style={{ width: 240 }}
-            items={menuItems}
-          />
+            <Menu
+              onClick={onClick}
+              selectedKeys={[currentView]} // 让选中状态与当前一致
+              style={{ width: 240 }}
+              items={menuItems}
+            />
         </aside>
 
         {/* 主内容区 */}

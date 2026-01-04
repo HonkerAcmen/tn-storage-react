@@ -1,10 +1,12 @@
 import type { FileSystemNode } from '@/types/fileSystem';
-import { openMock } from '@/mock/index';
-import { generateFileSystem } from '@/mock/randomFileData';
+import { openMock, getMockFileSystem } from '@/mock/index';
 
 /**
  * 文件系统 API 服务
- * 根据 openMock 开关决定使用假数据还是真实 API
+ * 根据 openMock 开关决定使用 Mock 数据还是真实 API
+ * 
+ * 当 openMock = true 时，使用 Mock 数据服务
+ * 当 openMock = false 时，调用真实后端 API
  */
 
 /**
@@ -12,9 +14,12 @@ import { generateFileSystem } from '@/mock/randomFileData';
  */
 export async function getFileSystemTree(): Promise<FileSystemNode> {
   if (openMock) {
-    // 使用假数据
-    const seed = typeof window !== 'undefined' ? Date.now() : 12345;
-    return generateFileSystem(3, 6, seed);
+    // 使用 Mock 数据
+    const mockData = getMockFileSystem();
+    if (!mockData) {
+      throw new Error('Failed to generate mock file system');
+    }
+    return mockData;
   } else {
     // 调用真实 API
     try {

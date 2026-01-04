@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { getFromStorage, saveToStorage } from '@/utils/storage';
-import { getAllFiles } from '@/utils/fileSystem/fileSystemUtils';
-import { fileDatas } from '@/mock/index';
+import { openMock, initializeMockDeletedFiles } from '@/mock/index';
 import type { FileSystemNode } from '@/types/fileSystem';
 
 const DELETED_FILES_STORAGE_KEY = 'deletedFiles';
@@ -15,10 +14,23 @@ export interface DeletedFileItem {
 }
 
 /**
+ * 从存储中读取的原始格式（日期为字符串）
+ */
+interface DeletedFileItemRaw {
+  file: FileSystemNode & {
+    createdAt: string | Date;
+    updatedAt: string | Date;
+  };
+  deletedAt: string | Date;
+}
+
+/**
  * 从 localStorage 获取已删除文件列表
  */
 function getDeletedFilesFromStorage(): DeletedFileItem[] {
-  const stored = getFromStorage<any[]>(DELETED_FILES_STORAGE_KEY);
+  const stored = getFromStorage<DeletedFileItemRaw[]>(
+    DELETED_FILES_STORAGE_KEY
+  );
   if (!stored) return [];
 
   // 将日期字符串转换回 Date 对象
@@ -34,16 +46,13 @@ function getDeletedFilesFromStorage(): DeletedFileItem[] {
 
 /**
  * 初始化默认已删除文件数据
+ * 只在 Mock 模式下初始化，真实环境下返回空数组
  */
 function initializeDefaultDeletedFiles(): DeletedFileItem[] {
-  if (!fileDatas) {
+  if (!openMock) {
     return [];
   }
-  const allFiles = getAllFiles(fileDatas);
-  const defaultDeleted = allFiles.slice(0, 3).map((file) => ({
-    file,
-    deletedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000), // 随机删除时间（最近7天内）
-  }));
+  const defaultDeleted = initializeMockDeletedFiles();
   saveToStorage(DELETED_FILES_STORAGE_KEY, defaultDeleted);
   return defaultDeleted;
 }
@@ -99,4 +108,3 @@ export function useDeletedFiles() {
     clearDeletedFiles,
   };
 }
-

@@ -92,14 +92,14 @@ export default function FileList() {
           return {
             title: (
               <span
-                onClick={() => !isLast && handleNavigate(node.id)}
-                className={
-                  !isLast
-                    ? 'cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600'
-                    : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
-                }
-              >
-                {node.name === 'root' ? '根目录' : node.name}
+              onClick={() => !isLast && handleNavigate(node.id)}
+              className={
+                !isLast
+                  ? 'cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600'
+                  : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
+              }
+            >
+              {node.name === 'root' ? '根目录' : node.name}
               </span>
             ),
           };

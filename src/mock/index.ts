@@ -1,7 +1,15 @@
-import { generateFileSystem } from './randomFileData';
-
-// Mock 数据开关：设置为 true 时使用假数据，false 时使用真实 API
+/**
+ * Mock 数据配置
+ * 
+ * openMock: Mock 数据开关
+ * - true: 使用 Mock 数据（开发/测试环境）
+ * - false: 使用真实 API（生产环境）
+ * 
+ * 切换方式：
+ * 1. 开发环境：设置为 true
+ * 2. 生产环境：设置为 false 并确保后端 API 可用
+ */
 export const openMock = true;
 
-// 当 openMock 为 true 时，导出假数据
-export const fileDatas = openMock ? generateFileSystem(3, 6) : null;
+// 导出 Mock 服务函数
+export * from './mockService';

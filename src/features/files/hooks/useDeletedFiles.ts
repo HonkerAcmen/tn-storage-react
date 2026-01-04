@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { getFromStorage, saveToStorage } from '@/utils/storage';
-import { getAllFiles } from '@/utils/fileSystem/fileSystemUtils';
-import { fileDatas } from '@/mock/index';
+import { openMock, initializeMockDeletedFiles } from '@/mock/index';
 import type { FileSystemNode } from '@/types/fileSystem';
 
 const DELETED_FILES_STORAGE_KEY = 'deletedFiles';
@@ -47,16 +46,13 @@ function getDeletedFilesFromStorage(): DeletedFileItem[] {
 
 /**
  * 初始化默认已删除文件数据
+ * 只在 Mock 模式下初始化，真实环境下返回空数组
  */
 function initializeDefaultDeletedFiles(): DeletedFileItem[] {
-  if (!fileDatas) {
+  if (!openMock) {
     return [];
   }
-  const allFiles = getAllFiles(fileDatas);
-  const defaultDeleted = allFiles.slice(0, 3).map((file) => ({
-    file,
-    deletedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000), // 随机删除时间（最近7天内）
-  }));
+  const defaultDeleted = initializeMockDeletedFiles();
   saveToStorage(DELETED_FILES_STORAGE_KEY, defaultDeleted);
   return defaultDeleted;
 }
