@@ -7,7 +7,7 @@ import {
   AiTwotoneClockCircle,
 } from 'react-icons/ai';
 import Header from './_components/Header';
-import { ConfigProvider, Menu, MenuProps } from 'antd';
+import { Menu, MenuProps } from 'antd';
 import MyCloud from './_components/MyCloud';
 import { JSX, useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
@@ -84,26 +84,12 @@ export default function Home() {
             <p className="flex flex-2">上传文件</p>
           </div>
 
-          <ConfigProvider
-            theme={{
-              components: {
-                Menu: {
-                  itemSelectedBg: '#EBEBEB',
-                  itemSelectedColor: '#3B3B3B',
-                  itemActiveBg: '#DEDEDE',
-                  itemHeight: 50,
-                  itemColor: '#2e2c34',
-                },
-              },
-            }}
-          >
-            <Menu
-              onClick={onClick}
-              selectedKeys={[currentView]} // 让选中状态与当前一致
-              style={{ width: 240 }}
-              items={menuItems}
-            />
-          </ConfigProvider>
+          <Menu
+            onClick={onClick}
+            selectedKeys={[currentView]} // 让选中状态与当前一致
+            style={{ width: 240 }}
+            items={menuItems}
+          />
         </aside>
 
         {/* 主内容区 */}

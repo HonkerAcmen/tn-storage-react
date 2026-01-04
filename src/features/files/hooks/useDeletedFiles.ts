@@ -81,11 +81,18 @@ export function useDeletedFiles() {
   });
 
   const addDeletedFile = useCallback((file: FileSystemNode): void => {
-    const deletedItem: DeletedFileItem = {
-      file,
-      deletedAt: new Date(),
-    };
     setDeletedFiles((prev) => {
+      // 检查文件是否已经在已删除列表中
+      const exists = prev.some((item) => item.file.id === file.id);
+      if (exists) {
+        // 如果已存在，不重复添加
+        return prev;
+      }
+
+      const deletedItem: DeletedFileItem = {
+        file,
+        deletedAt: new Date(),
+      };
       const newDeletedFiles = [...prev, deletedItem];
       saveDeletedFilesToStorage(newDeletedFiles);
       return newDeletedFiles;

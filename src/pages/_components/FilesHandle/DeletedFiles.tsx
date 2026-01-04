@@ -198,11 +198,13 @@ export default function DeletedFiles() {
         />
       ) : (
         <ul className="mr-8 flex flex-col space-y-2">
-          {sortedDeletedFiles.map((deletedItem) => {
+          {sortedDeletedFiles.map((deletedItem, index) => {
             const item = deletedItem.file;
+            // 使用组合 key 确保唯一性：文件 ID + 删除时间戳 + 索引
+            const uniqueKey = `${item.id}-${deletedItem.deletedAt.getTime()}-${index}`;
             return (
               <FileListItem
-                key={item.id}
+                key={uniqueKey}
                 file={item}
                 menuItems={getFileMenuItems(item)}
                 showSize
