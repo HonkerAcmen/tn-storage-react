@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
-import { getFromStorage, saveToStorage } from '../utils/storage';
-import { getAllFiles } from '../utils/fileSystem/fileSystemUtils';
-import { fileDatas } from '../mock/index';
-import type { FileSystemNode } from '../types/fileSystem';
+import { getFromStorage, saveToStorage } from '@/utils/storage';
+import { getAllFiles } from '@/utils/fileSystem/fileSystemUtils';
+import { fileDatas } from '@/mock/index';
+import type { FileSystemNode } from '@/types/fileSystem';
 
 const DELETED_FILES_STORAGE_KEY = 'deletedFiles';
 

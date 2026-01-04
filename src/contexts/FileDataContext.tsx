@@ -7,13 +7,13 @@ import {
   useMemo,
   useEffect,
 } from 'react';
-import type { FileSystemNode } from '../types/fileSystem';
-import { getAllNodes, updateNodeInTree, deleteNodeFromTree } from '../utils/fileSystem/fileSystemUtils';
+import type { FileSystemNode } from '@/types/fileSystem';
+import { getAllNodes, updateNodeInTree, deleteNodeFromTree } from '@/utils/fileSystem/fileSystemUtils';
 import {
   getFileSystemTree,
   updateFile as updateFileAPI,
   deleteFile as deleteFileAPI,
-} from '../services/fileService';
+} from '@/services/fileService';
 
 interface FileDataContextType {
   fileTree: FileSystemNode;

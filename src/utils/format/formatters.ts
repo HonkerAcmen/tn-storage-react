@@ -1,4 +1,4 @@
-import type { FileExtension } from '../../types/fileSystem';
+import type { FileExtension } from '@/types/fileSystem';
 
 /**
  * 格式化工具函数
@@ -75,4 +75,3 @@ export function getFileDisplayName(file: {
   }
   return file.name;
 }
-

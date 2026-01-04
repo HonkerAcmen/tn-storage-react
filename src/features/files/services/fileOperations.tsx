@@ -1,5 +1,5 @@
 import { message, Modal } from 'antd';
-import type { FileSystemNode } from '../../../types/fileSystem';
+import type { FileSystemNode } from '@/types/fileSystem';
 
 /**
  * 文件操作服务

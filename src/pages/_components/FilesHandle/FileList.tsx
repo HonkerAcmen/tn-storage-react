@@ -18,8 +18,8 @@ import {
   FileSystemNode,
   findPathToNode,
   getChildrenByParentId,
-} from '../../../types/fileSystem';
-import { useFileData } from '../../../contexts/FileDataContext';
+} from '@/types/fileSystem';
+import { useFileData } from '@/contexts/FileDataContext';
 
 // 将 renderMap 移出组件，避免重复创建对象
 // 使用 Record 类型增强类型安全

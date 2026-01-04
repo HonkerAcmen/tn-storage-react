@@ -1,38 +1,27 @@
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/router';
 import { Button, Dropdown, message } from 'antd';
-import type { MenuProps } from 'antd';
 import {
   AiFillCustomerService,
   AiFillFile,
-  AiFillFileImage,
-  AiFillFilePdf,
   AiFillFileText,
   AiFillFolder,
   AiFillPicture,
   AiFillPlaySquare,
   AiFillStar,
-  AiFillVideoCamera,
   AiOutlineEllipsis,
-  AiOutlineStar,
-  AiOutlineDownload,
-  AiOutlineShareAlt,
-  AiOutlineEdit,
-  AiOutlineDelete,
-  AiOutlineInfoCircle,
 } from 'react-icons/ai';
 import EChart from '@/components/Echart';
-import { useFileData } from '../../contexts/FileDataContext';
-import { useFileActions, useFileMenu } from '../../features/files/hooks';
-import { formatDate, formatFileSize } from '../../utils/format/formatters';
-import { getFileIcon } from '../../components/files/FileIcon';
+import { useFileData } from '@/contexts/FileDataContext';
+import { useFileActions, useFileMenu } from '@/features/files/hooks';
+import { formatDate, formatFileSize } from '@/utils/format/formatters';
+import { getFileIcon } from '@/components/files/FileIcon';
 import FileDetailsModal from './FilesHandle/FileDetailsModal';
-import type { FileSystemNode } from '../../types/fileSystem';
+import type { FileSystemNode } from '@/types/fileSystem';
+import type { TopLevelFormatterParams } from 'echarts/types/dist/shared';
 
 export default function MyCloud() {
-  const router = useRouter();
   const { allFiles, updateFile } = useFileData();
-  const { handleFileAction, handleFolderNavigation, isFavorite } = useFileActions();
+  const { handleFolderNavigation, isFavorite } = useFileActions();
   const { getFileMenuItems } = useFileMenu();
 
   // 详情模态框状态
@@ -66,9 +55,7 @@ export default function MyCloud() {
 
   // 获取收藏的文件（取前3个）
   const favoriteFiles = useMemo(() => {
-    return allFiles
-      .filter((file) => isFavorite(file.id))
-      .slice(0, 3);
+    return allFiles.filter((file) => isFavorite(file.id)).slice(0, 3);
   }, [allFiles, isFavorite]);
 
   // 根据实际文件数据计算存储统计
@@ -77,7 +64,17 @@ export default function MyCloud() {
     const files = allFiles.filter((item) => item.type === 'file');
 
     // 文件类型分类
-    const documentExts = ['txt', 'pdf', 'doc', 'docx', 'json', 'log', 'xlsx', 'zip', 'tar'];
+    const documentExts = [
+      'txt',
+      'pdf',
+      'doc',
+      'docx',
+      'json',
+      'log',
+      'xlsx',
+      'zip',
+      'tar',
+    ];
     const imageExts = ['jpg', 'png'];
     const videoExts = ['mp4'];
     const audioExts = ['mp3', 'wav'];
@@ -190,26 +187,30 @@ export default function MyCloud() {
                     </div>
                   )}
                 </div>
-                <h2 className="text-gray-800 line-clamp-1">{item.name}</h2>
+                <h2 className="line-clamp-1 text-gray-800">{item.name}</h2>
                 <span className="text-sm text-gray-600">
                   {formatDate(item.createdAt)}
                 </span>
                 {/* 右下角功能按钮 */}
-                <div className="absolute bottom-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="absolute right-2 bottom-2 opacity-0 transition-opacity group-hover:opacity-100">
                   <Dropdown
-                    menu={{ items: getFileMenuItems(item, {
-                      onDetailsOpen: (file: FileSystemNode) => {
-                        setSelectedFile(file);
-                        setShowDetails(true);
-                      },
-                      onFolderNavigate: handleFolderClick,
-                    }) }}
+                    menu={{
+                      items: getFileMenuItems(item, {
+                        onDetailsOpen: (file: FileSystemNode) => {
+                          setSelectedFile(file);
+                          setShowDetails(true);
+                        },
+                        onFolderNavigate: handleFolderClick,
+                      }),
+                    }}
                     trigger={['click']}
                     placement="bottomRight"
                   >
                     <Button
                       type="text"
-                      icon={<AiOutlineEllipsis className="h-5 w-5 text-gray-600" />}
+                      icon={
+                        <AiOutlineEllipsis className="h-5 w-5 text-gray-600" />
+                      }
                       onClick={(e) => e.stopPropagation()}
                       className="flex items-center justify-center"
                     />
@@ -257,19 +258,23 @@ export default function MyCloud() {
                   {/* 右下角功能按钮 */}
                   <div className="opacity-0 transition-opacity group-hover:opacity-100">
                     <Dropdown
-                      menu={{ items: getFileMenuItems(item, {
-                      onDetailsOpen: (file: FileSystemNode) => {
-                        setSelectedFile(file);
-                        setShowDetails(true);
-                      },
-                      onFolderNavigate: handleFolderClick,
-                    }) }}
+                      menu={{
+                        items: getFileMenuItems(item, {
+                          onDetailsOpen: (file: FileSystemNode) => {
+                            setSelectedFile(file);
+                            setShowDetails(true);
+                          },
+                          onFolderNavigate: handleFolderClick,
+                        }),
+                      }}
                       trigger={['click']}
                       placement="bottomRight"
                     >
                       <Button
                         type="text"
-                        icon={<AiOutlineEllipsis className="h-5 w-5 text-gray-600" />}
+                        icon={
+                          <AiOutlineEllipsis className="h-5 w-5 text-gray-600" />
+                        }
                         onClick={(e) => e.stopPropagation()}
                         className="flex items-center justify-center"
                       />
@@ -314,19 +319,23 @@ export default function MyCloud() {
                   {/* 右下角功能按钮 */}
                   <div className="opacity-0 transition-opacity group-hover:opacity-100">
                     <Dropdown
-                      menu={{ items: getFileMenuItems(item, {
-                      onDetailsOpen: (file: FileSystemNode) => {
-                        setSelectedFile(file);
-                        setShowDetails(true);
-                      },
-                      onFolderNavigate: handleFolderClick,
-                    }) }}
+                      menu={{
+                        items: getFileMenuItems(item, {
+                          onDetailsOpen: (file: FileSystemNode) => {
+                            setSelectedFile(file);
+                            setShowDetails(true);
+                          },
+                          onFolderNavigate: handleFolderClick,
+                        }),
+                      }}
                       trigger={['click']}
                       placement="bottomRight"
                     >
                       <Button
                         type="text"
-                        icon={<AiOutlineEllipsis className="h-5 w-5 text-gray-600" />}
+                        icon={
+                          <AiOutlineEllipsis className="h-5 w-5 text-gray-600" />
+                        }
                         onClick={(e) => e.stopPropagation()}
                         className="flex items-center justify-center"
                       />
@@ -350,12 +359,14 @@ export default function MyCloud() {
             option={{
               tooltip: {
                 trigger: 'item',
-                formatter: (params: any) => {
-                  const item = saveData.find((d) => d.name === params.name);
+                formatter: (params: TopLevelFormatterParams) => {
+                  // 处理数组或单个对象的情况
+                  const param = Array.isArray(params) ? params[0] : params;
+                  const item = saveData.find((d) => d.name === param.name);
                   if (item) {
-                    return `${params.name}<br/>${item.fileNumber} 个文件<br/>${formatFileSize(item.fileSize)}`;
+                    return `${param.name}<br/>${item.fileNumber} 个文件<br/>${formatFileSize(item.fileSize)}`;
                   }
-                  return `${params.name}: ${params.value}`;
+                  return `${param.name}: ${param.value}`;
                 },
               },
               series: [

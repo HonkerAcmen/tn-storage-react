@@ -1,4 +1,4 @@
-import type { FileSystemNode } from '../../types/fileSystem';
+import type { FileSystemNode } from '@/types/fileSystem';
 
 /**
  * 文件系统树操作工具函数

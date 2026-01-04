@@ -1,9 +1,9 @@
 import { Typography, Space, Tag, Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { AiFillFolder, AiOutlineEllipsis } from 'react-icons/ai';
-import type { FileSystemNode } from '../types/fileSystem';
+import type { FileSystemNode } from '@/types/fileSystem';
 import { getFileIcon, ICON_SIZE_MEDIUM } from './files/FileIcon';
-import { formatFileSize, getFileDisplayName } from '../utils/format/formatters';
+import { formatFileSize, getFileDisplayName } from '@/utils/format/formatters';
 
 const { Text } = Typography;
 

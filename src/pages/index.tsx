@@ -9,7 +9,7 @@ import {
 import Header from './_components/Header';
 import { ConfigProvider, Menu, MenuProps } from 'antd';
 import MyCloud from './_components/MyCloud';
-import { JSX, useState, useEffect } from 'react';
+import { JSX, useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import AllFiles from './_components/FilesHandle/AllFiles';
 import RecentFiles from './_components/FilesHandle/RecentFiles';
@@ -22,12 +22,13 @@ export default function Home() {
   const [seleId, setSeleId] = useState('sub1');
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  // 从 URL 参数读取视图
-  useEffect(() => {
+  // 从 URL 参数读取视图（派生状态，避免在 useEffect 中同步 setState）
+  const currentView = useMemo(() => {
     if (router.query.view && typeof router.query.view === 'string') {
-      setSeleId(router.query.view);
+      return router.query.view;
     }
-  }, [router.query.view]);
+    return seleId;
+  }, [router.query.view, seleId]);
 
   const menuItems = [
     { key: 'sub1', label: '我的云', icon: <AiFillCloud /> },
@@ -40,7 +41,10 @@ export default function Home() {
   const onClick: MenuProps['onClick'] = (e) => {
     setSeleId(e.key);
     // 更新 URL 参数
-    const newQuery = { ...router.query, view: e.key };
+    const newQuery: Record<string, string | string[] | undefined> = {
+      ...router.query,
+      view: e.key,
+    };
     // 如果切换到非 MyCloud 视图，清除 folderId
     if (e.key !== 'sub1') {
       delete newQuery.folderId;
@@ -77,7 +81,7 @@ export default function Home() {
             className="relative mt-6 mb-6 flex h-12 w-[90%] cursor-pointer items-center justify-center rounded-sm border border-gray-200 text-[16px] text-gray-600 transition duration-150 hover:bg-gray-100"
           >
             <AiOutlineCloudUpload className="mr-2 ml-2 flex h-5 w-5 flex-1" />
-            <p className="flex flex-2">上传</p>
+            <p className="flex flex-2">上传文件</p>
           </div>
 
           <ConfigProvider
@@ -95,7 +99,7 @@ export default function Home() {
           >
             <Menu
               onClick={onClick}
-              selectedKeys={[seleId]} // 让选中状态与当前一致
+              selectedKeys={[currentView]} // 让选中状态与当前一致
               style={{ width: 240 }}
               items={menuItems}
             />
@@ -104,7 +108,7 @@ export default function Home() {
 
         {/* 主内容区 */}
         <main className="bg-white">
-          {renderMap[seleId] ?? <div>未知选项</div>}
+          {renderMap[currentView] ?? <div>未知选项</div>}
         </main>
       </div>
 

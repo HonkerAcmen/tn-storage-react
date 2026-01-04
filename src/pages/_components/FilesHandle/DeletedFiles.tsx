@@ -7,12 +7,12 @@ import {
   AiOutlineInfoCircle,
   AiOutlineClockCircle,
 } from 'react-icons/ai';
-import { FileSystemNode } from '../../../types/fileSystem';
+import { FileSystemNode } from '@/types/fileSystem';
 import FileDetailsModal from './FileDetailsModal';
-import FileListItem from '../../../components/FileListItem';
-import { useDeletedFiles, useFileActions } from '../../../features/files/hooks';
-import { formatDate } from '../../../utils/format/formatters';
-import { useFileData } from '../../../contexts/FileDataContext';
+import FileListItem from '@/components/FileListItem';
+import { useDeletedFiles, useFileActions } from '@/features/files/hooks';
+import { formatDate } from '@/utils/format/formatters';
+import { useFileData } from '@/contexts/FileDataContext';
 
 const { confirm } = Modal;
 
@@ -263,4 +263,4 @@ export default function DeletedFiles() {
 export {
   useDeletedFiles,
   type DeletedFileItem,
-} from '../../../features/files/hooks';
+} from '@/features/files/hooks';

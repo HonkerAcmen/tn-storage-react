@@ -9,7 +9,7 @@ import {
   AiFillStar,
   AiOutlineStar,
 } from 'react-icons/ai';
-import type { FileSystemNode } from '../../../types/fileSystem';
+import type { FileSystemNode } from '@/types/fileSystem';
 import { useFileActions } from './useFileActions';
 
 /**

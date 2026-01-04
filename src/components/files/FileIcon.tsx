@@ -10,7 +10,7 @@ import {
   AiOutlineFileImage,
   AiOutlineFileJpg,
 } from 'react-icons/ai';
-import { ICON_SIZE_SMALL, ICON_SIZE_MEDIUM, ICON_SIZE_LARGE } from '../../utils/constants/fileConstants';
+import { ICON_SIZE_SMALL, ICON_SIZE_MEDIUM, ICON_SIZE_LARGE } from '@/utils/constants/fileConstants';
 
 /**
  * 文件图标组件

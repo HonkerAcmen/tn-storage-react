@@ -1,5 +1,5 @@
-import type { FileSystemNode } from '../../types/fileSystem';
-import { findPathToNode, getChildrenByParentId } from '../../types/fileSystem';
+import type { FileSystemNode } from '@/types/fileSystem';
+import { findPathToNode, getChildrenByParentId } from '@/types/fileSystem';
 
 /**
  * 文件导航工具函数

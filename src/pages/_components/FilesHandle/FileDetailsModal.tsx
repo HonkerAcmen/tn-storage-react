@@ -29,11 +29,11 @@ import {
   AiOutlineCheck,
   AiOutlineClose,
 } from 'react-icons/ai';
-import { FileSystemNode } from '../../../types/fileSystem';
-import { findPathToNode } from '../../../types/fileSystem';
-import { getFileIcon } from '../../../components/files/FileIcon';
-import { formatFileSize, formatDateTime, getFileDisplayName } from '../../../utils/format/formatters';
-import { useFileData } from '../../../contexts/FileDataContext';
+import { FileSystemNode } from '@/types/fileSystem';
+import { findPathToNode } from '@/types/fileSystem';
+import { getFileIcon } from '@/components/files/FileIcon';
+import { formatFileSize, formatDateTime, getFileDisplayName } from '@/utils/format/formatters';
+import { useFileData } from '@/contexts/FileDataContext';
 
 interface FileDetailsModalProps {
   open: boolean;

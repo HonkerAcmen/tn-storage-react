@@ -15,19 +15,19 @@ import {
   FileSystemNode,
   findPathToNode,
   getChildrenByParentId,
-} from '../../../types/fileSystem';
-import FileListItem from '../../../components/FileListItem';
+} from '@/types/fileSystem';
+import FileListItem from '@/components/FileListItem';
 import FileDetailsModal from './FileDetailsModal';
-import { useFileActions, useFileMenu } from '../../../features/files/hooks';
+import { useFileActions, useFileMenu } from '@/features/files/hooks';
 import {
   formatDate,
   getFileDisplayName,
-} from '../../../utils/format/formatters';
-import { useFileData } from '../../../contexts/FileDataContext';
+} from '@/utils/format/formatters';
+import { useFileData } from '@/contexts/FileDataContext';
 import {
   getFileIcon,
   ICON_SIZE_LARGE,
-} from '../../../components/files/FileIcon';
+} from '@/components/files/FileIcon';
 import { Breadcrumb } from 'antd';
 
 interface MenuItemNameProps {

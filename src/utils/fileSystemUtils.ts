@@ -1,4 +1,4 @@
-import type { FileSystemNode } from '../types/fileSystem';
+import type { FileSystemNode } from '@/types/fileSystem';
 
 /**
  * 递归获取所有文件

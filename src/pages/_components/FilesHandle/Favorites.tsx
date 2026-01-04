@@ -10,12 +10,12 @@ import {
   AiOutlineDelete,
   AiOutlineInfoCircle,
 } from 'react-icons/ai';
-import { FileSystemNode } from '../../../types/fileSystem';
+import { FileSystemNode } from '@/types/fileSystem';
 import FileDetailsModal from './FileDetailsModal';
-import FileListItem from '../../../components/FileListItem';
-import { useFileActions, useFileMenu, useFavorites } from '../../../features/files/hooks';
-import { formatDate } from '../../../utils/format/formatters';
-import { useFileData } from '../../../contexts/FileDataContext';
+import FileListItem from '@/components/FileListItem';
+import { useFileActions, useFileMenu, useFavorites } from '@/features/files/hooks';
+import { formatDate } from '@/utils/format/formatters';
+import { useFileData } from '@/contexts/FileDataContext';
 
 export default function Favorites() {
   const router = useRouter();

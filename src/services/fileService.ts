@@ -1,6 +1,6 @@
-import type { FileSystemNode } from '../types/fileSystem';
-import { openMock } from '../mock/index';
-import { generateFileSystem } from '../mock/randomFileData';
+import type { FileSystemNode } from '@/types/fileSystem';
+import { openMock } from '@/mock/index';
+import { generateFileSystem } from '@/mock/randomFileData';
 
 /**
  * 文件系统 API 服务

@@ -1,11 +1,11 @@
 import { useCallback } from 'react';
 import { message } from 'antd';
 import { useRouter } from 'next/router';
-import type { FileSystemNode } from '../../../types/fileSystem';
+import type { FileSystemNode } from '@/types/fileSystem';
 import { useFavorites } from './useFavorites';
 import { useDeletedFiles } from './useDeletedFiles';
-import { useFileData } from '../../../contexts/FileDataContext';
-import * as fileOperations from '../services/fileOperations';
+import { useFileData } from '@/contexts/FileDataContext';
+import * as fileOperations from '@/features/files/services/fileOperations';
 
 /**
  * 文件操作 Hook

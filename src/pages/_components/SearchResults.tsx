@@ -5,12 +5,12 @@ import {
   AiOutlineInfoCircle,
 } from 'react-icons/ai';
 import { Empty, message } from 'antd';
-import { FileSystemNode } from '../../types/fileSystem';
-import { useFileData } from '../../contexts/FileDataContext';
-import { searchNodes } from '../../utils/fileSystem/fileSystemUtils';
-import FileListItem from '../../components/FileListItem';
+import { FileSystemNode } from '@/types/fileSystem';
+import { useFileData } from '@/contexts/FileDataContext';
+import { searchNodes } from '@/utils/fileSystem/fileSystemUtils';
+import FileListItem from '@/components/FileListItem';
 import FileDetailsModal from './FilesHandle/FileDetailsModal';
-import { formatDate } from '../../utils/format/formatters';
+import { formatDate } from '@/utils/format/formatters';
 
 interface SearchResultsProps {
   open: boolean;
