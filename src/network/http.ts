@@ -31,10 +31,11 @@ const request: AxiosInstance = axios.create({
 request.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // 可以在这里添加 token 等认证信息
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     return config;
   },
   (error: AxiosError) => {

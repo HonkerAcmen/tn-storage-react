@@ -1,4 +1,5 @@
 import { queryClient } from '@/network/queryClient';
+import { clearCachedUsername } from './user';
 
 /**
  * 检查用户是否已认证
@@ -14,6 +15,8 @@ export function isAuthed(): boolean {
  */
 export function logout() {
   localStorage.removeItem('token');
+  // 清除缓存的用户名
+  clearCachedUsername();
   // 清除 React Query 缓存
   queryClient.clear();
   // 立即跳转到登录页面（强制刷新）

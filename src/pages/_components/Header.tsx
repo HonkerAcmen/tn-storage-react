@@ -9,6 +9,7 @@ import Settings from './Settings';
 import Profile from './Profile';
 import SearchResults from './SearchResults';
 import { logout } from '@/utils/auth';
+import { useCachedUsername } from '@/utils/auth/user';
 
 export default function Header() {
   const [clickProfile, setClickProfile] = useState(false);
@@ -16,6 +17,8 @@ export default function Header() {
   const [showProfile, setShowProfile] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
+  // 从 React Query 缓存中获取 username（自动处理客户端检查）
+  const { data: username } = useCachedUsername();
 
   return (
     <div className="flex h-16 w-full flex-row justify-between border-b border-gray-200 bg-white">
@@ -60,7 +63,7 @@ export default function Header() {
               }, 200);
             }}
           >
-            <p className="mr-2 whitespace-nowrap">管理员</p>
+            <p className="mr-2 whitespace-nowrap">{username || '管理员'}</p>
             <AiFillCaretDown className="h-3 w-3 text-gray-500" />
           </div>
 

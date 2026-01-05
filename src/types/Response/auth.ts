@@ -1,9 +1,4 @@
-interface BaseResponse<T> {
-  code: number;
-  message: string;
-  data: T;
-  timestamp: Date;
-}
+import { BaseResponse } from '.';
 
 interface LoginResponse {
   userId: number;

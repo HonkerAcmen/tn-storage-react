@@ -8,15 +8,17 @@ import {
   AiOutlinePhone,
   AiOutlineArrowLeft,
 } from 'react-icons/ai';
-import { LoginRequest, ForgotPasswordRequest } from '@/types/Request/auth';
 import {
   useLogin,
   useRegister,
   useForgotPassword,
 } from '@/network/hooks/login';
+import { LoginRequest, ForgotPasswordRequest } from '@/types/Request/auth';
+import { useRouter } from 'next/router';
 
 export default function Login() {
   const { message } = App.useApp();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const login = useLogin();
   const register = useRegister();
@@ -32,8 +34,9 @@ export default function Login() {
       if (localStorage.getItem('token')) {
         message.success('登录成功！');
         // 延迟跳转，确保 message 能够显示
+        // 使用 router.push 而不是 window.location.href，以保持 React Query 缓存
         setTimeout(() => {
-          window.location.href = '/';
+          router.push('/');
         }, 1500);
       }
     } catch {
