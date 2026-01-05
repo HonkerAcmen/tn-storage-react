@@ -23,6 +23,11 @@ interface GetSaltResponse {
   salt: string;
 }
 
+interface ForgotPasswordResponse {
+  message: string;
+}
+
 export type LoginApiResponse = BaseResponse<LoginResponse>;
 export type GetSaltApiResponse = BaseResponse<GetSaltResponse>;
 export type RegisterApiResponse = BaseResponse<RegisterResponse>;
+export type ForgotPasswordApiResponse = BaseResponse<ForgotPasswordResponse>;

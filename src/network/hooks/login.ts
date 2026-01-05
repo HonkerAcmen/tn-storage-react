@@ -1,10 +1,16 @@
-import { LoginRequest, RegisterRequest } from '@/types/Request/auth';
+import {
+  LoginRequest,
+  RegisterRequest,
+  ForgotPasswordRequest,
+} from '@/types/Request/auth';
 import { useMutation } from '@tanstack/react-query';
 import http from '@/network/http';
-import { loginPath, registerPath } from '../resPath';
-import { LoginApiResponse, RegisterApiResponse } from '@/types/Response/auth';
-import { message } from 'antd';
-import { useRouter } from 'next/router';
+import { loginPath, registerPath, forgotPasswordPath } from '../resPath';
+import {
+  LoginApiResponse,
+  RegisterApiResponse,
+  ForgotPasswordApiResponse,
+} from '@/types/Response/auth';
 
 export function useLogin() {
   return useMutation({
@@ -21,5 +27,12 @@ export function useRegister() {
   return useMutation({
     mutationFn: async (data: RegisterRequest) =>
       await http.post<RegisterApiResponse>(registerPath, data),
+  });
+}
+
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: async (data: ForgotPasswordRequest) =>
+      await http.post<ForgotPasswordApiResponse>(forgotPasswordPath, data),
   });
 }

@@ -6,15 +6,21 @@ import {
   AiOutlineLock,
   AiOutlineMail,
   AiOutlinePhone,
+  AiOutlineArrowLeft,
 } from 'react-icons/ai';
-import { LoginRequest } from '@/types/Request/auth';
-import { useLogin, useRegister } from '@/network/hooks/login';
+import { LoginRequest, ForgotPasswordRequest } from '@/types/Request/auth';
+import {
+  useLogin,
+  useRegister,
+  useForgotPassword,
+} from '@/network/hooks/login';
 
 export default function Login() {
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const login = useLogin();
   const register = useRegister();
+  const forgotPassword = useForgotPassword();
 
   // 登录表单提交
   const onLoginFinish = async (values: LoginRequest) => {
@@ -25,7 +31,7 @@ export default function Login() {
       // 确保 token 已保存到 localStorage
       if (localStorage.getItem('token')) {
         message.success('登录成功！');
-        // 延迟跳转，确保 message 能够显示（增加延迟时间）
+        // 延迟跳转，确保 message 能够显示
         setTimeout(() => {
           window.location.href = '/';
         }, 1500);
@@ -54,6 +60,28 @@ export default function Login() {
       setActiveTab('login');
     } catch {
       message.error('注册失败，请稍后重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 忘记密码表单提交
+  const onForgotPasswordFinish = async (values: ForgotPasswordRequest) => {
+    setLoading(true);
+    try {
+      await forgotPassword.mutateAsync(values);
+      message.success('重置密码邮件已发送，请检查您的邮箱');
+      // 2秒后切换到登录标签页
+      setTimeout(() => {
+        setActiveTab('login');
+      }, 2000);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : (error as { response?: { data?: { message?: string } } })?.response
+              ?.data?.message || '发送失败，请稍后重试';
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -104,7 +132,10 @@ export default function Login() {
               {/* <Form.Item name="remember" valuePropName="checked" noStyle>
                 <Checkbox>记住我</Checkbox>
               </Form.Item> */}
-              <a className="text-[#5542f6] hover:text-[#4532e6]" href="#">
+              <a
+                onClick={() => setActiveTab('forgot-password')}
+                className="cursor-pointer text-[#5542f6] hover:text-[#4532e6]"
+              >
                 忘记密码？
               </a>
             </div>
@@ -242,6 +273,60 @@ export default function Login() {
             </Button>
           </Form.Item>
         </Form>
+      ),
+    },
+    {
+      key: 'forgot-password',
+      label: '忘记密码',
+      children: (
+        <div>
+          {/* 说明文字 */}
+          <div className="mt-6 mb-6 rounded-lg bg-blue-50 p-4 text-sm text-gray-600">
+            <p>请输入您的邮箱地址，我们将向您发送重置密码的链接。</p>
+          </div>
+
+          <Form
+            name="forgot-password"
+            onFinish={onForgotPasswordFinish}
+            autoComplete="off"
+            size="large"
+          >
+            <Form.Item
+              name="email"
+              rules={[
+                { required: true, message: '请输入邮箱地址' },
+                { type: 'email', message: '请输入有效的邮箱地址' },
+              ]}
+            >
+              <Input
+                prefix={<AiOutlineMail className="text-gray-400" />}
+                placeholder="邮箱地址"
+              />
+            </Form.Item>
+
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                block
+                className="h-12 bg-[#5542f6] hover:bg-[#4532e6]"
+              >
+                发送重置链接
+              </Button>
+            </Form.Item>
+
+            <Form.Item className="mb-0 text-center">
+              <a
+                onClick={() => setActiveTab('login')}
+                className="inline-flex cursor-pointer items-center gap-2 text-[#5542f6] hover:text-[#4532e6]"
+              >
+                <AiOutlineArrowLeft />
+                返回登录
+              </a>
+            </Form.Item>
+          </Form>
+        </div>
       ),
     },
   ];
