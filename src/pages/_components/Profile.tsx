@@ -2,7 +2,6 @@ import { useGetAvatar, useGetUserWithName } from '@/network/hooks/user';
 import { GetUserWithNameApiResponse } from '@/types/Response/user';
 import { GetUserNameWithLocalsStroger } from '@/utils/auth/user';
 import { message } from 'antd';
-import { AxiosResponse } from 'axios';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   AiFillCloseCircle,
@@ -160,14 +159,6 @@ function OverviewTab() {
     }));
   }, [username, avatarUrl, userinfo]);
 
-  // 清理对象 URL，避免内存泄漏
-  useEffect(() => {
-    return () => {
-      if (avatarUrl) {
-        URL.revokeObjectURL(avatarUrl);
-      }
-    };
-  }, [avatarUrl]);
   // 开始编辑
   const handleEdit = () => {
     setEditForm({ ...profile });
