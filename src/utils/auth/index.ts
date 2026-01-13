@@ -14,6 +14,7 @@ export function isAuthed(): boolean {
  */
 export function logout() {
   localStorage.removeItem('token');
+  localStorage.removeItem('username');
   // 清除 React Query 缓存
   queryClient.clear();
   // 立即跳转到登录页面（强制刷新）

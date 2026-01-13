@@ -1,5 +1,9 @@
+import { useGetAvatar, useGetUserWithName } from '@/network/hooks/user';
+import { GetUserWithNameApiResponse } from '@/types/Response/user';
+import { GetUserNameWithLocalsStroger } from '@/utils/auth/user';
 import { message } from 'antd';
-import { useState, useRef } from 'react';
+import { AxiosResponse } from 'axios';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   AiFillCloseCircle,
   AiFillEdit,
@@ -88,17 +92,82 @@ interface UserProfile {
 // 概览标签页
 function OverviewTab() {
   const [isEditing, setIsEditing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [messageApi, contextHolder] = message.useMessage();
+  const [username, setUsername] = useState(
+    () => GetUserNameWithLocalsStroger() || ''
+  );
+
+  const { data: avatarResponse } = useGetAvatar(username);
+  const { data: userdata } = useGetUserWithName(username);
+
+  // 将 Buffer 数据转换为图片 URL
+  const avatarUrl = useMemo(() => {
+    if (!avatarResponse?.data?.data?.buffer?.data) {
+      return undefined;
+    }
+
+    try {
+      // 提取 buffer 数据（数字数组）
+      const bufferData = avatarResponse.data.data.buffer.data;
+      const mimeType = avatarResponse.data.data.mimetype || 'image/jpeg';
+
+      // 将数字数组转换为 Uint8Array
+      const uint8Array = new Uint8Array(bufferData);
+
+      // 创建 Blob
+      const blob = new Blob([uint8Array], { type: mimeType });
+
+      // 创建对象 URL
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('Failed to convert avatar buffer to URL:', error);
+      return undefined;
+    }
+  }, [avatarResponse]);
+
+  const userinfo = useMemo((): GetUserWithNameApiResponse | undefined => {
+    console.log('userdata : ');
+    console.log(userdata);
+
+    return userdata?.data;
+  }, [userdata]);
+
   const [profile, setProfile] = useState<UserProfile>({
-    nickname: '管理员',
-    email: 'admin@tnstorage.com',
+    nickname: '',
+    email: '',
     phone: '',
     avatar: null,
     bio: '',
   });
-  const [editForm, setEditForm] = useState<UserProfile>(profile);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [messageApi, contextHolder] = message.useMessage();
 
+  const [editForm, setEditForm] = useState<UserProfile>(profile);
+
+  // 当头像数据加载成功后，更新 profile
+  useEffect(() => {
+    // 只在数据真正改变时才更新，避免无限循环
+    if (!username) {
+      return;
+    }
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setProfile((prev) => ({
+      nickname: userinfo?.data.username || username || '',
+      email: userinfo?.data.email || prev.email || '',
+      phone: userinfo?.data.phone || prev.phone || '',
+      bio: userinfo?.data.desc || prev.bio || '',
+      avatar: avatarUrl || prev.avatar || null,
+    }));
+  }, [username, avatarUrl, userinfo]);
+
+  // 清理对象 URL，避免内存泄漏
+  useEffect(() => {
+    return () => {
+      if (avatarUrl) {
+        URL.revokeObjectURL(avatarUrl);
+      }
+    };
+  }, [avatarUrl]);
   // 开始编辑
   const handleEdit = () => {
     setEditForm({ ...profile });

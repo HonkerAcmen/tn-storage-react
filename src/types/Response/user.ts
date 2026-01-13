@@ -5,6 +5,7 @@ interface GetUserWithNameResponse {
   username: string;
   email: string;
   phone: string;
+  desc: string;
 }
 
 interface GetUserAvatarResponse {

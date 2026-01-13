@@ -13,7 +13,7 @@ import {
 
 export function useGetUserWithName(username: string) {
   return useQuery({
-    queryKey: ['username', username],
+    queryKey: ['user', 'data', username],
     queryFn: async () => {
       const res = await http.get<GetUserWithNameApiResponse>(
         getUserWithNamePath + `/${username}`
@@ -26,7 +26,7 @@ export function useGetUserWithName(username: string) {
 
 export function useGetAvatar(username: string) {
   return useQuery({
-    queryKey: ['username', username],
+    queryKey: ['user', 'avatar', username],
     queryFn: async () => {
       const res = await http.get<GetUserAvatarApiResponse>(
         GetUserAvatarPath + `/${username}`
