@@ -11,7 +11,6 @@ import {
   LoginRequest,
   RegisterRequest,
 } from '@/types/Request/auth';
-import { setCachedUsername } from '@/utils/auth/user';
 
 export function useLogin() {
   return useMutation({
@@ -22,9 +21,7 @@ export function useLogin() {
 
       // 保存 token 到 localStorage
       localStorage.setItem('token', token);
-
-      // 将 username 缓存到 React Query（必须在返回前设置）
-      setCachedUsername(username);
+      localStorage.setItem('username', username);
 
       return { token, username };
     },

@@ -22,16 +22,6 @@ export default function Home() {
   const [seleId, setSeleId] = useState('sub1');
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  // 使用 React Query hook 获取用户数据
-  // hook 返回的对象包含：{ data, isLoading, error, refetch, ... }
-  // 只有当 username 存在时才启用查询
-  // const {
-  //   data: userData,
-  //   isLoading,
-  //   error,
-  // } = useGetUserWithName(username || '');
-
-  // 从 URL 参数读取视图（派生状态，避免在 useEffect 中同步 setState）
   const currentView = useMemo(() => {
     if (router.query.view && typeof router.query.view === 'string') {
       return router.query.view;

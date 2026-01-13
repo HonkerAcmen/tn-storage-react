@@ -1,3 +1,4 @@
+import { message } from 'antd';
 import { useState, useRef } from 'react';
 import {
   AiFillCloseCircle,
@@ -18,7 +19,6 @@ interface ProfileProps {
 
 export default function Profile({ onClose }: ProfileProps) {
   const [activeTab, setActiveTab] = useState('overview');
-
   const tabs = [
     { id: 'overview', label: '概览', icon: <AiFillFileText /> },
     { id: 'files', label: '我的文件', icon: <AiFillFolder /> },
@@ -97,6 +97,7 @@ function OverviewTab() {
   });
   const [editForm, setEditForm] = useState<UserProfile>(profile);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [messageApi, contextHolder] = message.useMessage();
 
   // 开始编辑
   const handleEdit = () => {
@@ -121,14 +122,50 @@ function OverviewTab() {
   // 处理头像上传
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // 创建预览URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditForm({ ...editForm, avatar: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+    if (!file) {
+      return;
     }
+
+    // 先进行文件验证（必须在读取文件之前）
+    const allowedFileTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    const upSize = 1 * 1024 * 1024; // 1MB
+
+    // 验证文件大小
+    if (file.size > upSize) {
+      messageApi.error('头像文件太大，请选择小于 1MB 的图片');
+      e.target.value = '';
+      return;
+    }
+
+    // 验证文件类型
+    if (!allowedFileTypes.includes(file.type)) {
+      messageApi.error('文件类型不支持，请选择 PNG 或 JPEG 格式的图片');
+      // 清空 input，允许重新选择
+      e.target.value = '';
+      return;
+    }
+
+    // 安全地重命名文件：创建新的 File 对象
+    // 保留原始文件的扩展名
+    const fileExtension = file.name.split('.').pop() || 'jpg';
+    const newFileName = `${crypto.randomUUID()}.${fileExtension}`;
+
+    // 创建新的 File 对象，使用新的文件名
+    const renamedFile = new File([file], newFileName, {
+      type: file.type,
+      lastModified: file.lastModified,
+    });
+
+    // 验证通过后，创建预览URL（使用重命名后的文件）
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setEditForm({ ...editForm, avatar: reader.result as string });
+    };
+    reader.onerror = () => {
+      messageApi.error('文件读取失败，请重试');
+      e.target.value = '';
+    };
+    reader.readAsDataURL(renamedFile);
   };
 
   // 触发文件选择
@@ -143,6 +180,7 @@ function OverviewTab() {
 
   return (
     <div className="space-y-6">
+      {contextHolder}
       {/* 用户信息卡片 */}
       <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-[#5542f6] to-[#7c6cf5] p-6 text-white">
         {!isEditing ? (
@@ -151,7 +189,7 @@ function OverviewTab() {
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <div
-                  className="h-24 w-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden"
+                  className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-white/20 backdrop-blur-sm"
                   style={{
                     backgroundImage: profile.avatar
                       ? `url(${profile.avatar})`
@@ -174,7 +212,7 @@ function OverviewTab() {
                   <p className="mt-1 text-sm text-white/80">{profile.phone}</p>
                 )}
                 {profile.bio && (
-                  <p className="mt-2 text-sm text-white/70 line-clamp-2">
+                  <p className="mt-2 line-clamp-2 text-sm text-white/70">
                     {profile.bio}
                   </p>
                 )}
@@ -205,7 +243,7 @@ function OverviewTab() {
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <div
-                    className="h-24 w-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden cursor-pointer"
+                    className="flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-white/20 backdrop-blur-sm"
                     onClick={triggerAvatarUpload}
                     style={{
                       backgroundImage: editForm.avatar
@@ -223,7 +261,7 @@ function OverviewTab() {
                   </div>
                   <button
                     onClick={triggerAvatarUpload}
-                    className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-white text-gray-700 transition hover:bg-gray-100"
+                    className="absolute right-0 bottom-0 flex h-8 w-8 items-center justify-center rounded-full bg-white text-gray-700 transition hover:bg-gray-100"
                   >
                     <AiFillCamera className="h-4 w-4" />
                   </button>
@@ -237,7 +275,7 @@ function OverviewTab() {
                 </div>
                 <div className="flex-1 space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-white/90 mb-1">
+                    <label className="mb-1 block text-sm font-medium text-white/90">
                       昵称
                     </label>
                     <input
@@ -246,12 +284,12 @@ function OverviewTab() {
                       onChange={(e) =>
                         setEditForm({ ...editForm, nickname: e.target.value })
                       }
-                      className="w-full rounded-lg border border-white/30 bg-white/20 px-3 py-2 text-white placeholder-white/50 backdrop-blur-sm focus:border-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
+                      className="w-full rounded-lg border border-white/30 bg-white/20 px-3 py-2 text-white placeholder-white/50 backdrop-blur-sm focus:border-white/50 focus:ring-2 focus:ring-white/30 focus:outline-none"
                       placeholder="请输入昵称"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white/90 mb-1">
+                    <label className="mb-1 block text-sm font-medium text-white/90">
                       邮箱
                     </label>
                     <input
@@ -260,12 +298,12 @@ function OverviewTab() {
                       onChange={(e) =>
                         setEditForm({ ...editForm, email: e.target.value })
                       }
-                      className="w-full rounded-lg border border-white/30 bg-white/20 px-3 py-2 text-white placeholder-white/50 backdrop-blur-sm focus:border-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
+                      className="w-full rounded-lg border border-white/30 bg-white/20 px-3 py-2 text-white placeholder-white/50 backdrop-blur-sm focus:border-white/50 focus:ring-2 focus:ring-white/30 focus:outline-none"
                       placeholder="请输入邮箱"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white/90 mb-1">
+                    <label className="mb-1 block text-sm font-medium text-white/90">
                       手机号
                     </label>
                     <input
@@ -274,7 +312,7 @@ function OverviewTab() {
                       onChange={(e) =>
                         setEditForm({ ...editForm, phone: e.target.value })
                       }
-                      className="w-full rounded-lg border border-white/30 bg-white/20 px-3 py-2 text-white placeholder-white/50 backdrop-blur-sm focus:border-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
+                      className="w-full rounded-lg border border-white/30 bg-white/20 px-3 py-2 text-white placeholder-white/50 backdrop-blur-sm focus:border-white/50 focus:ring-2 focus:ring-white/30 focus:outline-none"
                       placeholder="请输入手机号"
                     />
                   </div>
@@ -282,7 +320,7 @@ function OverviewTab() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-white/90 mb-1">
+              <label className="mb-1 block text-sm font-medium text-white/90">
                 个人简介
               </label>
               <textarea
@@ -291,7 +329,7 @@ function OverviewTab() {
                   setEditForm({ ...editForm, bio: e.target.value })
                 }
                 rows={3}
-                className="w-full rounded-lg border border-white/30 bg-white/20 px-3 py-2 text-white placeholder-white/50 backdrop-blur-sm focus:border-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 resize-none"
+                className="w-full resize-none rounded-lg border border-white/30 bg-white/20 px-3 py-2 text-white placeholder-white/50 backdrop-blur-sm focus:border-white/50 focus:ring-2 focus:ring-white/30 focus:outline-none"
                 placeholder="介绍一下自己..."
               />
             </div>
@@ -448,4 +486,3 @@ function FavoritesTab() {
     </div>
   );
 }
-

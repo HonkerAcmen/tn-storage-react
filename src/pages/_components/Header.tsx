@@ -1,5 +1,5 @@
 import Modal from '@/components/Modal';
-import { useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   AiFillCaretDown,
   AiFillSetting,
@@ -9,7 +9,8 @@ import Settings from './Settings';
 import Profile from './Profile';
 import SearchResults from './SearchResults';
 import { logout } from '@/utils/auth';
-import { useCachedUsername } from '@/utils/auth/user';
+import { GetUserNameWithLocalsStroger } from '@/utils/auth/user';
+import { useGetAvatar } from '@/network/hooks/user';
 
 export default function Header() {
   const [clickProfile, setClickProfile] = useState(false);
@@ -17,8 +18,49 @@ export default function Header() {
   const [showProfile, setShowProfile] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
-  // 从 React Query 缓存中获取 username（自动处理客户端检查）
-  const { data: username } = useCachedUsername();
+
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setUsername(GetUserNameWithLocalsStroger());
+  }, []);
+
+  const { data: avatarResponse } = useGetAvatar(username);
+
+  // 将 Buffer 数据转换为图片 URL
+  const avatarUrl = useMemo(() => {
+    if (!avatarResponse?.data?.data?.buffer?.data) {
+      return undefined;
+    }
+
+    try {
+      // 提取 buffer 数据（数字数组）
+      const bufferData = avatarResponse.data.data.buffer.data;
+      const mimeType = avatarResponse.data.data.mimetype || 'image/jpeg';
+
+      // 将数字数组转换为 Uint8Array
+      const uint8Array = new Uint8Array(bufferData);
+
+      // 创建 Blob
+      const blob = new Blob([uint8Array], { type: mimeType });
+
+      // 创建对象 URL
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('Failed to convert avatar buffer to URL:', error);
+      return undefined;
+    }
+  }, [avatarResponse]);
+
+  // 清理对象 URL，避免内存泄漏
+  useEffect(() => {
+    return () => {
+      if (avatarUrl) {
+        URL.revokeObjectURL(avatarUrl);
+      }
+    };
+  }, [avatarUrl]);
 
   return (
     <div className="flex h-16 w-full flex-row justify-between border-b border-gray-200 bg-white">
@@ -44,11 +86,17 @@ export default function Header() {
         />
 
         <div className="relative flex items-center">
-          <img
-            src="#"
-            alt=""
-            className="mr-6 h-12 w-12 cursor-pointer rounded-full bg-gray-200"
-          />
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt=""
+              className="mr-6 h-12 w-12 cursor-pointer rounded-full bg-gray-200 object-cover"
+            />
+          ) : (
+            <div className="mr-6 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gray-200 text-gray-400">
+              {username?.charAt(0)?.toUpperCase() || 'U'}
+            </div>
+          )}
           <div
             className="flex cursor-pointer items-center"
             tabIndex={0}
