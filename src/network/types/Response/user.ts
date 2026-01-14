@@ -20,6 +20,10 @@ interface GetUserAvatarResponse {
   };
 }
 
+type AvatarUploadResponse = object;
+type UpdateUserDataResponse = string;
+
 export type GetUserWithNameApiResponse = BaseResponse<GetUserWithNameResponse>;
-export type AvatarUploadApiResponse = BaseResponse<null>;
+export type AvatarUploadApiResponse = BaseResponse<AvatarUploadResponse>; // 头像上传
 export type GetUserAvatarApiResponse = BaseResponse<GetUserAvatarResponse>;
+export type UpdateUserDataApiResponse = BaseResponse<UpdateUserDataResponse>;

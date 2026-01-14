@@ -5,12 +5,12 @@ import {
   LoginApiResponse,
   RegisterApiResponse,
   ForgotPasswordApiResponse,
-} from '@/types/Response/auth';
+} from '@/network/types/Response/auth';
 import {
   ForgotPasswordRequest,
   LoginRequest,
   RegisterRequest,
-} from '@/types/Request/auth';
+} from '@/network/types/Request/auth';
 
 export function useLogin() {
   return useMutation({

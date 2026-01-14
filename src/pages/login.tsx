@@ -13,7 +13,10 @@ import {
   useRegister,
   useForgotPassword,
 } from '@/network/hooks/login';
-import { LoginRequest, ForgotPasswordRequest } from '@/types/Request/auth';
+import {
+  LoginRequest,
+  ForgotPasswordRequest,
+} from '@/network/types/Request/auth';
 import { useRouter } from 'next/router';
 
 export default function Login() {

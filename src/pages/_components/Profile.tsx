@@ -1,5 +1,10 @@
-import { useGetAvatar, useGetUserWithName } from '@/network/hooks/user';
-import { GetUserWithNameApiResponse } from '@/types/Response/user';
+import {
+  useAvatarUpload,
+  useGetAvatar,
+  useGetUserWithName,
+  useUpdateUserData,
+} from '@/network/hooks/user';
+import { GetUserWithNameApiResponse } from '@/network/types/Response/user';
 import { GetUserNameWithLocalsStroger } from '@/utils/auth/user';
 import { message } from 'antd';
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -99,7 +104,8 @@ function OverviewTab() {
 
   const { data: avatarResponse } = useGetAvatar(username);
   const { data: userdata } = useGetUserWithName(username);
-
+  const updateUserData = useUpdateUserData();
+  const avatarUpload = useAvatarUpload();
   // 将 Buffer 数据转换为图片 URL
   const avatarUrl = useMemo(() => {
     if (!avatarResponse?.data?.data?.buffer?.data) {
@@ -126,9 +132,6 @@ function OverviewTab() {
   }, [avatarResponse]);
 
   const userinfo = useMemo((): GetUserWithNameApiResponse | undefined => {
-    console.log('userdata : ');
-    console.log(userdata);
-
     return userdata?.data;
   }, [userdata]);
 
@@ -177,6 +180,49 @@ function OverviewTab() {
     setIsEditing(false);
     // 这里可以添加保存到后端的逻辑
     console.log('保存用户资料:', editForm);
+
+    const userdata = {
+      username: editForm.nickname,
+      email: editForm.email,
+      phone: editForm.phone,
+      desc: editForm.bio,
+    };
+
+    updateUserData.mutateAsync(userdata);
+
+    if (editForm.avatar) {
+      // 如果是浏览器缓存则退出上传
+      if (editForm.avatar.includes('blob:')) {
+        return;
+      } else if (editForm.avatar.includes('data:image')) {
+        // 将 base64 数据 URL 转换为 File 对象
+        const dataUrl = editForm.avatar;
+        const arr = dataUrl.split(',');
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const file = new File(
+          [u8arr],
+          `avatar-${Date.now()}.${mimeType.split('/')[1]}`,
+          {
+            type: mimeType,
+          }
+        );
+
+        avatarUpload.mutateAsync({
+          username: editForm.nickname,
+          file: file,
+        });
+      } else {
+        message.error('未知文件!');
+        return;
+      }
+    }
   };
 
   // 处理头像上传
