@@ -208,7 +208,7 @@ function OverviewTab() {
         }
         const file = new File(
           [u8arr],
-          `avatar-${Date.now()}.${mimeType.split('/')[1]}`,
+          `avatar-${Date.now()}.${mimeType.split('/')[1]}`, // 文件名称
           {
             type: mimeType,
           }
@@ -219,7 +219,7 @@ function OverviewTab() {
           file: file,
         });
       } else {
-        message.error('未知文件!');
+        messageApi.error('未知文件!');
         return;
       }
     }

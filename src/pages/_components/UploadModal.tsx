@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Upload, Button, message, Progress, List, Modal } from 'antd';
 import type { UploadFile, UploadProps } from 'antd';
 import {
@@ -7,7 +7,8 @@ import {
   AiOutlineFile,
   AiOutlineInbox,
 } from 'react-icons/ai';
-import { UploadFileResponse } from '@/types/fileSystem';
+import { useUploadFile, useGetUploadStatus } from '@/network/hooks/file';
+import { useQueryClient } from '@tanstack/react-query';
 
 const { Dragger } = Upload;
 
@@ -16,14 +17,57 @@ interface UploadModalProps {
   onClose: () => void;
 }
 
+// 默认 bucket，可以根据实际需求修改
+const DEFAULT_BUCKET = 'default';
+
 export default function UploadModal({ open, onClose }: UploadModalProps) {
+  const [messageApi, contextHolder] = message.useMessage();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
     {}
   );
+  const [taskId, setTaskId] = useState<string | null>(null);
+  const uploadFileMutation = useUploadFile();
+  const queryClient = useQueryClient();
 
-  // 上传配置
+  // 查询上传任务状态
+  const { data: uploadStatus } = useGetUploadStatus(taskId || '');
+  const ups = useMemo(() => {
+    return uploadStatus?.data.data;
+  }, [uploadStatus]);
+
+  // 监听上传状态变化，更新进度
+  useEffect(() => {
+    if (ups && taskId) {
+      const progress = Math.round((ups.uploadedFiles / ups.fileNum) * 100);
+
+      // 更新所有文件的进度
+      setUploadProgress((prev) => {
+        const newProgress = { ...prev };
+        fileList.forEach((file) => {
+          newProgress[file.uid] = progress;
+        });
+        return newProgress;
+      });
+
+      // 如果上传完成，清理状态
+      if (ups.status === 'completed') {
+        setUploading(false);
+        messageApi.success('所有文件上传成功！');
+        // 刷新文件列表
+        queryClient.invalidateQueries({ queryKey: ['file', 'info'] });
+        setTimeout(() => {
+          setFileList([]);
+          setUploadProgress({});
+          setTaskId(null);
+          onClose();
+        }, 1000);
+      }
+    }
+  }, [ups, taskId, fileList, queryClient, onClose]);
+
+  // 上传配置（禁用自动上传，改为手动触发）
   const uploadProps: UploadProps = {
     name: 'file',
     multiple: true,
@@ -32,35 +76,14 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
       // 检查文件大小（限制 100MB）
       const isLt100M = file.size / 1024 / 1024 < 100;
       if (!isLt100M) {
-        message.error('文件大小不能超过 100MB！');
+        messageApi.error('文件大小不能超过 100MB！');
         return false;
       }
-      return true;
+      // 禁用自动上传
+      return false;
     },
     onChange: (info) => {
       setFileList(info.fileList);
-
-      // 模拟上传进度
-      if (info.file.status === 'uploading') {
-        const fileId = info.file.uid;
-        const timer = setInterval(() => {
-          setUploadProgress((prev) => {
-            const current = prev[fileId] || 0;
-            if (current >= 90) {
-              clearInterval(timer);
-              return prev;
-            }
-            return { ...prev, [fileId]: current + 10 };
-          });
-        }, 200);
-      }
-
-      if (info.file.status === 'done') {
-        message.success(`${info.file.name} 上传成功！`);
-        setUploadProgress((prev) => ({ ...prev, [info.file.uid]: 100 }));
-      } else if (info.file.status === 'error') {
-        message.error(`${info.file.name} 上传失败！`);
-      }
     },
     onRemove: (file) => {
       setFileList((prevList) =>
@@ -72,49 +95,46 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
         return newProgress;
       });
     },
-    customRequest: async ({ file, onSuccess, onError, onProgress }) => {
-      // 模拟上传过程
-      const fileId = (file as UploadFile).uid;
-      let progress = 0;
-
-      const timer = setInterval(() => {
-        progress += 10;
-        onProgress?.({ percent: progress } as unknown as ProgressEvent);
-
-        if (progress >= 100) {
-          clearInterval(timer);
-          // 模拟成功
-          setTimeout(() => {
-            onSuccess?.({} as UploadFileResponse);
-          }, 500);
-        }
-      }, 200);
-    },
   };
 
   // 开始上传
   const handleUpload = async () => {
     if (fileList.length === 0) {
-      message.warning('请先选择要上传的文件！');
+      messageApi.warning('请先选择要上传的文件！');
+      return;
+    }
+
+    // 检查文件数量限制（API 限制 ≤100 个文件）
+    if (fileList.length > 100) {
+      messageApi.error('一次最多只能上传 100 个文件！');
       return;
     }
 
     setUploading(true);
     try {
-      // 这里可以调用真实的上传 API
-      // await uploadFiles(fileList);
+      // 提取 File 对象
+      const files = fileList
+        .map((item) => item.originFileObj)
+        .filter(Boolean) as File[];
 
-      // 模拟上传
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // 调用上传 API
+      const response = await uploadFileMutation.mutateAsync({
+        bucket: DEFAULT_BUCKET,
+        files,
+      });
 
-      message.success('所有文件上传成功！');
-      setFileList([]);
-      setUploadProgress({});
-      onClose();
+      // 获取任务 ID
+      const taskId = response.data?.data?.taskId;
+      if (taskId) {
+        setTaskId(taskId);
+        messageApi.info('上传任务已创建，正在上传...');
+      } else {
+        throw new Error('未能获取上传任务 ID');
+      }
     } catch (error) {
-      message.error('上传失败，请重试！');
-    } finally {
       setUploading(false);
+      messageApi.error('上传失败，请重试！');
+      console.error('Upload error:', error);
     }
   };
 
@@ -122,7 +142,7 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
   const handleClear = () => {
     setFileList([]);
     setUploadProgress({});
-    message.info('已清空文件列表');
+    messageApi.info('已清空文件列表');
   };
 
   // 格式化文件大小
@@ -150,6 +170,7 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
       }
       className="upload-modal"
     >
+      {contextHolder}
       <div className="space-y-4">
         {/* 拖拽上传区域 */}
         <Dragger {...uploadProps} className="rounded-lg">

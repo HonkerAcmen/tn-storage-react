@@ -56,25 +56,26 @@ export type FileSystemNode = FileNode | FolderNode;
  * @param parentId 父节点ID
  * @returns 返回该父节点下的所有子节点
  */
-export function getChildrenByParentId(root: FileSystemNode, parentId: string): FileSystemNode[] {
-
-  function dfs(node: FileSystemNode, id: string):FileSystemNode | null {
+export function getChildrenByParentId(
+  root: FileSystemNode,
+  parentId: string
+): FileSystemNode[] {
+  function dfs(node: FileSystemNode, id: string): FileSystemNode | null {
     if (node.id === id) return node;
 
-    if (node.type === 'folder' && node.children){
-      for (const child of node.children){
-        const found = dfs(child, id)
-        if (found) return found
+    if (node.type === 'folder' && node.children) {
+      for (const child of node.children) {
+        const found = dfs(child, id);
+        if (found) return found;
       }
     }
 
-    return null
+    return null;
   }
 
   const result = dfs(root, parentId);
   return result?.type === 'folder' ? result.children : [];
 }
-
 
 // 查找从根节点到目标节点的路径 (用于面包屑)
 export function findPathToNode(
@@ -103,7 +104,6 @@ export function findPathToNode(
   dfs(root);
   return path;
 }
-
 
 /**
  * API 返回类型（可用于 React Query）

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Form, Input, Button, Tabs, Checkbox, App } from 'antd';
+import { Form, Input, Button, Tabs, Checkbox, message } from 'antd';
 import type { TabsProps } from 'antd';
 import {
   AiOutlineUser,
@@ -20,7 +20,7 @@ import {
 import { useRouter } from 'next/router';
 
 export default function Login() {
-  const { message } = App.useApp();
+  const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const login = useLogin();
@@ -35,7 +35,7 @@ export default function Login() {
 
       // 确保 token 已保存到 localStorage
       if (localStorage.getItem('token')) {
-        message.success('登录成功！');
+        messageApi.success('登录成功！');
         // 延迟跳转，确保 message 能够显示
         // 使用 router.push 而不是 window.location.href，以保持 React Query 缓存
         setTimeout(() => {
@@ -43,7 +43,7 @@ export default function Login() {
         }, 1500);
       }
     } catch {
-      message.error('登录失败，请检查用户名和密码');
+      messageApi.error('登录失败，请检查用户名和密码');
     } finally {
       setLoading(false);
     }
@@ -61,11 +61,11 @@ export default function Login() {
     setLoading(true);
     try {
       await register.mutateAsync(values);
-      message.success('注册成功！请登录');
+      messageApi.success('注册成功！请登录');
       // 切换到登录标签页
       setActiveTab('login');
     } catch {
-      message.error('注册失败，请稍后重试');
+      messageApi.error('注册失败，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -76,7 +76,7 @@ export default function Login() {
     setLoading(true);
     try {
       await forgotPassword.mutateAsync(values);
-      message.success('重置密码邮件已发送，请检查您的邮箱');
+      messageApi.success('重置密码邮件已发送，请检查您的邮箱');
       // 2秒后切换到登录标签页
       setTimeout(() => {
         setActiveTab('login');
@@ -87,7 +87,7 @@ export default function Login() {
           ? error.message
           : (error as { response?: { data?: { message?: string } } })?.response
               ?.data?.message || '发送失败，请稍后重试';
-      message.error(errorMessage);
+      messageApi.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -338,23 +338,26 @@ export default function Login() {
   ];
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#5542f6] via-[#7c6cf5] to-[#9d8ef7]">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
-        {/* Logo 和标题 */}
-        <div className="mb-8 text-center">
-          <h1 className="mb-2 text-3xl font-bold text-gray-800">TNStorage</h1>
-          <p className="text-gray-500">欢迎使用云存储服务</p>
-        </div>
+    <>
+      {contextHolder}
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#5542f6] via-[#7c6cf5] to-[#9d8ef7]">
+        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+          {/* Logo 和标题 */}
+          <div className="mb-8 text-center">
+            <h1 className="mb-2 text-3xl font-bold text-gray-800">TNStorage</h1>
+            <p className="text-gray-500">欢迎使用云存储服务</p>
+          </div>
 
-        {/* 标签页 */}
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={tabItems}
-          centered
-          className="w-full"
-        />
+          {/* 标签页 */}
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            items={tabItems}
+            centered
+            className="w-full"
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

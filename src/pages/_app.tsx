@@ -58,9 +58,9 @@ export default function App({ Component, pageProps }: AppProps) {
         }}
       >
         <AntApp>
-          <FileDataProvider>
-            <Component {...pageProps} />
-          </FileDataProvider>
+    <FileDataProvider>
+      <Component {...pageProps} />
+    </FileDataProvider>
         </AntApp>
       </ConfigProvider>
     </QueryProvider>

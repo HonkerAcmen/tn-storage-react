@@ -12,14 +12,15 @@ import {
   AiFillFolder,
 } from 'react-icons/ai';
 import {
-  FileSystemNode,
-  findPathToNode,
   getChildrenByParentId,
-} from '@/types/fileSystem';
+  findPathToNode,
+} from '@/utils/fileSystem/fileSystemUtils';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
+import { convertTreeNodeToFileSystemNode } from '@/utils/fileSystem/typeConverters';
 import FileListItem from '@/components/FileListItem';
 import FileDetailsModal from './FileDetailsModal';
 import { useFileActions, useFileMenu } from '@/features/files/hooks';
-import { formatDate, getFileDisplayName } from '@/utils/format/formatters';
+import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 import { getFileIcon, ICON_SIZE_LARGE } from '@/components/files/FileIcon';
 import { Breadcrumb } from 'antd';
@@ -33,6 +34,7 @@ interface MenuItemNameProps {
 type SortType = 'latest' | 'oldest' | 'name' | 'type';
 
 export default function AllFiles() {
+  const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
   const { fileTree, updateFile } = useFileData();
 
@@ -77,7 +79,9 @@ export default function AllFiles() {
   const { getFileMenuItems } = fileMenu;
 
   // 详情模态框状态
-  const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
+  const [selectedFile, setSelectedFile] = useState<FileSystemTreeNode | null>(
+    null
+  );
   const [showDetails, setShowDetails] = useState(false);
 
   // 获取当前要显示的文件列表
@@ -121,11 +125,13 @@ export default function AllFiles() {
     switch (sortType) {
       case 'latest':
         return files.sort(
-          (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
       case 'oldest':
         return files.sort(
-          (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
       case 'name':
         return files.sort((a, b) => {
@@ -151,13 +157,13 @@ export default function AllFiles() {
   // 处理文件更新
   const handleFileUpdate = async (
     fileId: string,
-    updates: Partial<FileSystemNode>
+    updates: Partial<FileSystemTreeNode>
   ) => {
     try {
       await updateFile(fileId, updates);
-      message.success('文件信息已更新');
+      messageApi.success('文件信息已更新');
     } catch {
-      message.error('更新文件失败');
+      messageApi.error('更新文件失败');
     }
   };
 
@@ -176,95 +182,169 @@ export default function AllFiles() {
   };
 
   return (
-    <div className="ml-4">
-      {/* 头部 Header */}
-      <div className="mt-4 mb-6 flex flex-row items-center justify-between">
-        <div className="mb-4 flex flex-col">
-          <p className="text-3xl font-semibold whitespace-nowrap text-[#2e2c34]">
-            所有文件
-          </p>
-          <p className="mt-2 text-sm text-gray-500">
-            {currentFolderId ? '查看文件夹内容' : '查看和管理所有文件和文件夹'}
-          </p>
-        </div>
-
-        <div className="mr-8 flex flex-row gap-6">
-          {/* 列表/网格切换 */}
-          <div className="flex h-10 w-20 items-center justify-center">
-            <div
-              onClick={() => setSeleRadioItem(0)}
-              className={`flex h-full w-[50%] cursor-pointer items-center justify-center rounded-l-lg border border-gray-200 transition duration-150 hover:bg-gray-200 ${seleRadioItem === 0 ? 'bg-gray-100' : ''}`}
-            >
-              <AiOutlineMenu />
-            </div>
-            <div
-              onClick={() => setSeleRadioItem(1)}
-              className={`${seleRadioItem === 1 ? 'bg-gray-100' : ''} flex h-full w-[50%] cursor-pointer items-center justify-center rounded-r-lg border border-gray-200 transition duration-150 hover:bg-gray-200`}
-            >
-              <AiOutlineAppstore />
-            </div>
+    <>
+      {contextHolder}
+      <div className="ml-4">
+        {/* 头部 Header */}
+        <div className="mt-4 mb-6 flex flex-row items-center justify-between">
+          <div className="mb-4 flex flex-col">
+            <p className="text-3xl font-semibold whitespace-nowrap text-[#2e2c34]">
+              所有文件
+            </p>
+            <p className="mt-2 text-sm text-gray-500">
+              {currentFolderId
+                ? '查看文件夹内容'
+                : '查看和管理所有文件和文件夹'}
+            </p>
           </div>
 
-          {/* 分组方式选择 */}
-          <Dropdown
-            menu={{ items: sortMenuItems }}
-            trigger={['click']}
-            placement="bottomLeft"
-          >
-            <div className="flex w-64 cursor-pointer items-center justify-between rounded-lg border border-gray-200 p-2 transition duration-150 hover:bg-gray-50">
-              <p className="text-xs text-gray-500">
-                分组方式:{' '}
-                <span className="ml-2 text-sm text-gray-800">
-                  {MenuItemName?.name}
-                </span>
-              </p>
-              <AiOutlineCaretDown className="text-gray-500" />
+          <div className="mr-8 flex flex-row gap-6">
+            {/* 列表/网格切换 */}
+            <div className="flex h-10 w-20 items-center justify-center">
+              <div
+                onClick={() => setSeleRadioItem(0)}
+                className={`flex h-full w-[50%] cursor-pointer items-center justify-center rounded-l-lg border border-gray-200 transition duration-150 hover:bg-gray-200 ${seleRadioItem === 0 ? 'bg-gray-100' : ''}`}
+              >
+                <AiOutlineMenu />
+              </div>
+              <div
+                onClick={() => setSeleRadioItem(1)}
+                className={`${seleRadioItem === 1 ? 'bg-gray-100' : ''} flex h-full w-[50%] cursor-pointer items-center justify-center rounded-r-lg border border-gray-200 transition duration-150 hover:bg-gray-200`}
+              >
+                <AiOutlineAppstore />
+              </div>
             </div>
-          </Dropdown>
+
+            {/* 分组方式选择 */}
+            <Dropdown
+              menu={{ items: sortMenuItems }}
+              trigger={['click']}
+              placement="bottomLeft"
+            >
+              <div className="flex w-64 cursor-pointer items-center justify-between rounded-lg border border-gray-200 p-2 transition duration-150 hover:bg-gray-50">
+                <p className="text-xs text-gray-500">
+                  分组方式:{' '}
+                  <span className="ml-2 text-sm text-gray-800">
+                    {MenuItemName?.name}
+                  </span>
+                </p>
+                <AiOutlineCaretDown className="text-gray-500" />
+              </div>
+            </Dropdown>
+          </div>
         </div>
-      </div>
 
-      {/* 面包屑导航 */}
-      {currentFolderId && (
-        <Breadcrumb
-          className="mb-4 px-4"
-          items={[
-            {
-              title: (
-                <span
-                  onClick={() => handleBreadcrumbClick('1')}
-                  className="cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600"
-                >
-                  所有文件
-                </span>
-              ),
-            },
-            ...breadcrumbPath
-              .filter((node) => node.id !== '1')
-              .map((node, index, filteredPath) => {
-                const isLast = index === filteredPath.length - 1;
-                return {
-                  title: (
-                    <span
-                      onClick={() => !isLast && handleBreadcrumbClick(node.id)}
-                      className={
-                        !isLast
-                          ? 'cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600'
-                          : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
+        {/* 面包屑导航 */}
+        {currentFolderId && (
+          <Breadcrumb
+            className="mb-4 px-4"
+            items={[
+              {
+                title: (
+                  <span
+                    onClick={() => handleBreadcrumbClick('1')}
+                    className="cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600"
+                  >
+                    所有文件
+                  </span>
+                ),
+              },
+              ...breadcrumbPath
+                .filter((node) => node.id !== '1')
+                .map((node, index, filteredPath) => {
+                  const isLast = index === filteredPath.length - 1;
+                  return {
+                    title: (
+                      <span
+                        onClick={() =>
+                          !isLast && handleBreadcrumbClick(node.id)
+                        }
+                        className={
+                          !isLast
+                            ? 'cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600'
+                            : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
+                        }
+                      >
+                        {node.name}
+                      </span>
+                    ),
+                  };
+                }),
+            ]}
+          />
+        )}
+
+        {/* 内容区域 */}
+        {seleRadioItem === 0 ? (
+          // 列表模式
+          sortedFiles.length === 0 ? (
+            <Empty
+              description={
+                <div>
+                  <p className="text-gray-500">暂无文件</p>
+                  <p className="mt-2 text-sm text-gray-400">
+                    上传文件后，文件将显示在这里
+                  </p>
+                </div>
+              }
+              className="py-12"
+            />
+          ) : (
+            <ul className="mt-2 mr-8 flex flex-col space-y-2">
+              {sortedFiles.map((item) => {
+                const convertedItem = convertTreeNodeToFileSystemNode(item);
+                return (
+                  <FileListItem
+                    key={item.id}
+                    file={convertedItem}
+                    menuItems={getFileMenuItems(convertedItem, {
+                      onDetailsOpen: () => {
+                        setSelectedFile(item);
+                        setShowDetails(true);
+                      },
+                      onFolderNavigate: handleFolderClick,
+                    })}
+                    showSize
+                    showType
+                    showTime
+                    timeValue={`创建于 ${formatDate(new Date(item.createdAt))} • 修改于 ${formatDate(new Date(item.updatedAt))}`}
+                    actions={
+                      <Button
+                        type="text"
+                        icon={
+                          isFavorite(item.id) ? (
+                            <AiFillStar className="h-5 w-5 text-amber-400" />
+                          ) : (
+                            <AiOutlineStar className="h-5 w-5 text-gray-400" />
+                          )
+                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFileAction('favorite', convertedItem, {
+                            onDetailsOpen: () => {
+                              setSelectedFile(item);
+                              setShowDetails(true);
+                            },
+                            onFolderNavigate: handleFolderClick,
+                          });
+                        }}
+                        className="flex items-center justify-center"
+                      />
+                    }
+                    onClick={() => {
+                      if (item.type === 'folder') {
+                        handleFolderClick(item.id);
+                      } else {
+                        setSelectedFile(item);
+                        setShowDetails(true);
                       }
-                    >
-                      {node.name}
-                    </span>
-                  ),
-                };
-              }),
-          ]}
-        />
-      )}
-
-      {/* 内容区域 */}
-      {seleRadioItem === 0 ? (
-        // 列表模式
+                    }}
+                  />
+                );
+              })}
+            </ul>
+          )
+        ) : // 网格模式
         sortedFiles.length === 0 ? (
           <Empty
             description={
@@ -278,175 +358,143 @@ export default function AllFiles() {
             className="py-12"
           />
         ) : (
-          <ul className="mt-2 mr-8 flex flex-col space-y-2">
+          <ul className="grid w-full grid-cols-2 gap-6 p-4 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
             {sortedFiles.map((item) => (
-              <FileListItem
+              <li
                 key={item.id}
-                file={item}
-                menuItems={getFileMenuItems(item, {
-                  onDetailsOpen: (file: FileSystemNode) => {
-                    setSelectedFile(file);
-                    setShowDetails(true);
-                  },
-                  onFolderNavigate: handleFolderClick,
-                })}
-                showSize
-                showType
-                showTime
-                timeValue={`创建于 ${formatDate(item.createdAt)} • 修改于 ${formatDate(item.updatedAt)}`}
-                actions={
-                  <Button
-                    type="text"
-                    icon={
-                      isFavorite(item.id) ? (
-                        <AiFillStar className="h-5 w-5 text-amber-400" />
-                      ) : (
-                        <AiOutlineStar className="h-5 w-5 text-gray-400" />
-                      )
-                    }
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleFileAction('favorite', item, {
-                        onDetailsOpen: (file: FileSystemNode) => {
-                          setSelectedFile(file);
-                          setShowDetails(true);
-                        },
-                        onFolderNavigate: handleFolderClick,
-                      });
-                    }}
-                    className="flex items-center justify-center"
-                  />
-                }
+                className="group relative flex cursor-pointer flex-col items-center justify-start rounded-xl border border-transparent p-4 transition-all duration-200 hover:border-gray-200 hover:bg-gray-100"
                 onClick={() => {
                   if (item.type === 'folder') {
                     handleFolderClick(item.id);
                   } else {
+                    // 打开文件详情
                     setSelectedFile(item);
                     setShowDetails(true);
                   }
                 }}
-              />
+              >
+                {/* 上方图标文字 */}
+                <div className="mb-3 flex flex-col items-center justify-center">
+                  {item.type === 'folder' ? (
+                    <AiFillFolder
+                      className={`${ICON_SIZE_LARGE} text-amber-400`}
+                    />
+                  ) : (
+                    <div className="text-gray-400">
+                      {getFileIcon(item.ext, 'large')}
+                    </div>
+                  )}
+                  <span className="line-clamp-2 text-center text-sm break-all text-gray-700">
+                    {item.type === 'file' && item.ext
+                      ? `${item.name}.${item.ext}`
+                      : item.name}
+                  </span>
+                </div>
+
+                {/* 下方收藏按钮和更多选项 */}
+                <div className="flex flex-row justify-between opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="w-full px-2">
+                    {/* 收藏按钮 */}
+                    <div className="mt-2 flex items-center justify-center">
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={
+                          isFavorite(item.id) ? (
+                            <AiFillStar className="h-4 w-4 text-amber-400" />
+                          ) : (
+                            <AiOutlineStar className="h-4 w-4 text-gray-400" />
+                          )
+                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const convertedItem =
+                            convertTreeNodeToFileSystemNode(item);
+                          handleFileAction('favorite', convertedItem, {
+                            onDetailsOpen: () => {
+                              setSelectedFile(item);
+                              setShowDetails(true);
+                            },
+                            onFolderNavigate: handleFolderClick,
+                          });
+                        }}
+                        className="flex items-center justify-center"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 右下角功能按钮 */}
+                  <div className="mt-2">
+                    <Dropdown
+                      menu={{
+                        items: getFileMenuItems(
+                          convertTreeNodeToFileSystemNode(item),
+                          {
+                            onDetailsOpen: () => {
+                              setSelectedFile(item);
+                              setShowDetails(true);
+                            },
+                            onFolderNavigate: handleFolderClick,
+                          }
+                        ),
+                        onClick: (e) => e.domEvent.stopPropagation(),
+                      }}
+                      trigger={['click']}
+                      placement="bottomRight"
+                    >
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={
+                          <AiOutlineEllipsis className="h-4 w-4 text-gray-600" />
+                        }
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center justify-center bg-white shadow-md hover:bg-gray-50"
+                      />
+                    </Dropdown>
+                  </div>
+                </div>
+              </li>
             ))}
           </ul>
-        )
-      ) : // 网格模式
-      sortedFiles.length === 0 ? (
-        <Empty
-          description={
-            <div>
-              <p className="text-gray-500">暂无文件</p>
-              <p className="mt-2 text-sm text-gray-400">
-                上传文件后，文件将显示在这里
-              </p>
-            </div>
-          }
-          className="py-12"
-        />
-      ) : (
-        <ul className="grid w-full grid-cols-2 gap-6 p-4 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-          {sortedFiles.map((item) => (
-            <li
-              key={item.id}
-              className="group relative flex cursor-pointer flex-col items-center justify-start rounded-xl border border-transparent p-4 transition-all duration-200 hover:border-gray-200 hover:bg-gray-100"
-              onClick={() => {
-                if (item.type === 'folder') {
-                  handleFolderClick(item.id);
-                } else {
-                  // 打开文件详情
-                  setSelectedFile(item);
-                  setShowDetails(true);
+        )}
+
+        {/* 文件详情模态框 */}
+        {selectedFile && (
+          <FileDetailsModal
+            open={showDetails}
+            file={convertTreeNodeToFileSystemNode(selectedFile)}
+            onClose={() => {
+              setShowDetails(false);
+              setSelectedFile(null);
+            }}
+            onUpdate={async (fileId, updates) => {
+              const apiUpdates: Partial<FileSystemTreeNode> = {
+                name: updates.name,
+              };
+
+              // 只在文件节点时添加这些属性
+              if (selectedFile.type === 'file') {
+                if ('ext' in updates && updates.ext !== undefined) {
+                  apiUpdates.ext = updates.ext as string;
                 }
-              }}
-            >
-              {/* 上方图标文字 */}
-              <div className="mb-3 flex flex-col items-center justify-center">
-                {item.type === 'folder' ? (
-                  <AiFillFolder
-                    className={`${ICON_SIZE_LARGE} text-amber-400`}
-                  />
-                ) : (
-                  <div className="text-gray-400">
-                    {getFileIcon(item.ext, 'large')}
-                  </div>
-                )}
-                <span className="line-clamp-2 text-center text-sm break-all text-gray-700">
-                  {getFileDisplayName(item)}
-                </span>
-              </div>
+                if ('size' in updates && updates.size !== undefined) {
+                  apiUpdates.size = updates.size.toString();
+                }
+              }
 
-              {/* 下方收藏按钮和更多选项 */}
-              <div className="flex flex-row justify-between opacity-0 transition-opacity group-hover:opacity-100">
-                <div className="w-full px-2">
-                  {/* 收藏按钮 */}
-                  <div className="mt-2 flex items-center justify-center">
-                    <Button
-                      type="text"
-                      size="small"
-                      icon={
-                        isFavorite(item.id) ? (
-                          <AiFillStar className="h-4 w-4 text-amber-400" />
-                        ) : (
-                          <AiOutlineStar className="h-4 w-4 text-gray-400" />
-                        )
-                      }
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFileAction('favorite', item, {
-                          onDetailsOpen: (file: FileSystemNode) => {
-                            setSelectedFile(file);
-                            setShowDetails(true);
-                          },
-                          onFolderNavigate: handleFolderClick,
-                        });
-                      }}
-                      className="flex items-center justify-center"
-                    />
-                  </div>
-                </div>
+              if (updates.createdAt) {
+                apiUpdates.createdAt = updates.createdAt.toISOString();
+              }
+              if (updates.updatedAt) {
+                apiUpdates.updatedAt = updates.updatedAt.toISOString();
+              }
 
-                {/* 右下角功能按钮 */}
-                <div className="mt-2">
-                  <Dropdown
-                    menu={{
-                      items: getFileMenuItems(item, {
-                        onDetailsOpen: (file: FileSystemNode) => {
-                          setSelectedFile(file);
-                          setShowDetails(true);
-                        },
-                        onFolderNavigate: handleFolderClick,
-                      }),
-                      onClick: (e) => e.domEvent.stopPropagation(),
-                    }}
-                    trigger={['click']}
-                    placement="bottomRight"
-                  >
-                    <Button
-                      type="text"
-                      size="small"
-                      icon={
-                        <AiOutlineEllipsis className="h-4 w-4 text-gray-600" />
-                      }
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex items-center justify-center bg-white shadow-md hover:bg-gray-50"
-                    />
-                  </Dropdown>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* 文件详情模态框 */}
-      <FileDetailsModal
-        open={showDetails}
-        file={selectedFile}
-        onClose={() => {
-          setShowDetails(false);
-          setSelectedFile(null);
-        }}
-        onUpdate={handleFileUpdate}
-      />
-    </div>
+              await handleFileUpdate(fileId, apiUpdates);
+            }}
+          />
+        )}
+      </div>
+    </>
   );
 }

@@ -12,6 +12,7 @@ import * as fileOperations from '@/features/files/services/fileOperations';
  * 统一管理所有文件操作逻辑
  */
 export function useFileActions() {
+  const [messageApi] = message.useMessage();
   const router = useRouter();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addDeletedFile } = useDeletedFiles();
@@ -37,13 +38,13 @@ export function useFileActions() {
           fileOperations.shareFile(item);
           break;
         case 'rename':
-          fileOperations.renameFile(item, updateFile);
+          fileOperations.renameFile(item, updateFile, messageApi);
           break;
         case 'delete':
           // 先添加到已删除列表
           addDeletedFile(item);
           // 立即显示成功消息（因为删除操作会立即更新 UI）
-          message.success(`已删除 ${item.name}`);
+          messageApi.success(`已删除 ${item.name}`);
           // 然后从文件树中删除（这会立即更新 UI）
           deleteFile(item.id).catch((error) => {
             console.error('Failed to delete file from tree:', error);
@@ -56,7 +57,7 @@ export function useFileActions() {
         case 'favorite': {
           const wasFavorite = isFavorite(item.id);
           toggleFavorite(item.id);
-          message.success(wasFavorite ? '已取消收藏' : '已添加到收藏');
+          messageApi.success(wasFavorite ? '已取消收藏' : '已添加到收藏');
           break;
         }
         case 'openFolder':
@@ -68,7 +69,7 @@ export function useFileActions() {
           break;
       }
     },
-    [toggleFavorite, isFavorite, addDeletedFile, updateFile, deleteFile]
+    [toggleFavorite, isFavorite, addDeletedFile, updateFile, deleteFile, messageApi]
   );
 
   /**

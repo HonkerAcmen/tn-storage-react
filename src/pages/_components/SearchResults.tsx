@@ -25,6 +25,7 @@ export default function SearchResults({
   onClose,
   onSearchChange,
 }: SearchResultsProps) {
+  const [messageApi, contextHolder] = message.useMessage();
   const { fileTree, updateFile } = useFileData();
   const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -78,9 +79,9 @@ export default function SearchResults({
   ) => {
     try {
       await updateFile(fileId, updates);
-      message.success('文件信息已更新');
+      messageApi.success('文件信息已更新');
     } catch {
-      message.error('更新文件失败');
+      messageApi.error('更新文件失败');
     }
   };
 

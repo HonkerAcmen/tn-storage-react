@@ -18,6 +18,7 @@ import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 
 export default function Favorites() {
+  const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
   const { favoriteIds, removeFavorite } = useFavorites();
   const { allFiles, updateFile } = useFileData();
@@ -45,16 +46,16 @@ export default function Favorites() {
   ) => {
     try {
       await updateFile(fileId, updates);
-      message.success('文件信息已更新');
+      messageApi.success('文件信息已更新');
     } catch {
-      message.error('更新文件失败');
+      messageApi.error('更新文件失败');
     }
   };
 
   // 取消收藏
   const handleUnfavorite = (fileId: string) => {
     removeFavorite(fileId);
-    message.success('已取消收藏');
+    messageApi.success('已取消收藏');
   };
 
   return (

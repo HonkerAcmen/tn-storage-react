@@ -1,9 +1,10 @@
-import { message, Modal } from 'antd';
+import { Modal } from 'antd';
 import type { FileSystemNode } from '@/types/fileSystem';
 
 /**
  * 文件操作服务
  * 统一处理文件的各种操作（下载、分享、重命名等）
+ * 注意：消息提示由调用方处理
  */
 
 /**
@@ -11,12 +12,12 @@ import type { FileSystemNode } from '@/types/fileSystem';
  */
 export function downloadFile(file: FileSystemNode): void {
   if (file.type === 'folder') {
-    message.warning('文件夹暂不支持下载');
+    // 消息提示由调用方处理
     return;
   }
 
   // TODO: 实现真实的下载逻辑
-  message.info(`正在下载 ${file.name}...`);
+  // 消息提示由调用方处理
   
   // 示例：创建下载链接
   // const url = `/api/files/${file.id}/download`;
@@ -31,7 +32,7 @@ export function downloadFile(file: FileSystemNode): void {
  */
 export function shareFile(file: FileSystemNode): void {
   // TODO: 实现真实的分享逻辑
-  message.info(`正在分享 ${file.name}...`);
+  // 消息提示由调用方处理
   
   // 示例：生成分享链接
   // const shareUrl = `${window.location.origin}/share/${file.id}`;
@@ -41,10 +42,15 @@ export function shareFile(file: FileSystemNode): void {
 
 /**
  * 重命名文件
+ * @param messageApi - 用于显示消息的 API，由调用方传入
  */
 export function renameFile(
   file: FileSystemNode,
-  onUpdate: (fileId: string, updates: Partial<FileSystemNode>) => Promise<void>
+  onUpdate: (fileId: string, updates: Partial<FileSystemNode>) => Promise<void>,
+  messageApi?: {
+    success: (content: string) => void;
+    error: (content: string) => void;
+  }
 ): void {
   Modal.confirm({
     title: '重命名',
@@ -69,9 +75,9 @@ export function renameFile(
 
       try {
         await onUpdate(file.id, { name: newName });
-        message.success('重命名成功');
+        messageApi?.success('重命名成功');
       } catch (error) {
-        message.error('重命名失败');
+        messageApi?.error('重命名失败');
       }
     },
   });
@@ -82,12 +88,12 @@ export function renameFile(
  */
 export function previewFile(file: FileSystemNode): void {
   if (file.type === 'folder') {
-    message.info('文件夹无法预览');
+    // 消息提示由调用方处理
     return;
   }
 
   // TODO: 根据文件类型实现不同的预览方式
-  message.info(`预览 ${file.name}...`);
+  // 消息提示由调用方处理
   
   // 示例：打开预览窗口
   // const previewUrl = `/api/files/${file.id}/preview`;

@@ -48,6 +48,7 @@ export default function FileDetailsModal({
   onClose,
   onUpdate,
 }: FileDetailsModalProps) {
+  const [messageApi, contextHolder] = message.useMessage();
   const { fileTree } = useFileData();
 
   // 获取文件路径
@@ -107,7 +108,7 @@ export default function FileDetailsModal({
         });
       }
 
-      message.success('保存成功！');
+      messageApi.success('保存成功！');
       setIsEditing(false);
     } catch (error) {
       console.error('Validation failed:', error);
@@ -149,6 +150,7 @@ export default function FileDetailsModal({
       }
       className="file-details-modal"
     >
+      {contextHolder}
       <Form form={form} layout="vertical" onFinish={handleSave}>
         <div className="space-y-6">
           {/* 文件图标和名称 */}
@@ -261,7 +263,7 @@ export default function FileDetailsModal({
               <Button
                 icon={<AiOutlineDownload />}
                 onClick={() => {
-                  message.info(`正在下载 ${file.name}...`);
+                  messageApi.info(`正在下载 ${file.name}...`);
                 }}
               >
                 下载
@@ -269,7 +271,7 @@ export default function FileDetailsModal({
               <Button
                 icon={<AiOutlineShareAlt />}
                 onClick={() => {
-                  message.info(`正在分享 ${file.name}...`);
+                  messageApi.info(`正在分享 ${file.name}...`);
                 }}
               >
                 分享

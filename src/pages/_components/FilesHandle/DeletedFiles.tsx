@@ -41,6 +41,7 @@ function formatDeletedTime(date: Date): string {
 }
 
 export default function DeletedFiles() {
+  const [messageApi, contextHolder] = message.useMessage();
   const { deletedFiles, removeDeletedFile, clearDeletedFiles } =
     useDeletedFiles();
   const { updateFile } = useFileData();
@@ -63,16 +64,16 @@ export default function DeletedFiles() {
   ) => {
     try {
       await updateFile(fileId, updates);
-      message.success('文件信息已更新');
+      messageApi.success('文件信息已更新');
     } catch {
-      message.error('更新文件失败');
+      messageApi.error('更新文件失败');
     }
   };
 
   // 恢复文件
   const handleRestore = (fileId: string) => {
     removeDeletedFile(fileId);
-    message.success('文件已恢复');
+    messageApi.success('文件已恢复');
   };
 
   // 永久删除文件
@@ -85,7 +86,7 @@ export default function DeletedFiles() {
       cancelText: '取消',
       onOk() {
         removeDeletedFile(fileId);
-        message.success('文件已永久删除');
+        messageApi.success('文件已永久删除');
       },
     });
   };
@@ -100,7 +101,7 @@ export default function DeletedFiles() {
       cancelText: '取消',
       onOk() {
         clearDeletedFiles();
-        message.success('回收站已清空');
+        messageApi.success('回收站已清空');
       },
     });
   };

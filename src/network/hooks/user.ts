@@ -12,7 +12,6 @@ import {
   getUserWithNamePath,
 } from '../resPath';
 import { UpdateUserDataRequest } from '@/network/types/Request/user';
-import { message } from 'antd';
 
 export function useGetUserWithName(username: string) {
   return useQuery({
@@ -59,10 +58,11 @@ export function useAvatarUpload() {
           AvatarUploadPath + `/${username}`,
           formData
         );
-        message.success('上传成功');
+        // message 提示由调用方处理
         return data;
       } catch {
-        message.error('上传出错');
+        // message 提示由调用方处理
+        throw new Error('Upload failed');
       }
     },
   });
@@ -76,10 +76,11 @@ export function useUpdateUserData() {
           '/user/update',
           userdata
         );
-        message.success('更新成功');
+        // message 提示由调用方处理
         return data;
       } catch {
-        message.error('更新出错！');
+        // message 提示由调用方处理
+        throw new Error('Update failed');
       }
     },
   });
