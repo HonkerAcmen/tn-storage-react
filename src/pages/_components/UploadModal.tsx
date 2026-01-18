@@ -34,7 +34,7 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
   // 查询上传任务状态
   const { data: uploadStatus } = useGetUploadStatus(taskId || '');
   const ups = useMemo(() => {
-    return uploadStatus?.data.data;
+    return uploadStatus?.data;
   }, [uploadStatus]);
 
   // 监听上传状态变化，更新进度
@@ -124,10 +124,12 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
       });
 
       // 获取任务 ID
-      const taskId = response.data?.data?.taskId;
+      const taskId = response.data?.taskId;
+      // console.log(taskId);  // undefined
+      
       if (taskId) {
         setTaskId(taskId);
-        messageApi.info('上传任务已创建，正在上传...');
+
       } else {
         throw new Error('未能获取上传任务 ID');
       }
