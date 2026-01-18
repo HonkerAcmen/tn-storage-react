@@ -129,7 +129,6 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
       
       if (taskId) {
         setTaskId(taskId);
-
       } else {
         throw new Error('未能获取上传任务 ID');
       }
@@ -206,7 +205,7 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
             <List
               dataSource={fileList}
               renderItem={(file) => (
-                <List.Item className="rounded-lg border border-gray-200 bg-white p-3">
+                <List.Item className="rounded-lg border border-gray-200 bg-white p-3 mt-2">
                   <div className="flex w-full items-center justify-between">
                     <div className="flex flex-1 items-center space-x-3">
                       <AiOutlineFile className="h-5 w-5 flex-shrink-0 text-gray-400" />
