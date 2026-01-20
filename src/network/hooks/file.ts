@@ -109,27 +109,21 @@ export function useUploadFile() {
       bucket: string;
       files: File[];
     }) => {
-      try {
-        const formData = new FormData();
-        files.forEach((file) => {
-          formData.append('files', file);
-        });
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
 
-        const res = await http.post<UploadFileApiResponse>(
-          `${uploadFilePath}/${bucket}`,
-          formData,
-          {
-            headers: {
-              'Accept-Charset': 'utf-8',
-            },
-          }
-        );
-        // message 提示由调用方处理
-        return res;
-      } catch {
-        // message 提示由调用方处理
-        throw new Error('Upload failed');
-      }
+      const res = await http.post<UploadFileApiResponse>(
+        `${uploadFilePath}/${bucket}`,
+        formData,
+        {
+          headers: {
+            'Accept-Charset': 'utf-8',
+          },
+        }
+      );
+      return res;
     },
   });
 }

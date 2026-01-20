@@ -43,6 +43,7 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
       const progress = Math.round((ups.uploadedFiles / ups.fileNum) * 100);
 
       // 更新所有文件的进度
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUploadProgress((prev) => {
         const newProgress = { ...prev };
         fileList.forEach((file) => {
@@ -98,7 +99,7 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
   };
 
   // 开始上传
-  const handleUpload = async () => {
+  const handleUpload = () => {
     if (fileList.length === 0) {
       messageApi.warning('请先选择要上传的文件！');
       return;
@@ -111,32 +112,36 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
     }
 
     setUploading(true);
-    try {
-      // 提取 File 对象
-      const files = fileList
-        .map((item) => item.originFileObj)
-        .filter(Boolean) as File[];
 
-      // 调用上传 API
-      const response = await uploadFileMutation.mutateAsync({
+    // 提取 File 对象
+    const files = fileList
+      .map((item) => item.originFileObj)
+      .filter(Boolean) as File[];
+
+    // 调用上传 API
+    uploadFileMutation.mutateAsync(
+      {
         bucket: DEFAULT_BUCKET,
         files,
-      });
-
-      // 获取任务 ID
-      const taskId = response.data?.taskId;
-      // console.log(taskId);  // undefined
-      
-      if (taskId) {
-        setTaskId(taskId);
-      } else {
-        throw new Error('未能获取上传任务 ID');
+      },
+      {
+        onSuccess: (response) => {
+          // 获取任务 ID
+          const taskId = response.data.data.taskId;
+          if (taskId) {
+            setTaskId(taskId);
+          } else {
+            messageApi.error('未能获取任务id');
+          }
+        },
+        onError: (error) => {
+          setUploading(false);
+          const msg = error.message || '上传失败，请重试！';
+          messageApi.error(msg);
+          console.error('业务层错误:', error);
+        },
       }
-    } catch (error) {
-      setUploading(false);
-      messageApi.error('上传失败，请重试！');
-      console.error('Upload error:', error);
-    }
+    );
   };
 
   // 清空文件列表
@@ -205,7 +210,7 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
             <List
               dataSource={fileList}
               renderItem={(file) => (
-                <List.Item className="rounded-lg border border-gray-200 bg-white p-3 mt-2">
+                <List.Item className="mt-2 rounded-lg border border-gray-200 bg-white p-3">
                   <div className="flex w-full items-center justify-between">
                     <div className="flex flex-1 items-center space-x-3">
                       <AiOutlineFile className="h-5 w-5 flex-shrink-0 text-gray-400" />

@@ -82,7 +82,7 @@ export type SetDownloadTotalApiResponse = BaseResponse<Record<string, unknown>>;
 export type GetFilesTypeCountApiResponse = BaseResponse<
   Record<string, unknown>
 >;
-export type UploadFileApiResponse = UploadTaskResponse;
+export type UploadFileApiResponse = BaseResponse<UploadTaskResponse>;
 export type GetUploadStatusApiResponse = UploadStatusResponse;
 export type GetFileApiResponse = BaseResponse<Record<string, unknown>>;
 export type GetFilePagesInfoApiResponse = BaseResponse<FilePagesInfoResponse>;
