@@ -111,7 +111,7 @@ export function useUploadFile() {
     }) => {
       const formData = new FormData();
       files.forEach((file) => {
-        formData.append('files', file);
+        formData.append('files', file, encodeURIComponent(file.name));
       });
 
       const res = await http.post<UploadFileApiResponse>(
