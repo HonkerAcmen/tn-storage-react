@@ -131,6 +131,9 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
           } else {
             messageApi.error('未能获取任务id');
           }
+          queryClient.invalidateQueries({
+            queryKey: ['file', 'data', 'tree'],
+          });
         },
         onError: (error) => {
           setUploading(false);
