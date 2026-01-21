@@ -9,6 +9,7 @@ import {
 } from 'react-icons/ai';
 import { useUploadFile, useGetUploadStatus } from '@/network/hooks/file';
 import { useQueryClient } from '@tanstack/react-query';
+import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
 
 const { Dragger } = Upload;
 
@@ -16,9 +17,6 @@ interface UploadModalProps {
   open: boolean;
   onClose: () => void;
 }
-
-// 默认 bucket，可以根据实际需求修改
-const DEFAULT_BUCKET = 'default';
 
 export default function UploadModal({ open, onClose }: UploadModalProps) {
   const [messageApi, contextHolder] = message.useMessage();

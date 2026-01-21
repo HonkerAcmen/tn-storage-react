@@ -21,3 +21,5 @@ export const FILE_TYPE_CATEGORIES = {
  */
 export const ROOT_NODE_ID = '1';
 
+// 默认 bucket，可以根据实际需求修改
+export const DEFAULT_BUCKET = 'default';

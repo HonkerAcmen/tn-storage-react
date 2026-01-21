@@ -5,13 +5,18 @@ import {
   ReactNode,
   useMemo,
 } from 'react';
-import { getAllNodes } from '@/utils/fileSystem/fileSystemUtils';
-
-import { useGetFileSystemTree } from '@/network/hooks/file';
+import { message } from 'antd';
+import {
+  deleteNodeFromTree,
+  getAllNodes,
+} from '@/utils/fileSystem/fileSystemUtils';
+import { useDeleteFile, useGetFileSystemTree } from '@/network/hooks/file';
 import {
   FileSystemTreeNode,
   FileSystemTreeResponse,
 } from '@/network/types/Response/file';
+import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface FileDataContextType {
   fileTree: FileSystemTreeResponse;
@@ -103,13 +108,15 @@ function normalizeFileTreeData(
 }
 
 export function FileDataProvider({ children }: { children: ReactNode }) {
-  // 在服务器端使用空数据，在客户端挂载后加载数据
+  // 在客户端挂载后加载数据
   const {
     data: fileSystemTreeData,
     isLoading,
     refetch,
   } = useGetFileSystemTree();
 
+  const [messageApi, contextHolder] = message.useMessage();
+  const queryClient = useQueryClient();
   // 规范化数据并作为状态
   const fileTree = useMemo(() => {
     const fstData = fileSystemTreeData?.data.data;
@@ -123,6 +130,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   const allFiles = useMemo(() => getAllNodes(fileTree), [fileTree]);
 
   const loading = isLoading;
+  const deleteFileMutate = useDeleteFile();
 
   // 更新文件
   const updateFile = useCallback(
@@ -151,24 +159,29 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   );
 
   // 删除文件（从树中移除）
-  const deleteFile = useCallback(async (_fileId: string) => {
-    // 先立即更新本地状态，确保 UI 快速响应
-    // setFileTree((prevTree) => {
-    //   const updatedTree = deleteNodeFromTree(prevTree, fileId);
-    //   // 如果删除的是根节点，返回空根节点而不是 null
-    //   if (!updatedTree) {
-    //     return emptyRoot;
-    //   }
-    //   return updatedTree;
-    // });
-    // // 然后调用 API 删除文件（异步操作，不阻塞 UI 更新）
-    // try {
-    //   await deleteFileAPI(fileId);
-    // } catch (error) {
-    //   console.error('Failed to delete file via API:', error);
-    //   // API 调用失败时，本地状态已经更新，保持删除状态
-    // }
-  }, []);
+  const deleteFile = useCallback(
+    async (fileId: string) => {
+      deleteFileMutate.mutate(
+        {
+          bucket: DEFAULT_BUCKET,
+          UUID: fileId,
+        },
+        {
+          onSuccess: () => {
+            messageApi.success('删除成功');
+            queryClient.invalidateQueries({
+              queryKey: ['file', 'data', 'tree'],
+            });
+          },
+          onError: (error) => {
+            console.error('删除文件出错: ' + error);
+            messageApi.error('删除失败, ' + error.message);
+          },
+        }
+      );
+    },
+    [deleteFileMutate, messageApi, queryClient]
+  );
 
   // 刷新文件（重新加载）
   const refreshFiles = useCallback(() => {
@@ -186,6 +199,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
         refreshFiles,
       }}
     >
+      {contextHolder}
       {children}
     </FileDataContext.Provider>
   );

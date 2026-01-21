@@ -48,7 +48,7 @@ export function useGetDownloadTotal() {
 
 export function useGetFileSystemTree() {
   return useQuery({
-    queryKey: ['file', 'tree'],
+    queryKey: ['file', 'data', 'tree'],
     queryFn: async () => {
       const res = await http.get<GetFileSystemTreeApiResponse>('/file/tree');
       return res;
@@ -216,16 +216,9 @@ export function useGetFileInfo(UUID: string) {
 export function useDeleteFile() {
   return useMutation({
     mutationFn: async ({ bucket, UUID }: { bucket: string; UUID: string }) => {
-      try {
-        const res = await http.delete<DeleteFileApiResponse>(
-          `${deleteFilePath}/${bucket}/${UUID}`
-        );
-        // message 提示由调用方处理
-        return res;
-      } catch {
-        // message 提示由调用方处理
-        throw new Error('Delete failed');
-      }
+      return await http.delete<DeleteFileApiResponse>(
+        `${deleteFilePath}/${bucket}/${UUID}`
+      );
     },
   });
 }

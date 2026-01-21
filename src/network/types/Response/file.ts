@@ -63,8 +63,9 @@ export interface UploadStatusResponse {
 // 删除文件响应
 export interface DeleteFileResponse {
   code: number;
-  result: null;
   message: string;
+  data: object;
+  timestamp: string;
 }
 
 // 批量删除文件响应
@@ -87,6 +88,6 @@ export type GetUploadStatusApiResponse = UploadStatusResponse;
 export type GetFileApiResponse = BaseResponse<Record<string, unknown>>;
 export type GetFilePagesInfoApiResponse = BaseResponse<FilePagesInfoResponse>;
 export type GetFileInfoApiResponse = BaseResponse<FileDetailInfo>;
-export type DeleteFileApiResponse = BaseResponse<DeleteFileResponse>;
+export type DeleteFileApiResponse = DeleteFileResponse;
 export type BatchDeleteFileApiResponse = BaseResponse<BatchDeleteFileResponse>;
 export type GetFileSystemTreeApiResponse = BaseResponse<FileSystemTreeResponse>;

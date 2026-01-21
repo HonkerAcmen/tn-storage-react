@@ -41,7 +41,7 @@ function formatDeletedTime(date: Date): string {
 }
 
 export default function DeletedFiles() {
-  const [messageApi, contextHolder] = message.useMessage();
+  const [messageApi] = message.useMessage();
   const { deletedFiles, removeDeletedFile, clearDeletedFiles } =
     useDeletedFiles();
   const { updateFile } = useFileData();
@@ -257,7 +257,4 @@ export default function DeletedFiles() {
 }
 
 // 导出删除文件相关的工具函数，供其他组件使用
-export {
-  useDeletedFiles,
-  type DeletedFileItem,
-} from '@/features/files/hooks';
+export { useDeletedFiles, type DeletedFileItem } from '@/features/files/hooks';

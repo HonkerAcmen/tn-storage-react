@@ -17,6 +17,7 @@ import { useFileActions } from './useFileActions';
  * 统一生成文件操作菜单
  */
 export function useFileMenu(): {
+  // 返回值为getFileMenuItems函数
   getFileMenuItems: (
     item: FileSystemNode,
     options?: {
@@ -31,12 +32,15 @@ export function useFileMenu(): {
    * 获取文件操作菜单项
    */
   const getFileMenuItems = useCallback(
-    (item: FileSystemNode, options?: {
-      onDetailsOpen?: (file: FileSystemNode) => void;
-      onFolderNavigate?: (folderId: string) => void;
-    }): MenuProps['items'] => {
+    (
+      item: FileSystemNode,
+      options?: {
+        onDetailsOpen?: (file: FileSystemNode) => void;
+        onFolderNavigate?: (folderId: string) => void;
+      }
+    ): MenuProps['items'] => {
       const isFav = isFavorite(item.id);
-      
+
       return [
         {
           key: 'download',
@@ -115,4 +119,3 @@ export function useFileMenu(): {
     getFileMenuItems,
   };
 }
-
