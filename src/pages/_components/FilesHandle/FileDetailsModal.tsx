@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import type { JSX } from 'react';
 import {
   Modal,
   Descriptions,
@@ -12,34 +11,31 @@ import {
   message,
 } from 'antd';
 import {
-  AiFillFileExcel,
-  AiFillFilePdf,
-  AiFillFileText,
-  AiFillFileUnknown,
-  AiFillFileZip,
   AiFillFolder,
-  AiFillMuted,
-  AiFillPlaySquare,
-  AiOutlineFileImage,
-  AiOutlineFileJpg,
   AiOutlineDownload,
   AiOutlineShareAlt,
   AiOutlineEdit,
-  AiFillCloseCircle,
   AiOutlineCheck,
   AiOutlineClose,
 } from 'react-icons/ai';
 import { FileSystemNode } from '@/types/fileSystem';
 import { findPathToNode } from '@/types/fileSystem';
 import { getFileIcon } from '@/components/files/FileIcon';
-import { formatFileSize, formatDateTime, getFileDisplayName } from '@/utils/format/formatters';
+import {
+  formatFileSize,
+  formatDateTime,
+  getFileDisplayName,
+} from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 
 interface FileDetailsModalProps {
   open: boolean;
   file: FileSystemNode | null;
   onClose: () => void;
-  onUpdate?: (fileId: string, updates: Partial<FileSystemNode>) => Promise<void>;
+  onUpdate?: (
+    fileId: string,
+    updates: Partial<FileSystemNode>
+  ) => Promise<void>;
 }
 
 export default function FileDetailsModal({
@@ -156,19 +152,19 @@ export default function FileDetailsModal({
           {/* 文件图标和名称 */}
           <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-gray-50 p-6">
             <div className="mb-4">
-            {file.type === 'folder' ? (
-              <AiFillFolder className="h-24 w-24 text-amber-400" />
-            ) : (
-              <div className="text-gray-400">
-                {getFileIcon(file.ext, 'large')}
-              </div>
-            )}
+              {file.type === 'folder' ? (
+                <AiFillFolder className="h-24 w-24 text-amber-400" />
+              ) : (
+                <div className="text-gray-400">
+                  {getFileIcon(file.ext, 'large')}
+                </div>
+              )}
             </div>
             {
               <>
-          <h3 className="mb-2 text-xl font-semibold text-gray-800">
-            {getFileDisplayName(file)}
-          </h3>
+                <h3 className="mb-2 text-xl font-semibold text-gray-800">
+                  {getFileDisplayName(file)}
+                </h3>
                 <Space>
                   {file.type === 'file' ? (
                     <Tag color="blue">文件</Tag>
@@ -229,11 +225,11 @@ export default function FileDetailsModal({
             </Descriptions.Item>
 
             <Descriptions.Item label="创建时间">
-              {formatDateTime(file.createdAt)}
+              {formatDateTime(new Date(file.createdAt))}
             </Descriptions.Item>
 
             <Descriptions.Item label="修改时间">
-              {formatDateTime(file.updatedAt)}
+              {formatDateTime(new Date(file.updatedAt))}
             </Descriptions.Item>
 
             <Descriptions.Item label="文件ID">

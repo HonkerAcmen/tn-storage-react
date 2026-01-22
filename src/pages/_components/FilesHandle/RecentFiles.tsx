@@ -28,14 +28,20 @@ export default function RecentFiles() {
   // 最近访问的文件（按 updatedAt 排序）
   const recentlyAccessed = useMemo(() => {
     return [...allFiles]
-      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )
       .slice(0, 20);
   }, [allFiles]);
 
   // 最近上传的文件（按 createdAt 排序）
   const recentlyCreated = useMemo(() => {
     return [...allFiles]
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )
       .slice(0, 20);
   }, [allFiles]);
 
@@ -45,8 +51,11 @@ export default function RecentFiles() {
     today.setHours(0, 0, 0, 0);
 
     return [...allFiles]
-      .filter((file) => file.createdAt < today)
-      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+      .filter((file) => new Date(file.createdAt) < today)
+      .sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )
       .slice(0, 20);
   }, [allFiles]);
 
@@ -67,7 +76,7 @@ export default function RecentFiles() {
               file={item}
               showSize
               showTime
-              timeValue={`${formatRelativeTime(item.updatedAt)} • 修改于 ${formatDate(item.updatedAt)}`}
+              timeValue={`${formatRelativeTime(new Date(item.updatedAt))} • 修改于 ${formatDate(new Date(item.updatedAt))}`}
               onClick={() => {
                 if (item.type === 'folder') {
                   handleFolderClick(item.id);
@@ -94,7 +103,7 @@ export default function RecentFiles() {
               file={item}
               showSize
               showTime
-              timeValue={`${formatRelativeTime(item.createdAt)} • 上传于 ${formatDate(item.createdAt)}`}
+              timeValue={`${formatRelativeTime(new Date(item.createdAt))} • 上传于 ${formatDate(new Date(item.createdAt))}`}
               actions={
                 item.type === 'file' && (
                   <Tag color="green" className="mr-2">
@@ -128,7 +137,7 @@ export default function RecentFiles() {
               file={item}
               showSize
               showTime
-              timeValue={`${formatRelativeTime(item.updatedAt)} • 修改于 ${formatDate(item.updatedAt)}`}
+              timeValue={`${formatRelativeTime(new Date(item.updatedAt))} • 修改于 ${formatDate(new Date(item.updatedAt))}`}
               actions={
                 item.type === 'file' && (
                   <Tag color="orange" className="mr-2">

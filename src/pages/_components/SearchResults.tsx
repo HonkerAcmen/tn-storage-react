@@ -159,7 +159,7 @@ export default function SearchResults({
                     showSize={file.type === 'file'}
                     showTime={true}
                     timeLabel="修改时间"
-                    timeValue={formatDate(file.updatedAt)}
+                    timeValue={formatDate(new Date(file.updatedAt))}
                     onClick={() => handleFileClick(file)}
                     actions={
                       <button

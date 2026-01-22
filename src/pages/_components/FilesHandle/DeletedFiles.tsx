@@ -215,7 +215,7 @@ export default function DeletedFiles() {
                   <>
                     <AiOutlineClockCircle className="mr-1 inline" />
                     {formatDeletedTime(deletedItem.deletedAt)} • 创建于{' '}
-                    {formatDate(item.createdAt)}
+                    {formatDate(new Date(item.createdAt))}
                   </>
                 }
                 actions={

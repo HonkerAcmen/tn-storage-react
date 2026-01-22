@@ -13,7 +13,11 @@ import {
 import { FileSystemNode } from '@/types/fileSystem';
 import FileDetailsModal from './FileDetailsModal';
 import FileListItem from '@/components/FileListItem';
-import { useFileActions, useFileMenu, useFavorites } from '@/features/files/hooks';
+import {
+  useFileActions,
+  useFileMenu,
+  useFavorites,
+} from '@/features/files/hooks';
 import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 
@@ -95,7 +99,7 @@ export default function Favorites() {
               showSize
               showType
               showTime
-              timeValue={`创建于 ${formatDate(item.createdAt)} • 修改于 ${formatDate(item.updatedAt)}`}
+              timeValue={`创建于 ${formatDate(new Date(item.createdAt))} • 修改于 ${formatDate(new Date(item.updatedAt))}`}
               actions={
                 <Button
                   type="text"
