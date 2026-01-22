@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { getFromStorage, saveToStorage } from '@/utils/storage';
-import { openMock, initializeMockDeletedFiles } from '@/mock/index';
-import type { FileSystemNode } from '@/types/fileSystem';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 const DELETED_FILES_STORAGE_KEY = 'deletedFiles';
 
@@ -9,7 +8,7 @@ const DELETED_FILES_STORAGE_KEY = 'deletedFiles';
  * 已删除文件的数据结构
  */
 export interface DeletedFileItem {
-  file: FileSystemNode;
+  file: FileSystemTreeNode;
   deletedAt: Date;
 }
 
@@ -17,7 +16,7 @@ export interface DeletedFileItem {
  * 从存储中读取的原始格式（日期为字符串）
  */
 interface DeletedFileItemRaw {
-  file: FileSystemNode & {
+  file: FileSystemTreeNode & {
     createdAt: string | Date;
     updatedAt: string | Date;
   };
@@ -37,8 +36,8 @@ function getDeletedFilesFromStorage(): DeletedFileItem[] {
   return stored.map((item) => ({
     file: {
       ...item.file,
-      createdAt: new Date(item.file.createdAt),
-      updatedAt: new Date(item.file.updatedAt),
+      createdAt: item.file.createdAt,
+      updatedAt: item.file.updatedAt,
     },
     deletedAt: new Date(item.deletedAt),
   }));
@@ -49,12 +48,7 @@ function getDeletedFilesFromStorage(): DeletedFileItem[] {
  * 只在 Mock 模式下初始化，真实环境下返回空数组
  */
 function initializeDefaultDeletedFiles(): DeletedFileItem[] {
-  if (!openMock) {
-    return [];
-  }
-  const defaultDeleted = initializeMockDeletedFiles();
-  saveToStorage(DELETED_FILES_STORAGE_KEY, defaultDeleted);
-  return defaultDeleted;
+  return [];
 }
 
 /**
@@ -76,7 +70,7 @@ export function useDeletedFiles() {
     return stored;
   });
 
-  const addDeletedFile = useCallback((file: FileSystemNode): void => {
+  const addDeletedFile = useCallback((file: FileSystemTreeNode): void => {
     setDeletedFiles((prev) => {
       // 检查文件是否已经在已删除列表中
       const exists = prev.some((item) => item.file.id === file.id);

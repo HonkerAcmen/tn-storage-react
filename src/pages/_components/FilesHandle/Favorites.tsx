@@ -1,16 +1,6 @@
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/router';
 import { Empty, Button, message } from 'antd';
-import type { MenuProps } from 'antd';
-import {
-  AiFillStar,
-  AiOutlineDownload,
-  AiOutlineShareAlt,
-  AiOutlineEdit,
-  AiOutlineDelete,
-  AiOutlineInfoCircle,
-} from 'react-icons/ai';
-import { FileSystemNode } from '@/types/fileSystem';
+import { AiFillStar } from 'react-icons/ai';
 import FileDetailsModal from './FileDetailsModal';
 import FileListItem from '@/components/FileListItem';
 import {
@@ -20,13 +10,16 @@ import {
 } from '@/features/files/hooks';
 import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
+import {
+  FileSystemTreeNode,
+  FileSystemTreeResponse,
+} from '@/network/types/Response/file';
 
 export default function Favorites() {
-  const [messageApi, contextHolder] = message.useMessage();
-  const router = useRouter();
+  const [messageApi] = message.useMessage();
   const { favoriteIds, removeFavorite } = useFavorites();
   const { allFiles, updateFile } = useFileData();
-  const { handleFileAction, handleFolderNavigation } = useFileActions();
+  const { handleFolderNavigation } = useFileActions();
   const { getFileMenuItems } = useFileMenu();
 
   // 处理文件夹点击 - 导航到"所有文件"视图
@@ -35,7 +28,9 @@ export default function Favorites() {
   };
 
   // 详情模态框状态
-  const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
+  const [selectedFile, setSelectedFile] = useState<FileSystemTreeNode | null>(
+    null
+  );
   const [showDetails, setShowDetails] = useState(false);
 
   // 获取收藏的文件
@@ -46,7 +41,7 @@ export default function Favorites() {
   // 处理文件更新
   const handleFileUpdate = async (
     fileId: string,
-    updates: Partial<FileSystemNode>
+    updates: Partial<FileSystemTreeNode | FileSystemTreeResponse>
   ) => {
     try {
       await updateFile(fileId, updates);
@@ -90,7 +85,7 @@ export default function Favorites() {
               key={item.id}
               file={item}
               menuItems={getFileMenuItems(item, {
-                onDetailsOpen: (file: FileSystemNode) => {
+                onDetailsOpen: (file: FileSystemTreeNode) => {
                   setSelectedFile(file);
                   setShowDetails(true);
                 },

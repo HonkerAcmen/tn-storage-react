@@ -6,6 +6,7 @@ import { useFavorites } from './useFavorites';
 import { useDeletedFiles } from './useDeletedFiles';
 import { useFileData } from '@/contexts/FileDataContext';
 import * as fileOperations from '@/features/files/services/fileOperations';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 /**
  * 文件操作 Hook
@@ -24,9 +25,9 @@ export function useFileActions() {
   const handleFileAction = useCallback(
     (
       action: string,
-      item: FileSystemNode,
+      item: FileSystemTreeNode,
       options?: {
-        onDetailsOpen?: (file: FileSystemNode) => void;
+        onDetailsOpen?: (file: FileSystemTreeNode) => void;
         onFolderNavigate?: (folderId: string) => void;
       }
     ) => {
@@ -72,7 +73,6 @@ export function useFileActions() {
       deleteFile,
       isFavorite,
       toggleFavorite,
-      refreshFiles,
     ]
   );
 

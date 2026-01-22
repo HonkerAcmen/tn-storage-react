@@ -1,5 +1,9 @@
 import { Modal } from 'antd';
 import type { FileSystemNode } from '@/types/fileSystem';
+import {
+  FileSystemTreeNode,
+  FileSystemTreeResponse,
+} from '@/network/types/Response/file';
 
 /**
  * 文件操作服务
@@ -10,7 +14,7 @@ import type { FileSystemNode } from '@/types/fileSystem';
 /**
  * 下载文件
  */
-export function downloadFile(file: FileSystemNode): void {
+export function downloadFile(file: FileSystemTreeNode): void {
   if (file.type === 'folder') {
     // 消息提示由调用方处理
     return;
@@ -18,7 +22,7 @@ export function downloadFile(file: FileSystemNode): void {
 
   // TODO: 实现真实的下载逻辑
   // 消息提示由调用方处理
-  
+
   // 示例：创建下载链接
   // const url = `/api/files/${file.id}/download`;
   // const link = document.createElement('a');
@@ -30,10 +34,9 @@ export function downloadFile(file: FileSystemNode): void {
 /**
  * 分享文件
  */
-export function shareFile(file: FileSystemNode): void {
+export function shareFile(file: FileSystemTreeNode): void {
   // TODO: 实现真实的分享逻辑
   // 消息提示由调用方处理
-  
   // 示例：生成分享链接
   // const shareUrl = `${window.location.origin}/share/${file.id}`;
   // navigator.clipboard.writeText(shareUrl);
@@ -45,8 +48,11 @@ export function shareFile(file: FileSystemNode): void {
  * @param messageApi - 用于显示消息的 API，由调用方传入
  */
 export function renameFile(
-  file: FileSystemNode,
-  onUpdate: (fileId: string, updates: Partial<FileSystemNode>) => Promise<void>,
+  file: FileSystemTreeNode,
+  onUpdate: (
+    fileId: string,
+    updates: Partial<FileSystemTreeNode | FileSystemTreeResponse>
+  ) => Promise<void>,
   messageApi?: {
     success: (content: string) => void;
     error: (content: string) => void;
@@ -68,7 +74,7 @@ export function renameFile(
     onOk: async () => {
       const input = document.getElementById('rename-input') as HTMLInputElement;
       const newName = input?.value.trim();
-      
+
       if (!newName || newName === file.name) {
         return;
       }
@@ -94,9 +100,8 @@ export function previewFile(file: FileSystemNode): void {
 
   // TODO: 根据文件类型实现不同的预览方式
   // 消息提示由调用方处理
-  
+
   // 示例：打开预览窗口
   // const previewUrl = `/api/files/${file.id}/preview`;
   // window.open(previewUrl, '_blank');
 }
-

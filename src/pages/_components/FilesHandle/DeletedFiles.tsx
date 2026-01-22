@@ -7,12 +7,15 @@ import {
   AiOutlineInfoCircle,
   AiOutlineClockCircle,
 } from 'react-icons/ai';
-import { FileSystemNode } from '@/types/fileSystem';
 import FileDetailsModal from './FileDetailsModal';
 import FileListItem from '@/components/FileListItem';
 import { useDeletedFiles } from '@/features/files/hooks';
 import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
+import {
+  FileSystemTreeNode,
+  FileSystemTreeResponse,
+} from '@/network/types/Response/file';
 
 const { confirm } = Modal;
 
@@ -47,7 +50,9 @@ export default function DeletedFiles() {
   const { updateFile } = useFileData();
 
   // 详情模态框状态
-  const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
+  const [selectedFile, setSelectedFile] = useState<FileSystemTreeNode | null>(
+    null
+  );
   const [showDetails, setShowDetails] = useState(false);
 
   // 按删除时间排序（最新的在前）
@@ -60,7 +65,7 @@ export default function DeletedFiles() {
   // 处理文件更新
   const handleFileUpdate = async (
     fileId: string,
-    updates: Partial<FileSystemNode>
+    updates: Partial<FileSystemTreeResponse | FileSystemTreeNode>
   ) => {
     try {
       await updateFile(fileId, updates);
@@ -107,7 +112,7 @@ export default function DeletedFiles() {
   };
 
   // 处理文件操作
-  const handleFileAction = (action: string, item: FileSystemNode) => {
+  const handleFileAction = (action: string, item: FileSystemTreeNode) => {
     switch (action) {
       case 'restore':
         handleRestore(item.id);
@@ -125,7 +130,7 @@ export default function DeletedFiles() {
   };
 
   // 获取文件操作菜单
-  const getFileMenuItems = (item: FileSystemNode): MenuProps['items'] => {
+  const getFileMenuItems = (item: FileSystemTreeNode): MenuProps['items'] => {
     return [
       {
         key: 'restore',

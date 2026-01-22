@@ -9,8 +9,9 @@ import {
   AiFillStar,
   AiOutlineStar,
 } from 'react-icons/ai';
-import type { FileSystemNode } from '@/types/fileSystem';
+
 import { useFileActions } from './useFileActions';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 /**
  * 文件菜单 Hook
@@ -19,9 +20,9 @@ import { useFileActions } from './useFileActions';
 export function useFileMenu(): {
   // 返回值为getFileMenuItems函数
   getFileMenuItems: (
-    item: FileSystemNode,
+    item: FileSystemTreeNode,
     options?: {
-      onDetailsOpen?: (file: FileSystemNode) => void;
+      onDetailsOpen?: (file: FileSystemTreeNode) => void;
       onFolderNavigate?: (folderId: string) => void;
     }
   ) => MenuProps['items'];
@@ -33,9 +34,9 @@ export function useFileMenu(): {
    */
   const getFileMenuItems = useCallback(
     (
-      item: FileSystemNode,
+      item: FileSystemTreeNode,
       options?: {
-        onDetailsOpen?: (file: FileSystemNode) => void;
+        onDetailsOpen?: (file: FileSystemTreeNode) => void;
         onFolderNavigate?: (folderId: string) => void;
       }
     ): MenuProps['items'] => {

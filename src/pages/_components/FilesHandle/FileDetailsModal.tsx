@@ -19,7 +19,7 @@ import {
   AiOutlineClose,
 } from 'react-icons/ai';
 import { FileSystemNode } from '@/types/fileSystem';
-import { findPathToNode } from '@/types/fileSystem';
+
 import { getFileIcon } from '@/components/files/FileIcon';
 import {
   formatFileSize,
@@ -27,14 +27,19 @@ import {
   getFileDisplayName,
 } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
+import {
+  FileSystemTreeNode,
+  FileSystemTreeResponse,
+} from '@/network/types/Response/file';
+import { findPathToNode } from '@/utils/fileSystem/fileSystemUtils';
 
 interface FileDetailsModalProps {
   open: boolean;
-  file: FileSystemNode | null;
+  file: FileSystemTreeNode | null;
   onClose: () => void;
   onUpdate?: (
     fileId: string,
-    updates: Partial<FileSystemNode>
+    updates: Partial<FileSystemTreeResponse | FileSystemTreeNode>
   ) => Promise<void>;
 }
 
@@ -100,7 +105,7 @@ export default function FileDetailsModal({
       if (onUpdate) {
         await onUpdate(file.id, {
           name: newName,
-          updatedAt: new Date(),
+          updatedAt: new Date().toLocaleString(),
         });
       }
 
@@ -216,7 +221,7 @@ export default function FileDetailsModal({
 
             {file.type === 'file' && (
               <Descriptions.Item label="大小">
-                {formatFileSize(file.size)}
+                {formatFileSize(parseInt(file.size))}
               </Descriptions.Item>
             )}
 

@@ -68,7 +68,7 @@ export function formatDate(date: Date): string {
 export function getFileDisplayName(file: {
   name: string;
   type: 'file' | 'folder';
-  ext?: FileExtension;
+  ext?: string;
 }): string {
   if (file.type === 'file' && file.ext) {
     return `${file.name}.${file.ext}`;

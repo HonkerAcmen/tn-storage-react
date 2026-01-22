@@ -1,14 +1,14 @@
 import { Typography, Space, Tag, Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { AiFillFolder, AiOutlineEllipsis } from 'react-icons/ai';
-import type { FileSystemNode } from '@/types/fileSystem';
 import { getFileIcon, ICON_SIZE_MEDIUM } from './files/FileIcon';
 import { formatFileSize, getFileDisplayName } from '@/utils/format/formatters';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 const { Text } = Typography;
 
 interface FileListItemProps {
-  file: FileSystemNode;
+  file: FileSystemTreeNode;
   menuItems?: MenuProps['items'];
   actions?: React.ReactNode;
   showSize?: boolean;
@@ -48,7 +48,7 @@ export default function FileListItem({
           <Space>
             <Text className="text-gray-800">{getFileDisplayName(file)}</Text>
             {showSize && file.type === 'file' && (
-              <Tag color="blue">{formatFileSize(file.size)}</Tag>
+              <Tag color="blue">{formatFileSize(parseInt(file.size))}</Tag>
             )}
             {showType && file.type === 'folder' && (
               <Tag color="orange">文件夹</Tag>
