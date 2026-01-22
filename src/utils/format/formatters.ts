@@ -40,8 +40,8 @@ export function formatRelativeTime(date: Date): string {
 /**
  * 格式化日期时间
  */
-export function formatDateTime(date: Date): string {
-  return date.toLocaleString('zh-CN', {
+export function formatDateTime(date: string): string {
+  return new Date(date).toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -54,8 +54,8 @@ export function formatDateTime(date: Date): string {
 /**
  * 格式化日期
  */
-export function formatDate(date: Date): string {
-  return date.toLocaleDateString('zh-CN', {
+export function formatDate(date: string): string {
+  return new Date(date).toLocaleString('zh-CN', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
