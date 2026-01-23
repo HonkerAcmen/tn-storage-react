@@ -1,22 +1,3 @@
-import type { FileSystemNode } from '@/types/fileSystem';
-
-/**
- * 递归获取所有文件
- */
-export function getAllFiles(node: FileSystemNode): FileSystemNode[] {
-  const files: FileSystemNode[] = [];
-
-  if (node.type === 'file') {
-    files.push(node);
-  } else if (node.type === 'folder' && node.children) {
-    node.children.forEach((child) => {
-      files.push(...getAllFiles(child));
-    });
-  }
-
-  return files;
-}
-
 /**
  * 格式化文件大小
  */
@@ -74,14 +55,3 @@ export function formatDate(date: Date): string {
     day: 'numeric',
   });
 }
-
-/**
- * 获取文件显示名称（包含扩展名）
- */
-export function getFileDisplayName(file: FileSystemNode): string {
-  if (file.type === 'file' && file.ext) {
-    return `${file.name}.${file.ext}`;
-  }
-  return file.name;
-}
-

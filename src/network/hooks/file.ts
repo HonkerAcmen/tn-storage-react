@@ -11,6 +11,7 @@ import {
   GetFileSystemTreeApiResponse,
   GetUploadStatusApiResponse,
   GetUploadTotalApiResponse,
+  PushFileDataTrashApiResponse,
   SetDownloadTotalApiResponse,
   UploadFileApiResponse,
 } from '@/network/types/Response/file';
@@ -249,5 +250,20 @@ export function useBatchDeleteFile() {
         throw new Error('Batch delete failed');
       }
     },
+  });
+}
+
+export function usePushFileDataTrash() {
+  return useMutation({
+    mutationFn: async ({
+      srcBucket,
+      UUID,
+    }: {
+      srcBucket: string;
+      UUID: string;
+    }) =>
+      await http.post<PushFileDataTrashApiResponse>(
+        `/file/delete/trash/${srcBucket}/${UUID}`
+      ),
   });
 }

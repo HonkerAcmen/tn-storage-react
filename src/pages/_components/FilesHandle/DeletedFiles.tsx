@@ -17,8 +17,6 @@ import {
   FileSystemTreeResponse,
 } from '@/network/types/Response/file';
 
-const { confirm } = Modal;
-
 /**
  * 格式化删除时间
  */
@@ -44,7 +42,8 @@ function formatDeletedTime(date: Date): string {
 }
 
 export default function DeletedFiles() {
-  const [messageApi] = message.useMessage();
+  const [messageApi, messageContextHolder] = message.useMessage();
+  const [modal, modalContextHolder] = Modal.useModal();
   const { deletedFiles, removeDeletedFile, clearDeletedFiles } =
     useDeletedFiles();
   const { updateFile } = useFileData();
@@ -83,7 +82,7 @@ export default function DeletedFiles() {
 
   // 永久删除文件
   const handlePermanentDelete = (fileId: string, fileName: string) => {
-    confirm({
+    modal.confirm({
       title: '确认永久删除',
       content: `确定要永久删除 "${fileName}" 吗？此操作无法撤销。`,
       okText: '确认删除',
@@ -98,7 +97,7 @@ export default function DeletedFiles() {
 
   // 清空回收站
   const handleEmptyTrash = () => {
-    confirm({
+    modal.confirm({
       title: '确认清空回收站',
       content: `确定要清空回收站吗？此操作将永久删除所有文件，无法撤销。`,
       okText: '确认清空',
@@ -171,6 +170,8 @@ export default function DeletedFiles() {
 
   return (
     <div className="ml-4">
+      {messageContextHolder}
+      {modalContextHolder}
       <div className="mt-4 mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-semibold text-[#2e2c34]">已删除文件</h1>

@@ -2,7 +2,6 @@ import {
   FileSystemTreeNode,
   FileSystemTreeResponse,
 } from '@/network/types/Response/file';
-import type { FileSystemNode } from '@/types/fileSystem';
 
 /**
  * 文件系统树操作工具函数
@@ -11,19 +10,19 @@ import type { FileSystemNode } from '@/types/fileSystem';
 /**
  * 递归获取所有文件（仅文件，不包括文件夹）
  */
-export function getAllFiles(node: FileSystemNode): FileSystemNode[] {
-  const files: FileSystemNode[] = [];
+// export function getAllFiles(node: FileSystemNode): FileSystemNode[] {
+//   const files: FileSystemNode[] = [];
 
-  if (node.type === 'file') {
-    files.push(node);
-  } else if (node.type === 'folder' && node.children) {
-    node.children.forEach((child) => {
-      files.push(...getAllFiles(child));
-    });
-  }
+//   if (node.type === 'file') {
+//     files.push(node);
+//   } else if (node.type === 'folder' && node.children) {
+//     node.children.forEach((child) => {
+//       files.push(...getAllFiles(child));
+//     });
+//   }
 
-  return files;
-}
+//   return files;
+// }
 
 /**
  * 递归获取所有节点（文件和文件夹，排除根节点）
@@ -56,45 +55,45 @@ export function getAllNodes(
  * 递归获取所有节点（文件和文件夹，排除根节点）
  * 用于处理前端 FileSystemNode 类型
  */
-export function getAllNodesFromFileSystemNode(
-  node: FileSystemNode
-): FileSystemNode[] {
-  const nodes: FileSystemNode[] = [];
+// export function getAllNodesFromFileSystemNode(
+//   node: FileSystemNode
+// ): FileSystemNode[] {
+//   const nodes: FileSystemNode[] = [];
 
-  // 跳过根节点
-  if (node.name !== 'root') {
-    nodes.push(node);
-  }
+//   // 跳过根节点
+//   if (node.name !== 'root') {
+//     nodes.push(node);
+//   }
 
-  if (node.type === 'folder' && node.children) {
-    node.children.forEach((child) => {
-      nodes.push(...getAllNodesFromFileSystemNode(child));
-    });
-  }
+//   if (node.type === 'folder' && node.children) {
+//     node.children.forEach((child) => {
+//       nodes.push(...getAllNodesFromFileSystemNode(child));
+//     });
+//   }
 
-  return nodes;
-}
+//   return nodes;
+// }
 
 /**
  * 搜索文件和文件夹
  */
-export function searchNodes(
-  root: FileSystemNode,
-  keyword: string
-): FileSystemNode[] {
-  if (!keyword.trim()) {
-    return [];
-  }
+// export function searchNodes(
+//   root: FileSystemNode,
+//   keyword: string
+// ): FileSystemNode[] {
+//   if (!keyword.trim()) {
+//     return [];
+//   }
 
-  const allNodes = getAllNodesFromFileSystemNode(root);
-  const lowerKeyword = keyword.toLowerCase();
+//   const allNodes = getAllNodesFromFileSystemNode(root);
+//   const lowerKeyword = keyword.toLowerCase();
 
-  return allNodes.filter((node) => {
-    const displayName =
-      node.type === 'file' && node.ext ? `${node.name}.${node.ext}` : node.name;
-    return displayName.toLowerCase().includes(lowerKeyword);
-  });
-}
+//   return allNodes.filter((node) => {
+//     const displayName =
+//       node.type === 'file' && node.ext ? `${node.name}.${node.ext}` : node.name;
+//     return displayName.toLowerCase().includes(lowerKeyword);
+//   });
+// }
 
 /**
  * 根据ID查找节点
@@ -265,24 +264,24 @@ export function updateNodeInTree(
 /**
  * 在树中删除节点
  */
-export function deleteNodeFromTree(
-  node: FileSystemNode,
-  targetId: string
-): FileSystemNode | null {
-  if (node.id === targetId) {
-    return null;
-  }
+// export function deleteNodeFromTree(
+//   node: FileSystemNode,
+//   targetId: string
+// ): FileSystemNode | null {
+//   if (node.id === targetId) {
+//     return null;
+//   }
 
-  if (node.type === 'folder' && node.children) {
-    const filteredChildren = node.children
-      .map((child) => deleteNodeFromTree(child, targetId))
-      .filter((child): child is FileSystemNode => child !== null);
+//   if (node.type === 'folder' && node.children) {
+//     const filteredChildren = node.children
+//       .map((child) => deleteNodeFromTree(child, targetId))
+//       .filter((child): child is FileSystemNode => child !== null);
 
-    return {
-      ...node,
-      children: filteredChildren,
-    };
-  }
+//     return {
+//       ...node,
+//       children: filteredChildren,
+//     };
+//   }
 
-  return node;
-}
+//   return node;
+// }

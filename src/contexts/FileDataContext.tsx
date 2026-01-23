@@ -6,11 +6,11 @@ import {
   useMemo,
 } from 'react';
 import { message } from 'antd';
+import { getAllNodes } from '@/utils/fileSystem/fileSystemUtils';
 import {
-  deleteNodeFromTree,
-  getAllNodes,
-} from '@/utils/fileSystem/fileSystemUtils';
-import { useDeleteFile, useGetFileSystemTree } from '@/network/hooks/file';
+  useGetFileSystemTree,
+  usePushFileDataTrash,
+} from '@/network/hooks/file';
 import {
   FileSystemTreeNode,
   FileSystemTreeResponse,
@@ -130,13 +130,13 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   const allFiles = useMemo(() => getAllNodes(fileTree), [fileTree]);
 
   const loading = isLoading;
-  const deleteFileMutate = useDeleteFile();
+  const pushFileDataTrash = usePushFileDataTrash();
 
   // 更新文件
   const updateFile = useCallback(
     async (
-      _fileId: string,
-      _updates: Partial<FileSystemTreeResponse | FileSystemTreeNode>
+      fileId: string,
+      updates: Partial<FileSystemTreeResponse | FileSystemTreeNode>
     ) => {
       // try {
       //   // 调用 API 更新文件
@@ -158,29 +158,29 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  // 删除文件（从树中移除）
+  // 删除文件
   const deleteFile = useCallback(
     async (fileId: string) => {
-      deleteFileMutate.mutate(
+      pushFileDataTrash.mutate(
         {
-          bucket: DEFAULT_BUCKET,
+          srcBucket: DEFAULT_BUCKET,
           UUID: fileId,
         },
         {
           onSuccess: () => {
-            messageApi.success('删除成功');
+            messageApi.success('删除成功，放入回收站');
             queryClient.invalidateQueries({
               queryKey: ['file', 'data', 'tree'],
             });
           },
           onError: (error) => {
-            console.error('删除文件出错: ' + error);
-            messageApi.error('删除失败, ' + error.message);
+            console.error(error);
+            messageApi.error('删除失败' + error.message);
           },
         }
       );
     },
-    [deleteFileMutate, messageApi, queryClient]
+    [pushFileDataTrash, messageApi, queryClient]
   );
 
   // 刷新文件（重新加载）

@@ -51,4 +51,3 @@ export function clearStorage(): void {
     console.error('Error clearing localStorage:', error);
   }
 }
-

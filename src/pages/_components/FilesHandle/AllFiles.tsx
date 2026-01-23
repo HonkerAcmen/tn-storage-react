@@ -484,10 +484,10 @@ export default function AllFiles() {
               }
 
               if (updates.createdAt) {
-                apiUpdates.createdAt = updates.createdAt.toISOString();
+                apiUpdates.createdAt = updates.createdAt.toString();
               }
               if (updates.updatedAt) {
-                apiUpdates.updatedAt = updates.updatedAt.toISOString();
+                apiUpdates.updatedAt = updates.updatedAt.toString();
               }
 
               await handleFileUpdate(fileId, apiUpdates);

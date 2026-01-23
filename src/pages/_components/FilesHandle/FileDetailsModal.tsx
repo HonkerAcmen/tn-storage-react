@@ -18,7 +18,6 @@ import {
   AiOutlineCheck,
   AiOutlineClose,
 } from 'react-icons/ai';
-import { FileSystemNode } from '@/types/fileSystem';
 
 import { getFileIcon } from '@/components/files/FileIcon';
 import {

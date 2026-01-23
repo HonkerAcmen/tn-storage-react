@@ -1,5 +1,4 @@
 import { Modal } from 'antd';
-import type { FileSystemNode } from '@/types/fileSystem';
 import {
   FileSystemTreeNode,
   FileSystemTreeResponse,
@@ -92,7 +91,7 @@ export function renameFile(
 /**
  * 预览文件
  */
-export function previewFile(file: FileSystemNode): void {
+export function previewFile(file: FileSystemTreeNode): void {
   if (file.type === 'folder') {
     // 消息提示由调用方处理
     return;
