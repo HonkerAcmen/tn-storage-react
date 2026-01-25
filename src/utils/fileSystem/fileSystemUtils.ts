@@ -1,7 +1,4 @@
-import {
-  FileSystemTreeNode,
-  FileSystemTreeResponse,
-} from '@/network/types/Response/file';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 /**
  * 文件系统树操作工具函数
@@ -25,30 +22,17 @@ import {
 // }
 
 /**
- * 递归获取所有节点（文件和文件夹，排除根节点）
- * 用于处理 API 返回的文件树结构
+ * 获取某层文件与文件夹
  */
-export function getAllNodes(
-  node: FileSystemTreeResponse | FileSystemTreeNode
+export function getLayNodes(
+  files: FileSystemTreeNode,
+  parentId: number
 ): FileSystemTreeNode[] {
-  const nodes: FileSystemTreeNode[] = [];
+  console.log('files is :', files);
+  const result: FileSystemTreeNode[] = [];
+  console.log('result is ', result);
 
-  // 跳过根节点
-  if (node.name !== 'root') {
-    // FileSystemTreeResponse 是文件夹类型，可以安全转换为 FileSystemTreeNode
-    nodes.push(node as FileSystemTreeNode);
-  }
-
-  // 处理子节点：children 可能是 FileSystemTreeNode[]（在 FileSystemTreeResponse 中）或 FileSystemTreeNode[]（在 FileSystemTreeNode 中）
-  const children = 'children' in node ? node.children : undefined;
-  if (node.type === 'folder' && children) {
-    children.forEach((child) => {
-      // child 是 FileSystemTreeNode，递归调用 getAllNodes
-      nodes.push(...getAllNodes(child));
-    });
-  }
-
-  return nodes;
+  return result;
 }
 
 /**
@@ -99,9 +83,9 @@ export function getAllNodes(
  * 根据ID查找节点
  */
 export function findNodeById(
-  node: FileSystemTreeResponse | FileSystemTreeNode,
+  node: FileSystemTreeNode,
   targetId: string
-): FileSystemTreeResponse | FileSystemTreeNode | null {
+): FileSystemTreeNode | null {
   if (node.id === targetId) {
     return node;
   }
@@ -126,13 +110,13 @@ export function findNodeById(
  * 用于处理 API 返回的文件树结构
  */
 export function getChildrenByParentId(
-  root: FileSystemTreeResponse | FileSystemTreeNode,
+  root: FileSystemTreeNode,
   parentId: string
 ): FileSystemTreeNode[] {
   function dfs(
-    node: FileSystemTreeResponse | FileSystemTreeNode,
+    node: FileSystemTreeNode,
     id: string
-  ): FileSystemTreeResponse | FileSystemTreeNode | null {
+  ): FileSystemTreeNode | null {
     if (node.id === id) return node;
 
     if (node.type === 'folder') {
@@ -161,12 +145,12 @@ export function getChildrenByParentId(
  * 用于处理 API 返回的文件树结构
  */
 export function findPathToNode(
-  root: FileSystemTreeResponse | FileSystemTreeNode,
+  root: FileSystemTreeNode,
   targetId: string
-): (FileSystemTreeResponse | FileSystemTreeNode)[] {
-  const path: (FileSystemTreeResponse | FileSystemTreeNode)[] = [];
+): FileSystemTreeNode[] {
+  const path: FileSystemTreeNode[] = [];
 
-  function dfs(node: FileSystemTreeResponse | FileSystemTreeNode): boolean {
+  function dfs(node: FileSystemTreeNode): boolean {
     path.push(node); // 将当前节点加入路径
 
     if (node.id === targetId) {
@@ -194,7 +178,7 @@ export function findPathToNode(
  * 在树中更新节点
  */
 export function updateNodeInTree(
-  node: FileSystemTreeResponse | FileSystemTreeNode,
+  node: FileSystemTreeNode,
   targetId: string,
   updates: Partial<{
     id?: string;
@@ -205,18 +189,18 @@ export function updateNodeInTree(
     createdAt?: string;
     updatedAt?: string;
   }>
-): FileSystemTreeResponse | FileSystemTreeNode | null {
+): FileSystemTreeNode | null {
   if (node.id === targetId) {
     // 根据节点类型分别处理，确保类型安全
     if (node.type === 'folder') {
       // 如果是根节点 (FileSystemTreeResponse)
-      if (node.name === 'root' && 'children' in node) {
+      if (node.name === 'root' && node.parent_id === 0 && 'children' in node) {
         return {
           ...node,
           ...updates,
           type: 'folder' as const,
           children: node.children || [],
-        } as FileSystemTreeResponse;
+        } as FileSystemTreeNode;
       }
       // 如果是文件夹节点 (FileSystemTreeNode)
       return {
@@ -244,11 +228,11 @@ export function updateNodeInTree(
         .filter((child): child is FileSystemTreeNode => child !== null);
 
       // 如果是根节点，返回 FileSystemTreeResponse
-      if (node.name === 'root' && 'children' in node) {
+      if (node.name === 'root' && node.parent_id === 0 && 'children' in node) {
         return {
           ...node,
           children: updatedChildren,
-        } as FileSystemTreeResponse;
+        } as FileSystemTreeNode;
       }
       // 如果是文件夹节点，返回 FileSystemTreeNode
       return {

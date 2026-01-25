@@ -3,24 +3,26 @@ import { BaseResponse } from '.';
 // 文件树节点接口
 export interface FileSystemTreeNode {
   id: string;
+  UUID: string;
   name: string;
   type: 'file' | 'folder';
-  size: string;
+  parent_id: number;
+  size: string | number;
   ext: string;
-  createdAt: string;
-  updatedAt: string;
-  children: FileSystemTreeNode[];
-}
-
-// 文件树响应接口
-export interface FileSystemTreeResponse {
-  id: string;
-  name: string;
-  type: 'folder';
   children?: FileSystemTreeNode[];
   createdAt: string;
   updatedAt: string;
 }
+
+// 文件树响应接口
+// export interface FileSystemTreeResponse {
+//   id: string;
+//   name: string;
+//   type: 'folder';
+//   children?: FileSystemTreeNode[];
+//   createdAt: string;
+//   updatedAt: string;
+// }
 
 // 文件信息接口
 export interface FileInfo {
@@ -76,6 +78,9 @@ export interface BatchDeleteFileResponse {
   timestamp: string;
 }
 
+// 获取垃圾桶全部数据响应
+type getTrashFilesResponse = FileSystemTreeNode;
+
 // API 响应类型
 export type GetDownloadTotalApiResponse = BaseResponse<Record<string, unknown>>;
 export type GetUploadTotalApiResponse = BaseResponse<Record<string, unknown>>;
@@ -90,5 +95,6 @@ export type GetFilePagesInfoApiResponse = BaseResponse<FilePagesInfoResponse>;
 export type GetFileInfoApiResponse = BaseResponse<FileDetailInfo>;
 export type DeleteFileApiResponse = DeleteFileResponse;
 export type BatchDeleteFileApiResponse = BaseResponse<BatchDeleteFileResponse>;
-export type GetFileSystemTreeApiResponse = BaseResponse<FileSystemTreeResponse>;
+export type GetFileSystemTreeApiResponse = BaseResponse<FileSystemTreeNode>;
 export type PushFileDataTrashApiResponse = BaseResponse<object>;
+export type getTrashFilesApiResponse = BaseResponse<getTrashFilesResponse>;
