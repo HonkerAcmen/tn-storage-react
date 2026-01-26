@@ -14,6 +14,7 @@ import {
 } from '@/network/hooks/file';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
+import { getChildrenByParentId } from '@/utils/fileSystem/fileSystemUtils';
 
 // --- 类型定义 ---
 
@@ -34,6 +35,7 @@ interface BackendTreeNode {
 interface FileDataContextType {
   fileTree: FileSystemTreeNode;
   allFiles: FileSystemTreeNode[]; // 扁平化的所有文件列表
+  fileMap: Map<string, FileSystemTreeNode>;
   loading: boolean;
   updateFile: (
     fileId: string,
@@ -59,7 +61,9 @@ const EMPTY_ROOT: FileSystemTreeNode = {
   children: [],
 };
 
-// 转换后端数据格式到前端格式（纯函数）
+/**
+ * 转换后端数据格式到前端格式（纯函数）
+ */
 const transformTreeNode = (node: BackendTreeNode): FileSystemTreeNode => {
   return {
     id: node.id,
@@ -80,18 +84,27 @@ const transformTreeNode = (node: BackendTreeNode): FileSystemTreeNode => {
   };
 };
 
-// 将树结构扁平化为一维数组 (DFS)
-const flattenTree = (nodes: FileSystemTreeNode[]): FileSystemTreeNode[] => {
-  let result: FileSystemTreeNode[] = [];
-  for (const node of nodes) {
-    result.push(node);
-    if (node.children && node.children.length > 0) {
-      result = result.concat(flattenTree(node.children));
+/**
+ * 构造缓存表
+ * @param root 整个文件结构的根结点
+ * @returns
+ */
+function buildFileMap(
+  root: FileSystemTreeNode
+): Map<string, FileSystemTreeNode> {
+  const map = new Map<string, FileSystemTreeNode>();
+
+  function transformation(root: FileSystemTreeNode) {
+    map.set(root.id, root);
+
+    if ('children' in root && root.children) {
+      root.children.forEach(transformation);
     }
   }
-  console.log('result is ', result);
-  return result;
-};
+
+  transformation(root);
+  return map;
+}
 
 // --- Context 定义 ---
 
@@ -111,7 +124,6 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
     isLoading,
     refetch,
   } = useGetFileSystemTree();
-
   const pushFileDataTrash = usePushFileDataTrash();
 
   // 2. 计算 fileTree (Memoized)
@@ -126,15 +138,18 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
     return transformTreeNode(rootNodeRaw as BackendTreeNode);
   }, [fileSystemTreeData]);
 
+  // 初始化为文件映射表
+  const fileMap = buildFileMap(fileTree);
+
   // 3. 计算 allFiles (Memoized)
-  // 这里修正为标准的“扁平化所有文件”
-  // 如果只需要第一层，直接用 fileTree.children 即可。这里假设你需要所有文件用于搜索/统计。
+  // 这里修正为 扁平化所有文件
+  // 这里假设你需要所有文件用于搜索/统计。
   const allFiles = useMemo(() => {
     if (!fileTree || !fileTree.children) return [];
     // 将整个树（包括根节点或仅根节点的子节点）扁平化
-    // 这里选择从 root 的 children 开始扁平化，不包含 root 本身
-    return flattenTree(fileTree.children);
-  }, [fileTree]);
+    // 1是根下的文件夹序列，即所有文件
+    return getChildrenByParentId(fileMap, '1');
+  }, [fileMap, fileTree]);
 
   // 4. 操作方法
 
@@ -188,13 +203,22 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   const contextValue = useMemo<FileDataContextType>(
     () => ({
       fileTree,
+      fileMap,
       allFiles,
       loading: isLoading,
       updateFile,
       deleteFile,
       refreshFiles,
     }),
-    [fileTree, allFiles, isLoading, updateFile, deleteFile, refreshFiles]
+    [
+      fileTree,
+      fileMap,
+      allFiles,
+      isLoading,
+      updateFile,
+      deleteFile,
+      refreshFiles,
+    ]
   );
 
   return (

@@ -110,32 +110,28 @@ export function findNodeById(
  * 用于处理 API 返回的文件树结构
  */
 export function getChildrenByParentId(
-  root: FileSystemTreeNode,
+  fileMap: Map<string, FileSystemTreeNode>,
   parentId: string
 ): FileSystemTreeNode[] {
-  function dfs(
-    node: FileSystemTreeNode,
-    id: string
-  ): FileSystemTreeNode | null {
-    if (node.id === id) return node;
-
-    if (node.type === 'folder') {
-      const children = 'children' in node ? node.children : undefined;
-      if (children) {
-        for (const child of children) {
-          const found = dfs(child, id);
-          if (found) return found;
-        }
-      }
+  /**
+   * 根据缓存表返回需要节点的数据，只需要构造一次缓存表即可（未实现）
+   * @param id
+   * @returns
+   */
+  function cacheMap(id: string): FileSystemTreeNode[] {
+    const node = fileMap.get(id);
+    if (node && node.type === 'folder' && node.children) {
+      return node.children;
     }
-
-    return null;
+    return [];
   }
 
-  const result = dfs(root, parentId);
-  if (result && result.type === 'folder') {
-    const children = 'children' in result ? result.children : undefined;
-    return children || [];
+  // 因为后端数据库表中使用邻接表进行组织文件和文件夹的结构
+  // 所以每个文件都会有一个parent_id字段
+  // 该字段的值是 存储该文件的文件夹的id
+  const result = cacheMap(parentId);
+  if (result) {
+    return result;
   }
   return [];
 }

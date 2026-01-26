@@ -14,16 +14,6 @@ export interface FileSystemTreeNode {
   updatedAt: string;
 }
 
-// 文件树响应接口
-// export interface FileSystemTreeResponse {
-//   id: string;
-//   name: string;
-//   type: 'folder';
-//   children?: FileSystemTreeNode[];
-//   createdAt: string;
-//   updatedAt: string;
-// }
-
 // 文件信息接口
 export interface FileInfo {
   id: string;

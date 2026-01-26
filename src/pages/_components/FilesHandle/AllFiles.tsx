@@ -36,7 +36,7 @@ type SortType = 'latest' | 'oldest' | 'name' | 'type';
 export default function AllFiles() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
-  const { fileTree, updateFile } = useFileData();
+  const { fileTree, updateFile, fileMap } = useFileData();
 
   // 获取当前文件夹ID，如果没有则在根路径下显示根目录的直接子节点
   const currentFolderId = router.query.folderId as string | undefined;
@@ -88,14 +88,14 @@ export default function AllFiles() {
   const currentFiles = useMemo(() => {
     // 如果有 folderId，显示该文件夹的直接子节点
     if (currentFolderId) {
-      return getChildrenByParentId(fileTree, currentFolderId);
+      return getChildrenByParentId(fileMap, currentFolderId);
     }
     // 否则显示根目录的直接子节点（不是所有文件）
     if (fileTree.type === 'folder' && fileTree.children) {
       return fileTree.children;
     }
     return [];
-  }, [currentFolderId, fileTree]);
+  }, [currentFolderId, fileMap, fileTree.children, fileTree.type]);
 
   // 计算面包屑路径
   const breadcrumbPath = useMemo(() => {

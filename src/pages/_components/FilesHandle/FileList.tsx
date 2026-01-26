@@ -14,12 +14,12 @@ import {
   AiOutlineFileJpg,
 } from 'react-icons/ai';
 
+import { useFileData } from '@/contexts/FileDataContext';
 import {
-  FileSystemNode,
   findPathToNode,
   getChildrenByParentId,
-} from '@/types/fileSystem';
-import { useFileData } from '@/contexts/FileDataContext';
+} from '@/utils/fileSystem/fileSystemUtils';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 // 将 renderMap 移出组件，避免重复创建对象
 // 使用 Record 类型增强类型安全
@@ -41,15 +41,15 @@ const RENDER_MAP: Record<string, JSX.Element> = {
 
 export default function FileList() {
   const router = useRouter();
-  const { fileTree } = useFileData();
+  const { fileTree, fileMap } = useFileData();
 
   // 获取当前文件夹ID，默认为根节点ID '1'
   const currentFolderId = (router.query.folderId as string) || '1';
 
   // 计算当前层级的文件 (使用你之前的函数)
   const siblings = useMemo(() => {
-    return getChildrenByParentId(fileTree, currentFolderId);
-  }, [fileTree, currentFolderId]);
+    return getChildrenByParentId(fileMap, currentFolderId);
+  }, [fileMap, currentFolderId]);
 
   // 计算面包屑路径 (使用新算法)
   const breadcrumbPath = useMemo(() => {
@@ -72,7 +72,7 @@ export default function FileList() {
     );
   }
 
-  function handleItemClick(item: FileSystemNode) {
+  function handleItemClick(item: FileSystemTreeNode) {
     if (item.type === 'folder') {
       handleNavigate(item.id);
     } else {
@@ -92,14 +92,14 @@ export default function FileList() {
           return {
             title: (
               <span
-              onClick={() => !isLast && handleNavigate(node.id)}
-              className={
-                !isLast
-                  ? 'cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600'
-                  : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
-              }
-            >
-              {node.name === 'root' ? '根目录' : node.name}
+                onClick={() => !isLast && handleNavigate(node.id)}
+                className={
+                  !isLast
+                    ? 'cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600'
+                    : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
+                }
+              >
+                {node.name === 'root' ? '根目录' : node.name}
               </span>
             ),
           };
