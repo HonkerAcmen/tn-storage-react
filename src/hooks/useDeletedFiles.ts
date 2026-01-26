@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { getFromStorage, saveToStorage } from '@/utils/storage';
-import { openMock, initializeMockDeletedFiles } from '@/mock/index';
-import type { FileSystemNode } from '@/types/fileSystem';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 const DELETED_FILES_STORAGE_KEY = 'deletedFiles';
 
@@ -9,15 +8,15 @@ const DELETED_FILES_STORAGE_KEY = 'deletedFiles';
  * 已删除文件的数据结构
  */
 export interface DeletedFileItem {
-  file: FileSystemNode;
-  deletedAt: Date;
+  file: FileSystemTreeNode;
+  deletedAt: string;
 }
 
 /**
  * 从存储中读取的原始格式（日期为字符串）
  */
 interface DeletedFileItemRaw {
-  file: FileSystemNode & {
+  file: FileSystemTreeNode & {
     createdAt: string | Date;
     updatedAt: string | Date;
   };
@@ -37,10 +36,10 @@ function getDeletedFilesFromStorage(): DeletedFileItem[] {
   return stored.map((item) => ({
     file: {
       ...item.file,
-      createdAt: new Date(item.file.createdAt),
-      updatedAt: new Date(item.file.updatedAt),
+      createdAt: new Date(item.file.createdAt).toLocaleString(),
+      updatedAt: new Date(item.file.updatedAt).toLocaleString(),
     },
-    deletedAt: new Date(item.deletedAt),
+    deletedAt: new Date(item.deletedAt).toLocaleString(),
   }));
 }
 
@@ -49,12 +48,7 @@ function getDeletedFilesFromStorage(): DeletedFileItem[] {
  * 只在 Mock 模式下初始化，真实环境下返回空数组
  */
 function initializeDefaultDeletedFiles(): DeletedFileItem[] {
-  if (!openMock) {
-    return [];
-  }
-  const defaultDeleted = initializeMockDeletedFiles();
-  saveToStorage(DELETED_FILES_STORAGE_KEY, defaultDeleted);
-  return defaultDeleted;
+  return [];
 }
 
 /**
@@ -76,10 +70,10 @@ export function useDeletedFiles() {
     return stored;
   });
 
-  const addDeletedFile = useCallback((file: FileSystemNode): void => {
+  const addDeletedFile = useCallback((file: FileSystemTreeNode): void => {
     const deletedItem: DeletedFileItem = {
       file,
-      deletedAt: new Date(),
+      deletedAt: new Date().toLocaleString(),
     };
     setDeletedFiles((prev) => {
       const newDeletedFiles = [...prev, deletedItem];
