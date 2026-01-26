@@ -1,5 +1,3 @@
-import type { FileExtension } from '@/types/fileSystem';
-
 /**
  * 格式化工具函数
  */

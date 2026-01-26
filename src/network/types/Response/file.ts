@@ -7,7 +7,7 @@ export interface FileSystemTreeNode {
   name: string;
   type: 'file' | 'folder';
   parent_id: number;
-  size: string | number;
+  size: string;
   ext: string;
   children?: FileSystemTreeNode[];
   createdAt: string;

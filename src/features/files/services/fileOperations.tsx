@@ -1,8 +1,5 @@
 import { Modal } from 'antd';
-import {
-  FileSystemTreeNode,
-  FileSystemTreeResponse,
-} from '@/network/types/Response/file';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 /**
  * 文件操作服务
@@ -50,7 +47,7 @@ export function renameFile(
   file: FileSystemTreeNode,
   onUpdate: (
     fileId: string,
-    updates: Partial<FileSystemTreeNode | FileSystemTreeResponse>
+    updates: Partial<FileSystemTreeNode>
   ) => Promise<void>,
   messageApi?: {
     success: (content: string) => void;
@@ -82,6 +79,7 @@ export function renameFile(
         await onUpdate(file.id, { name: newName });
         messageApi?.success('重命名成功');
       } catch (error) {
+        console.error(error);
         messageApi?.error('重命名失败');
       }
     },

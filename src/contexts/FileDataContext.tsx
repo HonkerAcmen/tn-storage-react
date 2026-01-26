@@ -25,7 +25,7 @@ interface BackendTreeNode {
   filename: string;
   type: 'file' | 'folder';
   parent_id: number;
-  size: string | number;
+  size: string;
   ext: string;
   children?: BackendTreeNode[];
   createdAt: string;
@@ -52,7 +52,7 @@ const EMPTY_ROOT: FileSystemTreeNode = {
   id: '1',
   UUID: '0',
   parent_id: 0,
-  size: 0,
+  size: '0',
   ext: 'other',
   name: 'root',
   type: 'folder',
@@ -71,10 +71,7 @@ const transformTreeNode = (node: BackendTreeNode): FileSystemTreeNode => {
     name: node.filename || 'Untitled', // 提供默认名
     type: node.type,
     parent_id: node.parent_id,
-    size:
-      typeof node.size === 'string'
-        ? parseInt(node.size, 10) || 0
-        : node.size || 0,
+    size: node.size || '0',
     ext: node.ext || 'other',
     children: Array.isArray(node.children)
       ? node.children.map(transformTreeNode)
