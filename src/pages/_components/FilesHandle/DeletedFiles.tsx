@@ -12,10 +12,7 @@ import FileListItem from '@/components/FileListItem';
 import { useDeletedFiles } from '@/features/files/hooks';
 import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
-import {
-  FileSystemTreeNode,
-  FileSystemTreeResponse,
-} from '@/network/types/Response/file';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 /**
  * 格式化删除时间
@@ -64,7 +61,7 @@ export default function DeletedFiles() {
   // 处理文件更新
   const handleFileUpdate = async (
     fileId: string,
-    updates: Partial<FileSystemTreeResponse | FileSystemTreeNode>
+    updates: Partial<FileSystemTreeNode>
   ) => {
     try {
       await updateFile(fileId, updates);
