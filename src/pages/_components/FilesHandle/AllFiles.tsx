@@ -16,7 +16,6 @@ import {
   findPathToNode,
 } from '@/utils/fileSystem/fileSystemUtils';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
-import { convertTreeNodeToFileSystemNode } from '@/utils/fileSystem/typeConverters';
 import FileListItem from '@/components/FileListItem';
 import FileDetailsModal from './FileDetailsModal';
 import { useFileActions, useFileMenu } from '@/features/files/hooks';
@@ -292,7 +291,7 @@ export default function AllFiles() {
           ) : (
             <ul className="mt-2 mr-8 flex flex-col space-y-2">
               {sortedFiles.map((item) => {
-                const convertedItem = convertTreeNodeToFileSystemNode(item);
+                const convertedItem = item;
                 return (
                   <FileListItem
                     key={item.id}
@@ -408,8 +407,7 @@ export default function AllFiles() {
                         }
                         onClick={(e) => {
                           e.stopPropagation();
-                          const convertedItem =
-                            convertTreeNodeToFileSystemNode(item);
+                          const convertedItem = item;
                           handleFileAction('favorite', convertedItem, {
                             onDetailsOpen: () => {
                               setSelectedFile(item);
@@ -427,16 +425,13 @@ export default function AllFiles() {
                   <div className="mt-2">
                     <Dropdown
                       menu={{
-                        items: getFileMenuItems(
-                          convertTreeNodeToFileSystemNode(item),
-                          {
-                            onDetailsOpen: () => {
-                              setSelectedFile(item);
-                              setShowDetails(true);
-                            },
-                            onFolderNavigate: handleFolderClick,
-                          }
-                        ),
+                        items: getFileMenuItems(item, {
+                          onDetailsOpen: () => {
+                            setSelectedFile(item);
+                            setShowDetails(true);
+                          },
+                          onFolderNavigate: handleFolderClick,
+                        }),
                         onClick: (e) => e.domEvent.stopPropagation(),
                       }}
                       trigger={['click']}
@@ -463,7 +458,7 @@ export default function AllFiles() {
         {selectedFile && (
           <FileDetailsModal
             open={showDetails}
-            file={convertTreeNodeToFileSystemNode(selectedFile)}
+            file={selectedFile}
             onClose={() => {
               setShowDetails(false);
               setSelectedFile(null);

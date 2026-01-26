@@ -16,7 +16,6 @@ import { useFileActions, useFileMenu } from '@/features/files/hooks';
 import { formatDate, formatFileSize } from '@/utils/format/formatters';
 import { getFileIcon } from '@/components/files/FileIcon';
 import FileDetailsModal from './FilesHandle/FileDetailsModal';
-import { convertTreeNodeToFileSystemNode } from '@/utils/fileSystem/typeConverters';
 import type { FileSystemTreeNode } from '@/network/types/Response/file';
 import type { TopLevelFormatterParams } from 'echarts/types/dist/shared';
 
@@ -224,16 +223,13 @@ export default function MyCloud() {
                   >
                     <Dropdown
                       menu={{
-                        items: getFileMenuItems(
-                          convertTreeNodeToFileSystemNode(item),
-                          {
-                            onDetailsOpen: () => {
-                              setSelectedFile(item);
-                              setShowDetails(true);
-                            },
-                            onFolderNavigate: handleFolderClick,
-                          }
-                        ),
+                        items: getFileMenuItems(item, {
+                          onDetailsOpen: () => {
+                            setSelectedFile(item);
+                            setShowDetails(true);
+                          },
+                          onFolderNavigate: handleFolderClick,
+                        }),
                         onClick: (e) => {
                           e.domEvent.stopPropagation();
                         },
@@ -294,16 +290,13 @@ export default function MyCloud() {
                     >
                       <Dropdown
                         menu={{
-                          items: getFileMenuItems(
-                            convertTreeNodeToFileSystemNode(item),
-                            {
-                              onDetailsOpen: () => {
-                                setSelectedFile(item);
-                                setShowDetails(true);
-                              },
-                              onFolderNavigate: handleFolderClick,
-                            }
-                          ),
+                          items: getFileMenuItems(item, {
+                            onDetailsOpen: () => {
+                              setSelectedFile(item);
+                              setShowDetails(true);
+                            },
+                            onFolderNavigate: handleFolderClick,
+                          }),
                           onClick: (e) => {
                             e.domEvent.stopPropagation();
                           },
@@ -364,16 +357,13 @@ export default function MyCloud() {
                     >
                       <Dropdown
                         menu={{
-                          items: getFileMenuItems(
-                            convertTreeNodeToFileSystemNode(item),
-                            {
-                              onDetailsOpen: () => {
-                                setSelectedFile(item);
-                                setShowDetails(true);
-                              },
-                              onFolderNavigate: handleFolderClick,
-                            }
-                          ),
+                          items: getFileMenuItems(item, {
+                            onDetailsOpen: () => {
+                              setSelectedFile(item);
+                              setShowDetails(true);
+                            },
+                            onFolderNavigate: handleFolderClick,
+                          }),
                           onClick: (e) => {
                             e.domEvent.stopPropagation();
                           },
@@ -470,7 +460,7 @@ export default function MyCloud() {
         {selectedFile && (
           <FileDetailsModal
             open={showDetails}
-            file={convertTreeNodeToFileSystemNode(selectedFile)}
+            file={selectedFile}
             onClose={() => {
               setShowDetails(false);
               setSelectedFile(null);
