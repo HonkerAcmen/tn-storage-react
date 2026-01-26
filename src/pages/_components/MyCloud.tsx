@@ -96,7 +96,7 @@ export default function MyCloud() {
     };
 
     files.forEach((file) => {
-      const fileSize = parseInt(file.size, 10) || 0;
+      const fileSize = (file.size, 10) || 0;
 
       if (!file.ext) {
         stats.other.count++;
