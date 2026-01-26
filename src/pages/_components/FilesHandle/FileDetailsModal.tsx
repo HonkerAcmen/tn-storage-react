@@ -26,10 +26,7 @@ import {
   getFileDisplayName,
 } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
-import {
-  FileSystemTreeNode,
-  FileSystemTreeResponse,
-} from '@/network/types/Response/file';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { findPathToNode } from '@/utils/fileSystem/fileSystemUtils';
 
 interface FileDetailsModalProps {
@@ -38,7 +35,7 @@ interface FileDetailsModalProps {
   onClose: () => void;
   onUpdate?: (
     fileId: string,
-    updates: Partial<FileSystemTreeResponse | FileSystemTreeNode>
+    updates: Partial<FileSystemTreeNode>
   ) => Promise<void>;
 }
 

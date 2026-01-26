@@ -10,10 +10,7 @@ import {
 } from '@/features/files/hooks';
 import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
-import {
-  FileSystemTreeNode,
-  FileSystemTreeResponse,
-} from '@/network/types/Response/file';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 export default function Favorites() {
   const [messageApi] = message.useMessage();
@@ -41,7 +38,7 @@ export default function Favorites() {
   // 处理文件更新
   const handleFileUpdate = async (
     fileId: string,
-    updates: Partial<FileSystemTreeNode | FileSystemTreeResponse>
+    updates: Partial<FileSystemTreeNode>
   ) => {
     try {
       await updateFile(fileId, updates);

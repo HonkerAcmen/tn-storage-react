@@ -6,7 +6,6 @@ import { AiOutlineClockCircle } from 'react-icons/ai';
 import FileListItem from '@/components/FileListItem';
 import { formatRelativeTime, formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
-import type { FileSystemNode } from '@/types/fileSystem';
 
 export default function RecentFiles() {
   const router = useRouter();
