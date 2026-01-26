@@ -22,20 +22,6 @@ import { FileSystemTreeNode } from '@/network/types/Response/file';
 // }
 
 /**
- * 获取某层文件与文件夹
- */
-export function getLayNodes(
-  files: FileSystemTreeNode,
-  parentId: number
-): FileSystemTreeNode[] {
-  console.log('files is :', files);
-  const result: FileSystemTreeNode[] = [];
-  console.log('result is ', result);
-
-  return result;
-}
-
-/**
  * 递归获取所有节点（文件和文件夹，排除根节点）
  * 用于处理前端 FileSystemNode 类型
  */
@@ -59,25 +45,46 @@ export function getLayNodes(
 // }
 
 /**
+ * 扁平化所有文件夹和文件，形成一个一维数组
+ * @param fileMap 文件的缓存表
+ * @returns 扁平化后的一维数组
+ */
+function flatteningFileMap(
+  fileMap: Map<string, FileSystemTreeNode>
+): FileSystemTreeNode[] {
+  const nodes: FileSystemTreeNode[] = [];
+  if (!fileMap) {
+    return [];
+  } else {
+    const root = fileMap.get('1'); // 获取root
+    if (root && root.type === 'folder' && root.children) {
+      root.children.forEach((c) => nodes.push(c));
+    }
+  }
+
+  return nodes;
+}
+
+/**
  * 搜索文件和文件夹
  */
-// export function searchNodes(
-//   root: FileSystemNode,
-//   keyword: string
-// ): FileSystemNode[] {
-//   if (!keyword.trim()) {
-//     return [];
-//   }
+export function searchNodes(
+  fileMap: Map<string, FileSystemTreeNode>,
+  keyword: string
+): FileSystemTreeNode[] {
+  if (!keyword.trim()) {
+    return [];
+  }
 
-//   const allNodes = getAllNodesFromFileSystemNode(root);
-//   const lowerKeyword = keyword.toLowerCase();
+  const allNodes = flatteningFileMap(fileMap);
+  const lowerKeyword = keyword.toLowerCase();
 
-//   return allNodes.filter((node) => {
-//     const displayName =
-//       node.type === 'file' && node.ext ? `${node.name}.${node.ext}` : node.name;
-//     return displayName.toLowerCase().includes(lowerKeyword);
-//   });
-// }
+  return allNodes.filter((node) => {
+    const displayName =
+      node.type === 'file' && node.ext ? `${node.name}.${node.ext}` : node.name;
+    return displayName.toLowerCase().includes(lowerKeyword);
+  });
+}
 
 /**
  * 根据ID查找节点

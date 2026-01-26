@@ -5,12 +5,13 @@ import {
   AiOutlineInfoCircle,
 } from 'react-icons/ai';
 import { Empty, message } from 'antd';
-import { FileSystemNode } from '@/types/fileSystem';
+
 import { useFileData } from '@/contexts/FileDataContext';
 import { searchNodes } from '@/utils/fileSystem/fileSystemUtils';
 import FileListItem from '@/components/FileListItem';
 import FileDetailsModal from './FilesHandle/FileDetailsModal';
 import { formatDate } from '@/utils/format/formatters';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 interface SearchResultsProps {
   open: boolean;
@@ -26,8 +27,10 @@ export default function SearchResults({
   onSearchChange,
 }: SearchResultsProps) {
   const [messageApi, contextHolder] = message.useMessage();
-  const { fileTree, updateFile } = useFileData();
-  const [selectedFile, setSelectedFile] = useState<FileSystemNode | null>(null);
+  const { updateFile, fileMap } = useFileData();
+  const [selectedFile, setSelectedFile] = useState<FileSystemTreeNode | null>(
+    null
+  );
   const [showDetails, setShowDetails] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState(initialKeyword || '');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -50,8 +53,8 @@ export default function SearchResults({
     if (!searchKeyword || !searchKeyword.trim()) {
       return [];
     }
-    return searchNodes(fileTree, searchKeyword);
-  }, [fileTree, searchKeyword]);
+    return searchNodes(fileMap, searchKeyword);
+  }, [fileMap, searchKeyword]);
 
   // 当模态框打开时，聚焦输入框
   useEffect(() => {
@@ -75,7 +78,7 @@ export default function SearchResults({
   // 处理文件更新
   const handleFileUpdate = async (
     fileId: string,
-    updates: Partial<FileSystemNode>
+    updates: Partial<FileSystemTreeNode>
   ) => {
     try {
       await updateFile(fileId, updates);
@@ -86,7 +89,7 @@ export default function SearchResults({
   };
 
   // 处理文件点击
-  const handleFileClick = (file: FileSystemNode) => {
+  const handleFileClick = (file: FileSystemTreeNode) => {
     setSelectedFile(file);
     setShowDetails(true);
   };
@@ -95,6 +98,7 @@ export default function SearchResults({
 
   return (
     <>
+      {contextHolder}
       <div className="search-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-400/50">
         <div className="search-modal relative flex h-[85vh] w-[90vw] max-w-4xl flex-col rounded-2xl bg-white shadow-2xl">
           {/* 头部 */}
