@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { getFromStorage, saveToStorage } from '@/utils/storage';
-import { openMock, initializeMockFavorites } from '@/mock/index';
 
 const FAVORITES_STORAGE_KEY = 'favorites';
 
@@ -23,12 +22,7 @@ function saveFavoritesToStorage(favorites: string[]): void {
  * 只在 Mock 模式下初始化，真实环境下返回空数组
  */
 function initializeDefaultFavorites(): string[] {
-  if (!openMock) {
-    return [];
-  }
-  const defaultFavorites = initializeMockFavorites();
-  saveFavoritesToStorage(defaultFavorites);
-  return defaultFavorites;
+  return [];
 }
 
 /**
@@ -43,43 +37,55 @@ export function useFavorites() {
     return stored;
   });
 
-  const toggleFavorite = useCallback((fileId: string): boolean => {
-    setFavoriteIds((prev) => {
-      const index = prev.indexOf(fileId);
-      let newFavorites: string[];
+  const toggleFavorite = useCallback(
+    (fileId: string): boolean => {
+      setFavoriteIds((prev) => {
+        const index = prev.indexOf(fileId);
+        let newFavorites: string[];
 
-      if (index > -1) {
-        // 取消收藏
-        newFavorites = prev.filter((id) => id !== fileId);
-      } else {
-        // 添加收藏
-        newFavorites = [...prev, fileId];
+        if (index > -1) {
+          // 取消收藏
+          newFavorites = prev.filter((id) => id !== fileId);
+        } else {
+          // 添加收藏
+          newFavorites = [...prev, fileId];
+        }
+
+        saveFavoritesToStorage(newFavorites);
+        return newFavorites;
+      });
+
+      return !favoriteIds.includes(fileId);
+    },
+    [favoriteIds]
+  );
+
+  const isFavorite = useCallback(
+    (fileId: string): boolean => {
+      return favoriteIds.includes(fileId);
+    },
+    [favoriteIds]
+  );
+
+  const addFavorite = useCallback(
+    (fileId: string): void => {
+      if (!favoriteIds.includes(fileId)) {
+        const newFavorites = [...favoriteIds, fileId];
+        setFavoriteIds(newFavorites);
+        saveFavoritesToStorage(newFavorites);
       }
+    },
+    [favoriteIds]
+  );
 
-      saveFavoritesToStorage(newFavorites);
-      return newFavorites;
-    });
-
-    return !favoriteIds.includes(fileId);
-  }, [favoriteIds]);
-
-  const isFavorite = useCallback((fileId: string): boolean => {
-    return favoriteIds.includes(fileId);
-  }, [favoriteIds]);
-
-  const addFavorite = useCallback((fileId: string): void => {
-    if (!favoriteIds.includes(fileId)) {
-      const newFavorites = [...favoriteIds, fileId];
+  const removeFavorite = useCallback(
+    (fileId: string): void => {
+      const newFavorites = favoriteIds.filter((id) => id !== fileId);
       setFavoriteIds(newFavorites);
       saveFavoritesToStorage(newFavorites);
-    }
-  }, [favoriteIds]);
-
-  const removeFavorite = useCallback((fileId: string): void => {
-    const newFavorites = favoriteIds.filter((id) => id !== fileId);
-    setFavoriteIds(newFavorites);
-    saveFavoritesToStorage(newFavorites);
-  }, [favoriteIds]);
+    },
+    [favoriteIds]
+  );
 
   return {
     favoriteIds,
@@ -89,4 +95,3 @@ export function useFavorites() {
     removeFavorite,
   };
 }
-
