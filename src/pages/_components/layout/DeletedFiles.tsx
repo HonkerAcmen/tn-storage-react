@@ -7,12 +7,13 @@ import {
   AiOutlineInfoCircle,
   AiOutlineClockCircle,
 } from 'react-icons/ai';
-import FileDetailsModal from './FileDetailsModal';
+
 import FileListItem from '@/components/FileListItem';
 import { useDeletedFiles } from '@/features/files/hooks';
 import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
+import FileDetailsModal from '../FilesHandle/FileDetailsModal';
 
 /**
  * 格式化删除时间

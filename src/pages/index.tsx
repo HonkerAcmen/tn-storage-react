@@ -6,16 +6,21 @@ import {
   AiOutlineStar,
   AiTwotoneClockCircle,
 } from 'react-icons/ai';
-import Header from './_components/Header';
+
 import { Menu, MenuProps } from 'antd';
-import MyCloud from './_components/MyCloud';
+
 import { JSX, useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import AllFiles from './_components/FilesHandle/AllFiles';
-import RecentFiles from './_components/FilesHandle/RecentFiles';
-import Favorites from './_components/FilesHandle/Favorites';
-import DeletedFiles from './_components/FilesHandle/DeletedFiles';
-import UploadModal from './_components/UploadModal';
+
+import RecentFiles from './_components/layout/RecentFiles';
+
+import UploadModal from './_components/secondaryPage/UploadModal';
+import MyCloud from './_components/layout/MyCloud';
+
+import AllFiles from './_components/layout/AllFiles';
+import DeletedFiles from './_components/layout/DeletedFiles';
+import Favorites from './_components/layout/Favorites';
+import Header from './_components/layout/Header';
 
 export default function Home() {
   const router = useRouter();

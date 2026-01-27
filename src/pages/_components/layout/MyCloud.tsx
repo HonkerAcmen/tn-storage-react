@@ -15,9 +15,10 @@ import { useFileData } from '@/contexts/FileDataContext';
 import { useFileActions, useFileMenu } from '@/features/files/hooks';
 import { formatDate, formatFileSize } from '@/utils/format/formatters';
 import { getFileIcon } from '@/components/files/FileIcon';
-import FileDetailsModal from './FilesHandle/FileDetailsModal';
+
 import type { FileSystemTreeNode } from '@/network/types/Response/file';
 import type { TopLevelFormatterParams } from 'echarts/types/dist/shared';
+import FileDetailsModal from '../FilesHandle/FileDetailsModal';
 
 export default function MyCloud() {
   const [messageApi, contextHolder] = message.useMessage();

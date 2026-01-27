@@ -5,12 +5,13 @@ import {
   AiFillSetting,
   AiOutlineSearch,
 } from 'react-icons/ai';
-import Settings from './Settings';
-import Profile from './Profile';
-import SearchResults from './SearchResults';
+
 import { logout } from '@/utils/auth';
 import { GetUserNameWithLocalsStroger } from '@/utils/auth/user';
 import { useGetAvatar } from '@/network/hooks/user';
+import SearchResults from '../secondaryPage/SearchResults';
+import Profile from '../secondaryPage/Profile';
+import Settings from '../secondaryPage/Settings';
 
 export default function Header() {
   const [clickProfile, setClickProfile] = useState(false);

@@ -9,9 +9,10 @@ import { Empty, message } from 'antd';
 import { useFileData } from '@/contexts/FileDataContext';
 import { searchNodes } from '@/utils/fileSystem/fileSystemUtils';
 import FileListItem from '@/components/FileListItem';
-import FileDetailsModal from './FilesHandle/FileDetailsModal';
+
 import { formatDate } from '@/utils/format/formatters';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
+import FileDetailsModal from '../FilesHandle/FileDetailsModal';
 
 interface SearchResultsProps {
   open: boolean;

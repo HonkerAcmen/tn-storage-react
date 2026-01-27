@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Empty, Button, message } from 'antd';
 import { AiFillStar } from 'react-icons/ai';
-import FileDetailsModal from './FileDetailsModal';
+
 import FileListItem from '@/components/FileListItem';
 import {
   useFileActions,
@@ -11,6 +11,7 @@ import {
 import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
+import FileDetailsModal from '../FilesHandle/FileDetailsModal';
 
 export default function Favorites() {
   const [messageApi] = message.useMessage();

@@ -17,12 +17,13 @@ import {
 } from '@/utils/fileSystem/fileSystemUtils';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import FileListItem from '@/components/FileListItem';
-import FileDetailsModal from './FileDetailsModal';
+
 import { useFileActions, useFileMenu } from '@/features/files/hooks';
 import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 import { getFileIcon, ICON_SIZE_LARGE } from '@/components/files/FileIcon';
 import { Breadcrumb } from 'antd';
+import FileDetailsModal from '../FilesHandle/FileDetailsModal';
 
 interface MenuItemNameProps {
   key: number;
