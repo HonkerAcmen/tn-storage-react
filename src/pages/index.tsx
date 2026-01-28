@@ -21,6 +21,7 @@ import AllFiles from './_components/layout/AllFiles';
 import DeletedFiles from './_components/layout/DeletedFiles';
 import Favorites from './_components/layout/Favorites';
 import Header from './_components/layout/Header';
+import UploadMenu from './_components/secondaryPage/UploadMenu';
 
 export default function Home() {
   const router = useRouter();
@@ -103,7 +104,11 @@ export default function Home() {
       </div>
 
       {/* 上传模态框 */}
-      <UploadModal
+      {/* <UploadModal
+        open={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+      /> */}
+      <UploadMenu
         open={showUploadModal}
         onClose={() => setShowUploadModal(false)}
       />

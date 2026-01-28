@@ -64,7 +64,7 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
         }, 1000);
       }
     }
-  }, [ups, taskId, fileList, queryClient, onClose]);
+  }, [ups, taskId, fileList, queryClient, onClose, messageApi]);
 
   // 上传配置（禁用自动上传，改为手动触发）
   const uploadProps: UploadProps = {
