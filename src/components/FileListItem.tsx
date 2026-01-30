@@ -2,7 +2,7 @@ import { Typography, Space, Tag, Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { AiFillFolder, AiOutlineEllipsis } from 'react-icons/ai';
 import { getFileIcon, ICON_SIZE_MEDIUM } from './files/FileIcon';
-import { formatFileSize, getFileDisplayName } from '@/utils/format/formatters';
+import { formatFileSize } from '@/utils/format/formatters';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 const { Text } = Typography;
@@ -46,7 +46,7 @@ export default function FileListItem({
         )}
         <div className="flex flex-col">
           <Space>
-            <Text className="text-gray-800">{getFileDisplayName(file)}</Text>
+            <Text className="text-gray-800">{file.name}</Text>
             {showSize && file.type === 'file' && (
               <Tag color="blue">{formatFileSize(parseInt(file.size))}</Tag>
             )}

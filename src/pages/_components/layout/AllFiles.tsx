@@ -385,9 +385,7 @@ export default function AllFiles() {
                     </div>
                   )}
                   <span className="line-clamp-2 text-center text-sm break-all text-gray-700">
-                    {item.type === 'file' && item.ext
-                      ? `${item.name}.${item.ext}`
-                      : item.name}
+                    {item.name}
                   </span>
                 </div>
 

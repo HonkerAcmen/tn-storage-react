@@ -59,17 +59,3 @@ export function formatDate(date: Date): string {
     day: 'numeric',
   });
 }
-
-/**
- * 获取文件显示名称（包含扩展名）
- */
-export function getFileDisplayName(file: {
-  name: string;
-  type: 'file' | 'folder';
-  ext?: string;
-}): string {
-  if (file.type === 'file' && file.ext) {
-    return `${file.name}.${file.ext}`;
-  }
-  return file.name;
-}

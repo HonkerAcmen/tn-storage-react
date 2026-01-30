@@ -20,11 +20,7 @@ import {
 } from 'react-icons/ai';
 
 import { getFileIcon } from '@/components/files/FileIcon';
-import {
-  formatFileSize,
-  formatDateTime,
-  getFileDisplayName,
-} from '@/utils/format/formatters';
+import { formatFileSize, formatDateTime } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { findPathToNode } from '@/utils/fileSystem/fileSystemUtils';
@@ -164,7 +160,7 @@ export default function FileDetailsModal({
             {
               <>
                 <h3 className="mb-2 text-xl font-semibold text-gray-800">
-                  {getFileDisplayName(file)}
+                  {file.name}
                 </h3>
                 <Space>
                   {file.type === 'file' ? (
@@ -198,7 +194,7 @@ export default function FileDetailsModal({
                   <Input placeholder="请输入名称" />
                 </Form.Item>
               ) : (
-                <span>{getFileDisplayName(file)}</span>
+                <span>{file.name}</span>
               )}
             </Descriptions.Item>
 
