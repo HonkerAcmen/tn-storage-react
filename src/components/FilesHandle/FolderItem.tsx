@@ -1,5 +1,5 @@
 import { AiFillFolder } from 'react-icons/ai'; // 假设你用的是这个库
-import { FileSystemTreeNode } from '../../../network/types/Response/file';
+import { FileSystemTreeNode } from '../../network/types/Response/file';
 interface FolderItemProps {
   item: FileSystemTreeNode;
   selectKey: string;
@@ -8,13 +8,13 @@ interface FolderItemProps {
   onSelectId: (id: string) => void;
 }
 
-export const FolderItem = ({
+export default function FolderItem ({
   item,
   selectKey,
   selectId,
   onSelect,
   onSelectId,
-}: FolderItemProps) => {
+}: FolderItemProps) {
   const isSelect = selectKey === item.UUID;
 
   // 1. 过滤：如果不是文件夹，直接不渲染 (返回 null)

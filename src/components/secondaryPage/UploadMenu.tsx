@@ -1,11 +1,14 @@
 import { useFileData } from '@/contexts/FileDataContext';
 import { message, Modal, Progress } from 'antd';
-import { FolderItem } from '../FilesHandle/FolderItem';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
-import FileUploadButton from '../FilesHandle/FileUploadButton';
+
 import { useGetUploadStatus, useUploadFile } from '@/network/hooks/file';
 import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
 import { useQueryClient } from '@tanstack/react-query';
+import FileUploadButton from '../FilesHandle/FileUploadButton';
+import FolderItem from '../FilesHandle/FolderItem';
+
 
 interface UploadMenuProps {
   open: boolean;

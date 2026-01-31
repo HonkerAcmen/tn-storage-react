@@ -12,15 +12,16 @@ import { Menu, MenuProps } from 'antd';
 import { JSX, useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
 
-import RecentFiles from './_components/layout/RecentFiles';
+import RecentFiles from '../components/layout/RecentFiles';
 
-import MyCloud from './_components/layout/MyCloud';
+import MyCloud from '../components/layout/MyCloud';
 
-import AllFiles from './_components/layout/AllFiles';
-import DeletedFiles from './_components/layout/DeletedFiles';
-import Favorites from './_components/layout/Favorites';
-import Header from './_components/layout/Header';
-import UploadMenu from './_components/secondaryPage/UploadMenu';
+import AllFiles from '../components/layout/AllFiles';
+import DeletedFiles from '../components/layout/DeletedFiles';
+import Favorites from '../components/layout/Favorites';
+import Header from '../components/layout/Header';
+import UploadMenu from '@/components/secondaryPage/UploadMenu';
+
 
 export default function Home() {
   const router = useRouter();
