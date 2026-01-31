@@ -340,7 +340,7 @@ export default function Login() {
   return (
     <>
       {contextHolder}
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#5542f6] via-[#7c6cf5] to-[#9d8ef7]">
+      <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-[#5542f6] via-[#7c6cf5] to-[#9d8ef7]">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
           {/* Logo 和标题 */}
           <div className="mb-8 text-center">

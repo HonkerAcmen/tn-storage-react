@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Modal from '@/components/Modal';
 import { useEffect, useState, useMemo } from 'react';
 import {
@@ -67,7 +68,7 @@ export default function Header() {
     <div className="flex h-16 w-full flex-row justify-between border-b border-gray-200 bg-white">
       {/* 左侧：LOGO + 搜索 */}
       <div className="flex items-center justify-center">
-        <h2 className="animate-gradient mr-16 ml-4 cursor-pointer bg-linear-to-r from-red-500 via-yellow-500 to-blue-500 bg-[length:200%_200%] bg-clip-text text-[24px] font-bold text-transparent">
+        <h2 className="animate-gradient mr-16 ml-4 cursor-pointer bg-linear-to-r from-red-500 via-yellow-500 to-blue-500 bg-size-[200%_200%] bg-clip-text text-[24px] font-bold text-transparent">
           TNStorage
         </h2>
 
@@ -88,9 +89,11 @@ export default function Header() {
 
         <div className="relative flex items-center">
           {avatarUrl ? (
-            <img
+            <Image
               src={avatarUrl}
-              alt=""
+              alt="User avatar"
+              width={48}
+              height={48}
               className="mr-6 h-12 w-12 cursor-pointer rounded-full bg-gray-200 object-cover"
             />
           ) : (
