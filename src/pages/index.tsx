@@ -14,7 +14,6 @@ import { useRouter } from 'next/router';
 
 import RecentFiles from './_components/layout/RecentFiles';
 
-import UploadModal from './_components/secondaryPage/UploadModal';
 import MyCloud from './_components/layout/MyCloud';
 
 import AllFiles from './_components/layout/AllFiles';

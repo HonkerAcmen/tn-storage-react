@@ -3,10 +3,18 @@ import { FileSystemTreeNode } from '../../../network/types/Response/file';
 interface FolderItemProps {
   item: FileSystemTreeNode;
   selectKey: string;
+  selectId: string; // 要给上传的文件指定文件夹的id 所以返回一个文件夹id
   onSelect: (key: string) => void;
+  onSelectId: (id: string) => void;
 }
 
-export const FolderItem = ({ item, selectKey, onSelect }: FolderItemProps) => {
+export const FolderItem = ({
+  item,
+  selectKey,
+  selectId,
+  onSelect,
+  onSelectId,
+}: FolderItemProps) => {
   const isSelect = selectKey === item.UUID;
 
   // 1. 过滤：如果不是文件夹，直接不渲染 (返回 null)
@@ -16,12 +24,15 @@ export const FolderItem = ({ item, selectKey, onSelect }: FolderItemProps) => {
     <div className="flex flex-col">
       {/* 渲染当前文件夹的 UI */}
       <li
-        onClick={() => onSelect(item.UUID)}
-        className={`my-1 flex cursor-pointer rounded-lg border border-gray-100 bg-gray-100 p-2 hover:border-gray-300 ${isSelect ? 'border-gray-300' : ''}`}
+        onClick={() => {
+          onSelect(item.UUID);
+          onSelectId(item.id);
+        }}
+        className={`my-1 flex cursor-pointer rounded-lg border border-gray-100 bg-gray-100 p-2 transition duration-200 hover:border-gray-300 ${isSelect ? 'border-gray-400' : ''}`}
       >
         <div className="flex flex-row items-center justify-between">
           <div className="mr-2">
-            <AiFillFolder className="h-8 w-8 text-amber-400" />
+            <AiFillFolder className="h-4 w-4 text-amber-400" />
           </div>
           <div>{item.name}</div>
         </div>
@@ -35,8 +46,10 @@ export const FolderItem = ({ item, selectKey, onSelect }: FolderItemProps) => {
             <FolderItem
               key={child.id}
               item={child}
+              selectId={selectId}
               selectKey={selectKey}
               onSelect={onSelect}
+              onSelectId={onSelectId}
             />
           ))}
         </ul>

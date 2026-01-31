@@ -47,6 +47,10 @@ export function useGetDownloadTotal() {
   });
 }
 
+/**
+ * 获取文件树
+ * @returns
+ */
 export function useGetFileSystemTree() {
   return useQuery({
     queryKey: ['file', 'data', 'tree'],
@@ -105,9 +109,11 @@ export function useUploadFile() {
   return useMutation({
     mutationFn: async ({
       bucket,
+      parentid,
       files,
     }: {
       bucket: string;
+      parentid: number;
       files: File[];
     }) => {
       const formData = new FormData();
@@ -116,7 +122,7 @@ export function useUploadFile() {
       });
 
       const res = await http.post<UploadFileApiResponse>(
-        `${uploadFilePath}/${bucket}`,
+        `${uploadFilePath}/${bucket}/${parentid}`,
         formData,
         {
           headers: {
