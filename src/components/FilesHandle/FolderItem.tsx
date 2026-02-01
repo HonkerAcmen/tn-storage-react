@@ -8,7 +8,7 @@ interface FolderItemProps {
   onSelectId: (id: string) => void;
 }
 
-export default function FolderItem ({
+export default function FolderItem({
   item,
   selectKey,
   selectId,
@@ -34,7 +34,7 @@ export default function FolderItem ({
           <div className="mr-2">
             <AiFillFolder className="h-4 w-4 text-amber-400" />
           </div>
-          <div>{item.name}</div>
+          {item.id === '1' ? <div>根目录</div> : <div>{item.name}</div>}
         </div>
       </li>
 
@@ -56,4 +56,4 @@ export default function FolderItem ({
       )}
     </div>
   );
-};
+}

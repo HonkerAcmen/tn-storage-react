@@ -19,7 +19,7 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
    * 变量定义区域
    */
   const [messageApi, messageContextH] = message.useMessage();
-  const { allFiles } = useFileData();
+  const { fileTree } = useFileData();
   const [selectKey, setSelectKey] = useState('');
   const [fileList, setFileList] = useState<File[]>([]);
   const [taskId, setTaskId] = useState<string | null>(null);
@@ -31,6 +31,7 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
 
   const [progress, setProgress] = useState(0);
   const successShownRef = useRef(false);
+
   const FILE_TYPE_MAP = [
     'doc',
     'docx',
@@ -212,16 +213,16 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
     >
       {messageContextH}
       <ul>
-        {allFiles.map((item) => (
-          <FolderItem
-            key={item.UUID}
-            item={item}
-            selectId={selectId}
-            selectKey={selectKey}
-            onSelect={(key: string) => setSelectKey(key)}
-            onSelectId={(id: string) => setSelectId(id)}
-          />
-        ))}
+        {/* {allFiles.map((item) => ( */}
+        <FolderItem
+          key={fileTree.UUID}
+          item={fileTree}
+          selectId={selectId}
+          selectKey={selectKey}
+          onSelect={(key: string) => setSelectKey(key)}
+          onSelectId={(id: string) => setSelectId(id)}
+        />
+        {/* ))} */}
       </ul>
       <div className="mt-4 flex justify-end">
         <button

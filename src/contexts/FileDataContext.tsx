@@ -14,10 +14,7 @@ import {
 } from '@/network/hooks/file';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
-import {
-  getChildrenByParentId,
-  mapToList,
-} from '@/utils/fileSystem/fileSystemUtils';
+import { mapToList } from '@/utils/fileSystem/fileSystemUtils';
 
 // --- 类型定义 ---
 
@@ -130,11 +127,12 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   const fileTree = useMemo(() => {
     const fstData = fileSystemTreeData?.data?.data;
 
-    if (!fstData) return EMPTY_ROOT;
+    if (!fstData) {
+      return EMPTY_ROOT;
+    }
 
-    // 兼容后端可能返回数组或单个对象的情况
+    // // 兼容后端可能返回数组或单个对象的情况
     const rootNodeRaw = Array.isArray(fstData) ? fstData[0] : fstData;
-
     return transformTreeNode(rootNodeRaw as BackendTreeNode);
   }, [fileSystemTreeData]);
 
