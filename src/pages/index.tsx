@@ -22,7 +22,6 @@ import Favorites from '../components/layout/Favorites';
 import Header from '../components/layout/Header';
 import UploadMenu from '@/components/secondaryPage/UploadMenu';
 
-
 export default function Home() {
   const router = useRouter();
   const [seleId, setSeleId] = useState('sub1');
@@ -104,10 +103,6 @@ export default function Home() {
       </div>
 
       {/* 上传模态框 */}
-      {/* <UploadModal
-        open={showUploadModal}
-        onClose={() => setShowUploadModal(false)}
-      /> */}
       <UploadMenu
         open={showUploadModal}
         onClose={() => setShowUploadModal(false)}

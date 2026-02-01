@@ -194,7 +194,7 @@ export default function MyCloud() {
                           {getFileIcon(item.ext, 'medium')}
                         </div>
                         <h2 className="line-clamp-1 text-gray-800">
-                          {item.name}.{item.ext}
+                          {item.name}
                         </h2>
                         <span className="text-sm text-gray-600">
                           {formatDate(new Date(item.createdAt))}
@@ -262,10 +262,7 @@ export default function MyCloud() {
                         getFileIcon(item.ext, 'small')
                       )}
                     </div>
-                    <p className="text-gray-700">
-                      {item.name}
-                      {item.type === 'file' && item.ext ? `.${item.ext}` : ''}
-                    </p>
+                    <p className="text-gray-700">{item.name}</p>
                   </div>
                   <div className="flex items-center space-x-4 text-sm text-gray-500">
                     <span>添加于 {formatDate(new Date(item.createdAt))}</span>
@@ -330,10 +327,7 @@ export default function MyCloud() {
                         {getFileIcon(item.ext, 'small')}
                       </div>
                     )}
-                    <p className="text-gray-700">
-                      {item.name}
-                      {item.type === 'file' && item.ext ? `.${item.ext}` : ''}
-                    </p>
+                    <p className="text-gray-700">{item.name}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <AiFillStar className="mr-2 h-6 w-6 text-amber-400" />
