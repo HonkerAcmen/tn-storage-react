@@ -9,7 +9,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import FileUploadButton from '../FilesHandle/FileUploadButton';
 import FolderItem from '../FilesHandle/FolderItem';
 
-
 interface UploadMenuProps {
   open: boolean;
   onClose: () => void;

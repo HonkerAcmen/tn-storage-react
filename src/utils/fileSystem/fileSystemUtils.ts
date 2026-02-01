@@ -1,68 +1,16 @@
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 /**
- * 文件系统树操作工具函数
+ * 将map转化为list
  */
+function mapToList(map: Map<string, FileSystemTreeNode>): FileSystemTreeNode[] {
+  const list: FileSystemTreeNode[] = [];
+  map.forEach((v) => {
+    if (v.id === '1') return; // 去除root节点
+    list.push(v);
+  });
 
-/**
- * 递归获取所有文件（仅文件，不包括文件夹）
- */
-// export function getAllFiles(node: FileSystemNode): FileSystemNode[] {
-//   const files: FileSystemNode[] = [];
-
-//   if (node.type === 'file') {
-//     files.push(node);
-//   } else if (node.type === 'folder' && node.children) {
-//     node.children.forEach((child) => {
-//       files.push(...getAllFiles(child));
-//     });
-//   }
-
-//   return files;
-// }
-
-/**
- * 递归获取所有节点（文件和文件夹，排除根节点）
- * 用于处理前端 FileSystemNode 类型
- */
-// export function getAllNodesFromFileSystemNode(
-//   node: FileSystemNode
-// ): FileSystemNode[] {
-//   const nodes: FileSystemNode[] = [];
-
-//   // 跳过根节点
-//   if (node.name !== 'root') {
-//     nodes.push(node);
-//   }
-
-//   if (node.type === 'folder' && node.children) {
-//     node.children.forEach((child) => {
-//       nodes.push(...getAllNodesFromFileSystemNode(child));
-//     });
-//   }
-
-//   return nodes;
-// }
-
-/**
- * 扁平化所有文件夹和文件，形成一个一维数组
- * @param fileMap 文件的缓存表
- * @returns 扁平化后的一维数组
- */
-function flatteningFileMap(
-  fileMap: Map<string, FileSystemTreeNode>
-): FileSystemTreeNode[] {
-  const nodes: FileSystemTreeNode[] = [];
-  if (!fileMap) {
-    return [];
-  } else {
-    const root = fileMap.get('1'); // 获取root
-    if (root && root.type === 'folder' && root.children) {
-      root.children.forEach((c) => nodes.push(c));
-    }
-  }
-
-  return nodes;
+  return list;
 }
 
 /**
@@ -76,7 +24,7 @@ export function searchNodes(
     return [];
   }
 
-  const allNodes = flatteningFileMap(fileMap);
+  const allNodes = mapToList(fileMap);
   const lowerKeyword = keyword.toLowerCase();
 
   return allNodes.filter((node) => {

@@ -14,7 +14,6 @@ import { formatDate } from '@/utils/format/formatters';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import FileDetailsModal from '../FilesHandle/FileDetailsModal';
 
-
 interface SearchResultsProps {
   open: boolean;
   searchKeyword: string;
@@ -24,7 +23,7 @@ interface SearchResultsProps {
 
 export default function SearchResults({
   open,
-  searchKeyword: initialKeyword = '',
+  searchKeyword: initialKeyword = '', // searchKeyword的替代名称initialKeyword
   onClose,
   onSearchChange,
 }: SearchResultsProps) {
@@ -33,9 +32,10 @@ export default function SearchResults({
   const [selectedFile, setSelectedFile] = useState<FileSystemTreeNode | null>(
     null
   );
-  const [showDetails, setShowDetails] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState(initialKeyword || '');
   const inputRef = useRef<HTMLInputElement>(null);
+  const [showDetails, setShowDetails] = useState(false);
+
+  const [searchKeyword, setSearchKeyword] = useState(initialKeyword || '');
   const prevInitialKeywordRef = useRef<string>(initialKeyword || '');
 
   // 同步外部传入的搜索关键词（使用异步更新避免级联渲染）
