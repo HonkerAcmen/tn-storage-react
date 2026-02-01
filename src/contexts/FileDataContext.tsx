@@ -14,7 +14,10 @@ import {
 } from '@/network/hooks/file';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
-import { getChildrenByParentId } from '@/utils/fileSystem/fileSystemUtils';
+import {
+  getChildrenByParentId,
+  mapToList,
+} from '@/utils/fileSystem/fileSystemUtils';
 
 // --- 类型定义 ---
 
@@ -143,13 +146,12 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   // 这里假设你需要所有文件用于搜索/统计。
   const allFiles = useMemo(() => {
     if (!fileTree || !fileTree.children) return [];
+
     // 将整个树（包括根节点或仅根节点的子节点）扁平化
-    // 1是根下的文件夹序列，即所有文件
-    return getChildrenByParentId(fileMap, '1');
+    return mapToList(fileMap);
   }, [fileMap, fileTree]);
 
   // 4. 操作方法
-
   const updateFile = useCallback(
     async (fileId: string, updates: Partial<FileSystemTreeNode>) => {
       // TODO: 实现 update 逻辑

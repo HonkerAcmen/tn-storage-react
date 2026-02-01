@@ -3,7 +3,9 @@ import { FileSystemTreeNode } from '@/network/types/Response/file';
 /**
  * 将map转化为list
  */
-function mapToList(map: Map<string, FileSystemTreeNode>): FileSystemTreeNode[] {
+export function mapToList(
+  map: Map<string, FileSystemTreeNode>
+): FileSystemTreeNode[] {
   const list: FileSystemTreeNode[] = [];
   map.forEach((v) => {
     if (v.id === '1') return; // 去除root节点

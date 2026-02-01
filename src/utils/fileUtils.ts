@@ -55,3 +55,36 @@ export function formatDate(date: Date): string {
     day: 'numeric',
   });
 }
+
+export const FILE_TYPE_MAP: Record<string, string[]> = {
+  documentExts: [
+    'doc',
+    'docx',
+    'xls',
+    'xlsx',
+    'csv',
+    'ppt',
+    'pptx',
+    'pdf',
+    'zip',
+    'rar',
+    '7z',
+    'tar',
+    'gz',
+    'txt',
+    'md',
+    'log',
+    'rtf',
+    'js',
+    'ts',
+    'html',
+    'css',
+    'json',
+    'xml',
+    'yaml',
+    'yml',
+  ],
+  imageExts: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'heic'],
+  videoExts: ['mp4', 'avi', 'mkv', 'mov', 'wmv', 'webm'],
+  audioExts: ['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a'],
+};

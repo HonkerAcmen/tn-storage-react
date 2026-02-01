@@ -19,6 +19,7 @@ import { getFileIcon } from '@/components/files/FileIcon';
 import type { FileSystemTreeNode } from '@/network/types/Response/file';
 import type { TopLevelFormatterParams } from 'echarts/types/dist/shared';
 import FileDetailsModal from '../FilesHandle/FileDetailsModal';
+import { FILE_TYPE_MAP } from '@/utils/fileUtils';
 
 export default function MyCloud() {
   const [messageApi, contextHolder] = message.useMessage();
@@ -70,22 +71,6 @@ export default function MyCloud() {
     // 只统计文件，不包括文件夹
     const files = allFiles.filter((item) => item.type === 'file');
 
-    // 文件类型分类
-    const documentExts = [
-      'txt',
-      'pdf',
-      'doc',
-      'docx',
-      'json',
-      'log',
-      'xlsx',
-      'zip',
-      'tar',
-    ];
-    const imageExts = ['jpg', 'png'];
-    const videoExts = ['mp4'];
-    const audioExts = ['mp3', 'wav'];
-
     // 统计各类文件
     const stats = {
       document: { count: 0, size: 0 },
@@ -95,25 +80,26 @@ export default function MyCloud() {
       other: { count: 0, size: 0 },
     };
 
-    files.forEach((file) => {
-      const fileSize = (file.size, 10) || 0;
+    files.map((file) => {
+      const fileSize = parseInt(file.size) || 0;
+      const fileExtName = file.name.split('.')[1];
 
-      if (!file.ext) {
+      if (!fileExtName) {
         stats.other.count++;
         stats.other.size += fileSize;
         return;
       }
 
-      if (documentExts.includes(file.ext)) {
+      if (FILE_TYPE_MAP['documentExts'].includes(fileExtName)) {
         stats.document.count++;
         stats.document.size += fileSize;
-      } else if (imageExts.includes(file.ext)) {
+      } else if (FILE_TYPE_MAP['imageExts'].includes(fileExtName)) {
         stats.image.count++;
         stats.image.size += fileSize;
-      } else if (videoExts.includes(file.ext)) {
+      } else if (FILE_TYPE_MAP['videoExts'].includes(fileExtName)) {
         stats.video.count++;
         stats.video.size += fileSize;
-      } else if (audioExts.includes(file.ext)) {
+      } else if (FILE_TYPE_MAP['audioExts'].includes(fileExtName)) {
         stats.audio.count++;
         stats.audio.size += fileSize;
       } else {
@@ -393,7 +379,7 @@ export default function MyCloud() {
         <div className="col-span-4 rounded-2xl bg-white p-6">
           <h2 className="mb-4 text-lg font-semibold text-gray-800">存储大小</h2>
           <div
-            className="flex h-[200px] items-center justify-center rounded-xl text-gray-400"
+            className="flex h-50 items-center justify-center rounded-xl text-gray-400"
             style={{ boxShadow: '0px 0px 5px #eaeaea' }}
           >
             <EChart
