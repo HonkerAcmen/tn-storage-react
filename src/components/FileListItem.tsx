@@ -43,7 +43,13 @@ export default function FileListItem({
           <AiFillFolder className={`${ICON_SIZE_MEDIUM} text-amber-400`} />
         ) : (
           <div className="text-gray-400">
-            {getFileIcon(file.filename.split('.')[1], 'small')}
+            {getFileIcon(
+              file.filename
+                .split('.')
+                [file.filename.split('.').length - 1].toLocaleLowerCase()
+                .trim(),
+              'small'
+            )}
           </div>
         )}
         <div className="flex flex-col">
