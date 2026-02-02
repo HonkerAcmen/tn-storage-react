@@ -262,4 +262,4 @@ export default function DeletedFiles() {
 }
 
 // 导出删除文件相关的工具函数，供其他组件使用
-export { useDeletedFiles, type DeletedFileItem } from '@/features/files/hooks';
+export { useDeletedFiles } from '@/features/files/hooks';

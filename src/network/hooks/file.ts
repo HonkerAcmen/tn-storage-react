@@ -6,7 +6,6 @@ import {
   GetDownloadTotalApiResponse,
   GetFileApiResponse,
   GetFileInfoApiResponse,
-  GetFilePagesInfoApiResponse,
   GetFilesTypeCountApiResponse,
   GetFileSystemTreeApiResponse,
   getTrashFilesApiResponse,
@@ -21,7 +20,6 @@ import {
   deleteFilePath,
   getDownloadTotalPath,
   getFileInfoPath,
-  getFilePagesInfoPath,
   getFilePath,
   getFilesTypeCountPath,
   getUploadStatusPath,
@@ -29,10 +27,7 @@ import {
   setDownloadTotalPath,
   uploadFilePath,
 } from '../resPath';
-import {
-  BatchDeleteFileRequest,
-  FilePagesInfoRequest,
-} from '@/network/types/Request/file';
+import { BatchDeleteFileRequest } from '@/network/types/Request/file';
 
 //////////////// Get 方法 / Query方法 ////////////////
 

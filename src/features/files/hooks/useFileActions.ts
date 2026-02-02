@@ -16,7 +16,7 @@ export function useFileActions() {
   const router = useRouter();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addDeletedFile } = useDeletedFiles();
-  const { updateFile, deleteFile } = useFileData();
+  const { updateFile } = useFileData();
 
   /**
    * 处理文件操作
@@ -42,10 +42,8 @@ export function useFileActions() {
           break;
         case 'delete':
           // 先添加到已删除列表
-          addDeletedFile(item);
-          // 然后从文件树中删除
-          deleteFile(item.id);
-          messageApi.success(`已删除 ${item.filename}`);
+          addDeletedFile(item.UUID);
+          messageApi.success(`已放入回收站 ${item.filename}`);
           break;
         case 'details':
           options?.onDetailsOpen?.(item);
@@ -65,14 +63,7 @@ export function useFileActions() {
           break;
       }
     },
-    [
-      updateFile,
-      messageApi,
-      addDeletedFile,
-      deleteFile,
-      isFavorite,
-      toggleFavorite,
-    ]
+    [updateFile, messageApi, addDeletedFile, isFavorite, toggleFavorite]
   );
 
   /**
