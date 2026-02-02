@@ -82,7 +82,10 @@ export default function MyCloud() {
 
     files.map((file) => {
       const fileSize = parseInt(file.size) || 0;
-      const fileExtName = file.filename.split('.')[1];
+      const fileExtName = file.filename
+        .split('.')
+        [file.filename.split('.').length - 1].toLocaleLowerCase()
+        .trim();
 
       if (!fileExtName) {
         stats.other.count++;

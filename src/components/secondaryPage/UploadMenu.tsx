@@ -158,7 +158,14 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
           return;
         }
 
-        if (!FILE_TYPE_MAP.includes(f.name.split('.')[1])) {
+        if (
+          !FILE_TYPE_MAP.includes(
+            f.name
+              .split('.')
+              [f.name.split('.').length - 1].toLocaleLowerCase()
+              .trim()
+          )
+        ) {
           messageApi.error(`文件 ${f.name} 文件类型不支持上传`);
         }
 

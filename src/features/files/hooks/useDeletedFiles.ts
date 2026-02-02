@@ -11,14 +11,6 @@ import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
  * 已删除文件管理 Hook
  */
 export function useDeletedFiles() {
-  // const [deletedFiles, setDeletedFiles] = useState<DeletedFileItem[]>(() => {
-  //   const stored = getDeletedFilesFromStorage();
-  //   if (stored.length === 0) {
-  //     return initializeDefaultDeletedFiles();
-  //   }
-  //   return stored;
-  // });
-
   const { data: delListData } = useGetDelListInTrash();
   const pushFileDataTrash = usePushFileDataTrash();
   const queryClient = useQueryClient();
