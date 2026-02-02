@@ -55,7 +55,8 @@ export default function DeletedFiles() {
   // 按删除时间排序（最新的在前）
   const sortedDeletedFiles = useMemo(() => {
     return [...deletedFiles].sort(
-      (a, b) => b.deletedAt.getTime() - a.deletedAt.getTime()
+      (a, b) =>
+        new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime()
     );
   }, [deletedFiles]);
 
@@ -204,9 +205,9 @@ export default function DeletedFiles() {
       ) : (
         <ul className="mr-8 flex flex-col space-y-2">
           {sortedDeletedFiles.map((deletedItem, index) => {
-            const item = deletedItem.file;
+            const item = deletedItem;
             // 使用组合 key 确保唯一性：文件 ID + 删除时间戳 + 索引
-            const uniqueKey = `${item.id}-${deletedItem.deletedAt.getTime()}-${index}`;
+            const uniqueKey = `${item.id}-${new Date(deletedItem.deletedAt).getTime()}-${index}`;
             return (
               <FileListItem
                 key={uniqueKey}
@@ -218,8 +219,8 @@ export default function DeletedFiles() {
                 timeValue={
                   <>
                     <AiOutlineClockCircle className="mr-1 inline" />
-                    {formatDeletedTime(deletedItem.deletedAt)} • 创建于{' '}
-                    {formatDate(new Date(item.createdAt))}
+                    {formatDeletedTime(new Date(deletedItem.deletedAt))} •
+                    创建于 {formatDate(new Date(item.createdAt))}
                   </>
                 }
                 actions={

@@ -13,7 +13,9 @@ export interface FileSystemTreeNode {
   createdAt: string;
   updatedAt: string;
 }
-
+export interface DeletedList extends FileSystemTreeNode {
+  deletedAt: string;
+}
 // 文件信息接口
 export interface FileInfo {
   id: string;
@@ -69,7 +71,7 @@ export interface BatchDeleteFileResponse {
 }
 
 // 获取垃圾桶全部数据响应
-type getTrashFilesResponse = FileSystemTreeNode;
+type getTrashFilesResponse = DeletedList[];
 
 // API 响应类型
 export type GetDownloadTotalApiResponse = BaseResponse<Record<string, unknown>>;

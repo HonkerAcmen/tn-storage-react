@@ -9,6 +9,7 @@ import {
   GetFilePagesInfoApiResponse,
   GetFilesTypeCountApiResponse,
   GetFileSystemTreeApiResponse,
+  getTrashFilesApiResponse,
   GetUploadStatusApiResponse,
   GetUploadTotalApiResponse,
   PushFileDataTrashApiResponse,
@@ -32,6 +33,8 @@ import {
   BatchDeleteFileRequest,
   FilePagesInfoRequest,
 } from '@/network/types/Request/file';
+
+//////////////// Get 方法 / Query方法 ////////////////
 
 /**
  * 获取每日下载量统计数据
@@ -103,39 +106,6 @@ export function useGetFilesTypeCount() {
 }
 
 /**
- * 上传文件到指定桶
- */
-export function useUploadFile() {
-  return useMutation({
-    mutationFn: async ({
-      bucket,
-      parentid,
-      files,
-    }: {
-      bucket: string;
-      parentid: number;
-      files: File[];
-    }) => {
-      const formData = new FormData();
-      files.forEach((file) => {
-        formData.append('files', file, encodeURIComponent(file.name));
-      });
-
-      const res = await http.post<UploadFileApiResponse>(
-        `${uploadFilePath}/${bucket}/${parentid}`,
-        formData,
-        {
-          headers: {
-            'Accept-Charset': 'utf-8',
-          },
-        }
-      );
-      return res;
-    },
-  });
-}
-
-/**
  * 查询上传任务状态
  */
 export function useGetUploadStatus(taskId: string) {
@@ -181,27 +151,6 @@ export function useGetFile(bucket: string, id: string, enabled = true) {
 }
 
 /**
- * 分页查询所有文件信息
- */
-export function useGetFilePagesInfo(params?: FilePagesInfoRequest) {
-  return useQuery({
-    queryKey: ['file', 'info', 'pages', params],
-    queryFn: async () => {
-      const queryParams = new URLSearchParams();
-      if (params?.page) queryParams.append('page', params.page);
-      if (params?.pageSize) queryParams.append('pageSize', params.pageSize);
-
-      const url = queryParams.toString()
-        ? `${getFilePagesInfoPath}?${queryParams.toString()}`
-        : getFilePagesInfoPath;
-
-      const res = await http.get<GetFilePagesInfoApiResponse>(url);
-      return res;
-    },
-  });
-}
-
-/**
  * 获取单个文件的详细信息
  */
 export function useGetFileInfo(UUID: string) {
@@ -214,6 +163,49 @@ export function useGetFileInfo(UUID: string) {
       return res;
     },
     enabled: !!UUID,
+  });
+}
+
+export function useGetDelListInTrash() {
+  return useQuery({
+    queryKey: ['file', 'data', 'trash'],
+    queryFn: async () =>
+      await http.get<getTrashFilesApiResponse>('/file/delete/trash'),
+  });
+}
+
+//////////////// 其他方法 ////////////////
+
+/**
+ * 上传文件到指定桶
+ */
+export function useUploadFile() {
+  return useMutation({
+    mutationFn: async ({
+      bucket,
+      parentid,
+      files,
+    }: {
+      bucket: string;
+      parentid: number;
+      files: File[];
+    }) => {
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append('files', file, encodeURIComponent(file.name));
+      });
+
+      const res = await http.post<UploadFileApiResponse>(
+        `${uploadFilePath}/${bucket}/${parentid}`,
+        formData,
+        {
+          headers: {
+            'Accept-Charset': 'utf-8',
+          },
+        }
+      );
+      return res;
+    },
   });
 }
 

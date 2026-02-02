@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { getFromStorage, saveToStorage } from '@/utils/storage';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
+import { useGetDelListInTrash } from '@/network/hooks/file';
 
 const DELETED_FILES_STORAGE_KEY = 'deletedFiles';
 
@@ -62,48 +63,52 @@ function saveDeletedFilesToStorage(deletedFiles: DeletedFileItem[]): void {
  * 已删除文件管理 Hook
  */
 export function useDeletedFiles() {
-  const [deletedFiles, setDeletedFiles] = useState<DeletedFileItem[]>(() => {
-    const stored = getDeletedFilesFromStorage();
-    if (stored.length === 0) {
-      return initializeDefaultDeletedFiles();
-    }
-    return stored;
-  });
+  // const [deletedFiles, setDeletedFiles] = useState<DeletedFileItem[]>(() => {
+  //   const stored = getDeletedFilesFromStorage();
+  //   if (stored.length === 0) {
+  //     return initializeDefaultDeletedFiles();
+  //   }
+  //   return stored;
+  // });
+
+  const { data: delListData } = useGetDelListInTrash();
+  const delList = useMemo(() => {
+    return Array.from(delListData?.data.data ?? []);
+  }, [delListData]);
 
   const addDeletedFile = useCallback((file: FileSystemTreeNode): void => {
-    setDeletedFiles((prev) => {
-      // 检查文件是否已经在已删除列表中
-      const exists = prev.some((item) => item.file.id === file.id);
-      if (exists) {
-        // 如果已存在，不重复添加
-        return prev;
-      }
-
-      const deletedItem: DeletedFileItem = {
-        file,
-        deletedAt: new Date(),
-      };
-      const newDeletedFiles = [...prev, deletedItem];
-      saveDeletedFilesToStorage(newDeletedFiles);
-      return newDeletedFiles;
-    });
+    // setDeletedFiles((prev) => {
+    //   // 检查文件是否已经在已删除列表中
+    //   const exists = prev.some((item) => item.file.id === file.id);
+    //   if (exists) {
+    //     // 如果已存在，不重复添加
+    //     return prev;
+    //   }
+    //   const deletedItem: DeletedFileItem = {
+    //     file,
+    //     deletedAt: new Date(),
+    //   };
+    //   const newDeletedFiles = [...prev, deletedItem];
+    //   saveDeletedFilesToStorage(newDeletedFiles);
+    //   return newDeletedFiles;
+    // });
   }, []);
 
   const removeDeletedFile = useCallback((fileId: string): void => {
-    setDeletedFiles((prev) => {
-      const newDeletedFiles = prev.filter((item) => item.file.id !== fileId);
-      saveDeletedFilesToStorage(newDeletedFiles);
-      return newDeletedFiles;
-    });
+    // setDeletedFiles((prev) => {
+    //   const newDeletedFiles = prev.filter((item) => item.file.id !== fileId);
+    //   saveDeletedFilesToStorage(newDeletedFiles);
+    //   return newDeletedFiles;
+    // });
   }, []);
 
   const clearDeletedFiles = useCallback((): void => {
-    setDeletedFiles([]);
-    saveDeletedFilesToStorage([]);
+    // setDeletedFiles([]);
+    // saveDeletedFilesToStorage([]);
   }, []);
 
   return {
-    deletedFiles,
+    deletedFiles: delList,
     addDeletedFile,
     removeDeletedFile,
     clearDeletedFiles,

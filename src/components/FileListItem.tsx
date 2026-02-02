@@ -42,7 +42,9 @@ export default function FileListItem({
         {file.type === 'folder' ? (
           <AiFillFolder className={`${ICON_SIZE_MEDIUM} text-amber-400`} />
         ) : (
-          <div className="text-gray-400">{getFileIcon(file.ext, 'small')}</div>
+          <div className="text-gray-400">
+            {getFileIcon(file.filename.split('.')[1], 'small')}
+          </div>
         )}
         <div className="flex flex-col">
           <Space>
