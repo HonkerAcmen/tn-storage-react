@@ -135,8 +135,8 @@ export default function AllFiles() {
         );
       case 'name':
         return files.sort((a, b) => {
-          const nameA = a.name.toLowerCase();
-          const nameB = b.name.toLowerCase();
+          const nameA = a.filename.toLowerCase();
+          const nameB = b.filename.toLowerCase();
           return nameA.localeCompare(nameB);
         });
       case 'type':
@@ -265,7 +265,7 @@ export default function AllFiles() {
                             : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
                         }
                       >
-                        {node.name}
+                        {node.filename}
                       </span>
                     ),
                   };
@@ -385,7 +385,7 @@ export default function AllFiles() {
                     </div>
                   )}
                   <span className="line-clamp-2 text-center text-sm break-all text-gray-700">
-                    {item.name}
+                    {item.filename}
                   </span>
                 </div>
 
@@ -464,7 +464,7 @@ export default function AllFiles() {
             }}
             onUpdate={async (fileId, updates) => {
               const apiUpdates: Partial<FileSystemTreeNode> = {
-                name: updates.name,
+                filename: updates.filename,
               };
 
               // 只在文件节点时添加这些属性

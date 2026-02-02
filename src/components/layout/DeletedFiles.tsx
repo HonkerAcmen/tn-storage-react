@@ -115,7 +115,7 @@ export default function DeletedFiles() {
         handleRestore(item.id);
         break;
       case 'permanentDelete':
-        handlePermanentDelete(item.id, item.name);
+        handlePermanentDelete(item.id, item.filename);
         break;
       case 'details':
         setSelectedFile(item);

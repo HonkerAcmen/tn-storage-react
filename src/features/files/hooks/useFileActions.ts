@@ -45,7 +45,7 @@ export function useFileActions() {
           addDeletedFile(item);
           // 然后从文件树中删除
           deleteFile(item.id);
-          messageApi.success(`已删除 ${item.name}`);
+          messageApi.success(`已删除 ${item.filename}`);
           break;
         case 'details':
           options?.onDetailsOpen?.(item);

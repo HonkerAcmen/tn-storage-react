@@ -48,7 +48,7 @@ export default function FileDetailsModal({
   const getFilePath = (nodeId: string): string => {
     const path = findPathToNode(fileTree, nodeId);
     return path
-      .map((node) => (node.name === 'root' ? '根目录' : node.name))
+      .map((node) => (node.filename === 'root' ? '根目录' : node.filename))
       .join(' / ');
   };
   const [isEditing, setIsEditing] = useState(false);
@@ -63,14 +63,14 @@ export default function FileDetailsModal({
       if (isNewFile) {
         // 分离文件名和扩展名
         if (file.type === 'file' && file.ext) {
-          const nameWithoutExt = file.name.replace(`.${file.ext}`, '');
+          const nameWithoutExt = file.filename.replace(`.${file.ext}`, '');
           form.setFieldsValue({
             name: nameWithoutExt,
             ext: file.ext,
           });
         } else {
           form.setFieldsValue({
-            name: file.name,
+            name: file.filename,
           });
         }
         previousFileIdRef.current = fileId;
@@ -96,7 +96,7 @@ export default function FileDetailsModal({
       // 调用更新回调
       if (onUpdate) {
         await onUpdate(file.id, {
-          name: newName,
+          filename: newName,
           updatedAt: new Date().toLocaleString(),
         });
       }
@@ -160,7 +160,7 @@ export default function FileDetailsModal({
             {
               <>
                 <h3 className="mb-2 text-xl font-semibold text-gray-800">
-                  {file.name}
+                  {file.filename}
                 </h3>
                 <Space>
                   {file.type === 'file' ? (
@@ -194,7 +194,7 @@ export default function FileDetailsModal({
                   <Input placeholder="请输入名称" />
                 </Form.Item>
               ) : (
-                <span>{file.name}</span>
+                <span>{file.filename}</span>
               )}
             </Descriptions.Item>
 
@@ -256,7 +256,7 @@ export default function FileDetailsModal({
               <Button
                 icon={<AiOutlineDownload />}
                 onClick={() => {
-                  messageApi.info(`正在下载 ${file.name}...`);
+                  messageApi.info(`正在下载 ${file.filename}...`);
                 }}
               >
                 下载
@@ -264,7 +264,7 @@ export default function FileDetailsModal({
               <Button
                 icon={<AiOutlineShareAlt />}
                 onClick={() => {
-                  messageApi.info(`正在分享 ${file.name}...`);
+                  messageApi.info(`正在分享 ${file.filename}...`);
                 }}
               >
                 分享

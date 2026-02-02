@@ -288,7 +288,7 @@ function OverviewTab() {
     <div className="space-y-6">
       {contextHolder}
       {/* 用户信息卡片 */}
-      <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-[#5542f6] to-[#7c6cf5] p-6 text-white">
+      <div className="rounded-xl border border-gray-200 bg-linear-to-br from-[#5542f6] to-[#7c6cf5] p-6 text-white">
         {!isEditing ? (
           // 显示模式
           <div className="flex items-start justify-between">
@@ -555,7 +555,7 @@ function StorageTab() {
             <span className="text-sm text-gray-500">10.5 GB / 100 GB</span>
           </div>
           <div className="h-3 w-full rounded-full bg-gray-200">
-            <div className="h-3 w-[10.5%] rounded-full bg-gradient-to-r from-[#5542f6] to-[#7c6cf5]"></div>
+            <div className="h-3 w-[10.5%] rounded-full bg-linear-to-r from-[#5542f6] to-[#7c6cf5]"></div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">

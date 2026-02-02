@@ -37,6 +37,7 @@ interface FileDataContextType {
   allFiles: FileSystemTreeNode[]; // 扁平化的所有文件列表
   fileMap: Map<string, FileSystemTreeNode>;
   loading: boolean;
+
   updateFile: (
     fileId: string,
     updates: Partial<FileSystemTreeNode>
@@ -54,7 +55,7 @@ const EMPTY_ROOT: FileSystemTreeNode = {
   parent_id: 0,
   size: '0',
   ext: 'other',
-  name: 'root',
+  filename: 'root',
   type: 'folder',
   createdAt: new Date('2024-01-01').toISOString(),
   updatedAt: new Date('2024-01-01').toISOString(),
@@ -68,7 +69,7 @@ const transformTreeNode = (node: BackendTreeNode): FileSystemTreeNode => {
   return {
     id: node.id,
     UUID: node.UUID,
-    name: node.filename || 'Untitled', // 提供默认名
+    filename: node.filename || 'Untitled', // 提供默认名
     type: node.type,
     parent_id: node.parent_id,
     size: node.size || '0',
@@ -132,8 +133,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
     }
 
     // // 兼容后端可能返回数组或单个对象的情况
-    const rootNodeRaw = Array.isArray(fstData) ? fstData[0] : fstData;
-    return transformTreeNode(rootNodeRaw as BackendTreeNode);
+    return Array.isArray(fstData) ? fstData[0] : fstData;
   }, [fileSystemTreeData]);
 
   // 初始化为文件映射表
@@ -161,9 +161,8 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   );
 
   const deleteFile = useCallback(
-    async (fileId: string) => {
-      // 返回 promise 以便组件可以 await
-      return new Promise<void>((resolve, reject) => {
+    async (fileId: string) =>
+      new Promise<void>((resolve, reject) =>
         pushFileDataTrash.mutate(
           {
             srcBucket: DEFAULT_BUCKET,
@@ -185,9 +184,8 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
               reject(error);
             },
           }
-        );
-      });
-    },
+        )
+      ),
     [pushFileDataTrash, messageApi, queryClient]
   );
 

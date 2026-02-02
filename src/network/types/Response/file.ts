@@ -4,7 +4,7 @@ import { BaseResponse } from '.';
 export interface FileSystemTreeNode {
   id: string;
   UUID: string;
-  name: string;
+  filename: string;
   type: 'file' | 'folder';
   parent_id: number;
   size: string;

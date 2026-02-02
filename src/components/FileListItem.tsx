@@ -46,7 +46,7 @@ export default function FileListItem({
         )}
         <div className="flex flex-col">
           <Space>
-            <Text className="text-gray-800">{file.name}</Text>
+            <Text className="text-gray-800">{file.filename}</Text>
             {showSize && file.type === 'file' && (
               <Tag color="blue">{formatFileSize(parseInt(file.size))}</Tag>
             )}

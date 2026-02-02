@@ -76,7 +76,7 @@ export default function FileList() {
     if (item.type === 'folder') {
       handleNavigate(item.id);
     } else {
-      console.log('Preview file:', item.name);
+      console.log('Preview file:', item.filename);
       // 这里可以加入文件预览逻辑
     }
   }
@@ -99,7 +99,7 @@ export default function FileList() {
                     : 'cursor-pointer rounded-md border border-white bg-gray-200 px-2 py-1 text-gray-600 transition duration-150 hover:border-gray-200'
                 }
               >
-                {node.name === 'root' ? '根目录' : node.name}
+                {node.filename === 'root' ? '根目录' : node.filename}
               </span>
             ),
           };
@@ -126,8 +126,7 @@ export default function FileList() {
             </div>
 
             <span className="line-clamp-2 px-2 text-center text-sm break-all text-gray-700">
-              {v.name}
-              {v.type === 'file' && v.ext ? `.${v.ext}` : ''}
+              {v.filename}
             </span>
           </li>
         ))}

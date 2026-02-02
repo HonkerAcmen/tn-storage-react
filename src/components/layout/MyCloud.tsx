@@ -82,7 +82,7 @@ export default function MyCloud() {
 
     files.map((file) => {
       const fileSize = parseInt(file.size) || 0;
-      const fileExtName = file.name.split('.')[1];
+      const fileExtName = file.filename.split('.')[1];
 
       if (!fileExtName) {
         stats.other.count++;
@@ -182,7 +182,7 @@ export default function MyCloud() {
                       <div>
                         <AiFillFolder className="h-10 w-10 text-amber-400" />
                         <h2 className="line-clamp-1 text-gray-800">
-                          {item.name}
+                          {item.filename}
                         </h2>
                         <span className="text-sm text-gray-600">
                           {formatDate(new Date(item.createdAt))}
@@ -194,7 +194,7 @@ export default function MyCloud() {
                           {getFileIcon(item.ext, 'medium')}
                         </div>
                         <h2 className="line-clamp-1 text-gray-800">
-                          {item.name}
+                          {item.filename}
                         </h2>
                         <span className="text-sm text-gray-600">
                           {formatDate(new Date(item.createdAt))}
@@ -262,7 +262,7 @@ export default function MyCloud() {
                         getFileIcon(item.ext, 'small')
                       )}
                     </div>
-                    <p className="text-gray-700">{item.name}</p>
+                    <p className="text-gray-700">{item.filename}</p>
                   </div>
                   <div className="flex items-center space-x-4 text-sm text-gray-500">
                     <span>添加于 {formatDate(new Date(item.createdAt))}</span>
@@ -327,7 +327,7 @@ export default function MyCloud() {
                         {getFileIcon(item.ext, 'small')}
                       </div>
                     )}
-                    <p className="text-gray-700">{item.name}</p>
+                    <p className="text-gray-700">{item.filename}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <AiFillStar className="mr-2 h-6 w-6 text-amber-400" />
@@ -448,7 +448,7 @@ export default function MyCloud() {
             }}
             onUpdate={async (fileId, updates) => {
               const apiUpdates: Partial<FileSystemTreeNode> = {
-                name: updates.name,
+                filename: updates.filename,
               };
 
               // 只在文件节点时添加这些属性
