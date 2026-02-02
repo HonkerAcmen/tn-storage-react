@@ -73,6 +73,9 @@ export interface BatchDeleteFileResponse {
 // 获取垃圾桶全部数据响应
 type getTrashFilesResponse = DeletedList[];
 
+// 全部删除垃圾桶数据接口类型
+type DeleteAllTrashResponse = object;
+
 // API 响应类型
 export type GetDownloadTotalApiResponse = BaseResponse<Record<string, unknown>>;
 export type GetUploadTotalApiResponse = BaseResponse<Record<string, unknown>>;
@@ -90,3 +93,4 @@ export type BatchDeleteFileApiResponse = BaseResponse<BatchDeleteFileResponse>;
 export type GetFileSystemTreeApiResponse = BaseResponse<FileSystemTreeNode>;
 export type PushFileDataTrashApiResponse = BaseResponse<object>;
 export type getTrashFilesApiResponse = BaseResponse<getTrashFilesResponse>;
+export type DeleteAllTrashApiResponse = BaseResponse<DeleteAllTrashResponse>;

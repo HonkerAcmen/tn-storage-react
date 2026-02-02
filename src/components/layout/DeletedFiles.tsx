@@ -102,9 +102,14 @@ export default function DeletedFiles() {
       okText: '确认清空',
       okType: 'danger',
       cancelText: '取消',
-      onOk() {
-        clearDeletedFiles();
-        messageApi.success('回收站已清空');
+      async onOk() {
+        try {
+          await clearDeletedFiles();
+          messageApi.success('回收站已清空');
+        } catch (err) {
+          const msg = (err as Error)?.message || '清空回收站失败，请稍后重试';
+          messageApi.error(msg);
+        }
       },
     });
   };

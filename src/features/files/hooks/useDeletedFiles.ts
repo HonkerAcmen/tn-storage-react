@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import {
+  useDeleteAllTrash,
   useGetDelListInTrash,
   usePushFileDataTrash,
 } from '@/network/hooks/file';
@@ -13,6 +14,7 @@ import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
 export function useDeletedFiles() {
   const { data: delListData } = useGetDelListInTrash();
   const pushFileDataTrash = usePushFileDataTrash();
+  const deleteAllTrash = useDeleteAllTrash();
   const queryClient = useQueryClient();
   const messageApi = message;
 
@@ -62,10 +64,16 @@ export function useDeletedFiles() {
     // });
   }, []);
 
-  const clearDeletedFiles = useCallback((): void => {
-    // setDeletedFiles([]);
-    // saveDeletedFilesToStorage([]);
-  }, []);
+  /**
+   * 清空回收站
+   * 由调用方负责展示 message 提示
+   */
+  const clearDeletedFiles = useCallback(async (): Promise<void> => {
+    await deleteAllTrash.mutateAsync('trash');
+    queryClient.invalidateQueries({
+      queryKey: ['file', 'data', 'trash'],
+    });
+  }, [deleteAllTrash, queryClient]);
 
   return {
     deletedFiles: delList,

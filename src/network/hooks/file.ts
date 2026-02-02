@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import http from '@/network/http';
 import {
   BatchDeleteFileApiResponse,
+  DeleteAllTrashApiResponse,
   DeleteFileApiResponse,
   GetDownloadTotalApiResponse,
   GetFileApiResponse,
@@ -165,11 +166,23 @@ export function useGetDelListInTrash() {
   return useQuery({
     queryKey: ['file', 'data', 'trash'],
     queryFn: async () =>
-      await http.get<getTrashFilesApiResponse>('/file/delete/trash'),
+      await http.get<getTrashFilesApiResponse>('/file/trash'),
   });
 }
 
 //////////////// 其他方法 ////////////////
+
+/**
+ * 清空垃圾桶
+ */
+export function useDeleteAllTrash() {
+  return useMutation({
+    mutationFn: async (bucketName: string) =>
+      await http.delete<DeleteAllTrashApiResponse>(
+        `/file/trash/empty/${bucketName}`
+      ),
+  });
+}
 
 /**
  * 上传文件到指定桶
@@ -256,7 +269,7 @@ export function usePushFileDataTrash() {
       UUID: string;
     }) =>
       await http.post<PushFileDataTrashApiResponse>(
-        `/file/delete/trash/${srcBucket}/${UUID}`
+        `/file/trash/move/${srcBucket}/${UUID}`
       ),
   });
 }
