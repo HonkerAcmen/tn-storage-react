@@ -222,11 +222,8 @@ export function useUploadFile() {
  */
 export function useDeleteFile() {
   return useMutation({
-    mutationFn: async ({ bucket, UUID }: { bucket: string; UUID: string }) => {
-      return await http.delete<DeleteFileApiResponse>(
-        `${deleteFilePath}/${bucket}/${UUID}`
-      );
-    },
+    mutationFn: async ({ bucket, UUID }: { bucket: string; UUID: string }) =>
+      await http.delete<DeleteFileApiResponse>(`/file/${bucket}/${UUID}`),
   });
 }
 

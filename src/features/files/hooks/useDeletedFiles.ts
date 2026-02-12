@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import {
   useDeleteAllTrash,
+  useDeleteFile,
   useGetDelListInTrash,
   usePushFileDataTrash,
 } from '@/network/hooks/file';
@@ -15,6 +16,8 @@ export function useDeletedFiles() {
   const { data: delListData } = useGetDelListInTrash();
   const pushFileDataTrash = usePushFileDataTrash();
   const deleteAllTrash = useDeleteAllTrash();
+  const deleteFile = useDeleteFile();
+
   const queryClient = useQueryClient();
   const messageApi = message;
 
@@ -56,13 +59,30 @@ export function useDeletedFiles() {
     [pushFileDataTrash, queryClient, messageApi]
   );
 
-  const removeDeletedFile = useCallback((fileId: string): void => {
-    // setDeletedFiles((prev) => {
-    //   const newDeletedFiles = prev.filter((item) => item.file.id !== fileId);
-    //   saveDeletedFilesToStorage(newDeletedFiles);
-    //   return newDeletedFiles;
-    // });
-  }, []);
+  const removeDeletedFile = useCallback(
+    (UUID: string): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        deleteFile.mutate(
+          {
+            bucket: 'trash',
+            UUID,
+          },
+          {
+            onSuccess: () => {
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'data', 'trash'],
+              });
+              resolve('已永久删除');
+            },
+            onError: (err) => {
+              reject(err.message);
+            },
+          }
+        );
+      });
+    },
+    [deleteFile, queryClient]
+  );
 
   /**
    * 清空回收站

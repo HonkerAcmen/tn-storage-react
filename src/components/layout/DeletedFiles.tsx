@@ -75,12 +75,12 @@ export default function DeletedFiles() {
 
   // 恢复文件
   const handleRestore = (fileId: string) => {
-    removeDeletedFile(fileId);
+    // removeDeletedFile(fileId);
     messageApi.success('文件已恢复');
   };
 
   // 永久删除文件
-  const handlePermanentDelete = (fileId: string, fileName: string) => {
+  const handlePermanentDelete = (UUID: string, fileName: string) => {
     modal.confirm({
       title: '确认永久删除',
       content: `确定要永久删除 "${fileName}" 吗？此操作无法撤销。`,
@@ -88,8 +88,13 @@ export default function DeletedFiles() {
       okType: 'danger',
       cancelText: '取消',
       onOk() {
-        removeDeletedFile(fileId);
-        messageApi.success('文件已永久删除');
+        removeDeletedFile(UUID)
+          .then((msg) => {
+            messageApi.success(msg);
+          })
+          .catch((err) => {
+            messageApi.error('删除出错: ' + err);
+          });
       },
     });
   };
@@ -118,10 +123,10 @@ export default function DeletedFiles() {
   const handleFileAction = (action: string, item: FileSystemTreeNode) => {
     switch (action) {
       case 'restore':
-        handleRestore(item.id);
+        handleRestore(item.UUID);
         break;
       case 'permanentDelete':
-        handlePermanentDelete(item.id, item.filename);
+        handlePermanentDelete(item.UUID, item.filename);
         break;
       case 'details':
         setSelectedFile(item);

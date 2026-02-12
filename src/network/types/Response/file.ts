@@ -54,14 +54,6 @@ export interface UploadStatusResponse {
   status: string;
 }
 
-// 删除文件响应
-export interface DeleteFileResponse {
-  code: number;
-  message: string;
-  data: object;
-  timestamp: string;
-}
-
 // 批量删除文件响应
 export interface BatchDeleteFileResponse {
   code: number;
@@ -76,6 +68,9 @@ type getTrashFilesResponse = DeletedList[];
 // 全部删除垃圾桶数据接口类型
 type DeleteAllTrashResponse = object;
 
+// 单独删除垃圾桶数据接口类型
+type DeleteFileResponse = object;
+
 // API 响应类型
 export type GetDownloadTotalApiResponse = BaseResponse<Record<string, unknown>>;
 export type GetUploadTotalApiResponse = BaseResponse<Record<string, unknown>>;
@@ -88,9 +83,10 @@ export type GetUploadStatusApiResponse = UploadStatusResponse;
 export type GetFileApiResponse = BaseResponse<Record<string, unknown>>;
 export type GetFilePagesInfoApiResponse = BaseResponse<FilePagesInfoResponse>;
 export type GetFileInfoApiResponse = BaseResponse<FileDetailInfo>;
-export type DeleteFileApiResponse = DeleteFileResponse;
+
 export type BatchDeleteFileApiResponse = BaseResponse<BatchDeleteFileResponse>;
 export type GetFileSystemTreeApiResponse = BaseResponse<FileSystemTreeNode>;
 export type PushFileDataTrashApiResponse = BaseResponse<object>;
 export type getTrashFilesApiResponse = BaseResponse<getTrashFilesResponse>;
 export type DeleteAllTrashApiResponse = BaseResponse<DeleteAllTrashResponse>;
+export type DeleteFileApiResponse = BaseResponse<DeleteFileResponse>;
