@@ -19,7 +19,6 @@ import {
 } from '@/network/types/Response/file';
 import {
   batchDeleteFilePath,
-  deleteFilePath,
   getDownloadTotalPath,
   getFileInfoPath,
   getFilePath,
@@ -30,7 +29,6 @@ import {
   uploadFilePath,
 } from '../resPath';
 import { BatchDeleteFileRequest } from '@/network/types/Request/file';
-import { AxiosError } from 'axios';
 import { ErrorResponse } from '../types/Response';
 
 //////////////// Get 方法 / Query方法 ////////////////
@@ -39,12 +37,12 @@ import { ErrorResponse } from '../types/Response';
  * 获取每日下载量统计数据
  */
 export function useGetDownloadTotal() {
-  return useQuery({
+  return useQuery<GetDownloadTotalApiResponse, ErrorResponse>({
     queryKey: ['file', 'download', 'total'],
     queryFn: async () => {
       const res =
         await http.get<GetDownloadTotalApiResponse>(getDownloadTotalPath);
-      return res;
+      return res.data;
     },
   });
 }
@@ -67,11 +65,11 @@ export function useGetFileSystemTree() {
  * 获取上传总数
  */
 export function useGetUploadTotal() {
-  return useQuery({
+  return useQuery<GetUploadTotalApiResponse, ErrorResponse>({
     queryKey: ['file', 'upload', 'total'],
     queryFn: async () => {
       const res = await http.get<GetUploadTotalApiResponse>(getUploadTotalPath);
-      return res;
+      return res.data;
     },
   });
 }
@@ -80,11 +78,11 @@ export function useGetUploadTotal() {
  * 设置某日下载的数量
  */
 export function useSetDownloadTotal() {
-  return useMutation({
+  return useMutation<SetDownloadTotalApiResponse, ErrorResponse>({
     mutationFn: async () => {
       const res =
         await http.get<SetDownloadTotalApiResponse>(setDownloadTotalPath);
-      return res;
+      return res.data;
     },
   });
 }
@@ -93,13 +91,13 @@ export function useSetDownloadTotal() {
  * 获取不同文件类型的数量统计
  */
 export function useGetFilesTypeCount() {
-  return useQuery({
+  return useQuery<GetFilesTypeCountApiResponse, ErrorResponse>({
     queryKey: ['file', 'upload', 'typeTotal'],
     queryFn: async () => {
       const res = await http.get<GetFilesTypeCountApiResponse>(
         getFilesTypeCountPath
       );
-      return res;
+      return res.data;
     },
   });
 }
@@ -194,11 +192,14 @@ export function useReStore() {
  * 清空垃圾桶
  */
 export function useDeleteAllTrash() {
-  return useMutation({
-    mutationFn: async (bucketName: string) =>
-      await http.delete<DeleteAllTrashApiResponse>(
+  return useMutation<DeleteAllTrashApiResponse, ErrorResponse, string>({
+    mutationFn: async (bucketName: string) => {
+      const res = await http.delete<DeleteAllTrashApiResponse>(
         `/file/trash/empty/${bucketName}`
-      ),
+      );
+
+      return res.data;
+    },
   });
 }
 

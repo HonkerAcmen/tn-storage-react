@@ -56,39 +56,32 @@ request.interceptors.request.use(
  */
 request.interceptors.response.use(
   (response: AxiosResponse) => {
+    if (sessionStorage.getItem('networkConn') === 'false') {
+      sessionStorage.setItem('networkConn', 'true');
+    }
     return response;
   },
   (error: AxiosError) => {
     // 处理 HTTP 错误状态码
     if (error.response) {
-      const { status, data } = error.response;
+      const { status } = error.response;
 
       switch (status) {
         case 401:
-          message.error('未授权，请重新登录');
           // 可以在这里处理登出逻辑
           if (window.location.pathname !== '/login') {
             window.location.href = '/login';
             localStorage.removeItem('token');
           }
           break;
-        case 403:
-          message.error('拒绝访问');
-          break;
-        case 404:
-          message.error('请求的资源不存在');
-          break;
-        case 500:
-          message.error('服务器错误');
-          break;
-        default:
-          message.error(
-            (data as { message?: string })?.message || `请求失败 (${status})`
-          );
       }
     } else if (error.request) {
       // 请求已发出但没有收到响应
-      message.error('网络错误，请检查网络连接');
+
+      if (sessionStorage.getItem('networkConn') === 'true') {
+        sessionStorage.setItem('networkConn', 'false');
+        window.location.href = '/networkError';
+      }
     } else {
       // 其他错误
       message.error(error.message || '请求失败');
