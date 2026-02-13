@@ -13,6 +13,7 @@ import {
   GetUploadStatusApiResponse,
   GetUploadTotalApiResponse,
   PushFileDataTrashApiResponse,
+  ReStoreApiResopnse,
   SetDownloadTotalApiResponse,
   UploadFileApiResponse,
 } from '@/network/types/Response/file';
@@ -29,6 +30,8 @@ import {
   uploadFilePath,
 } from '../resPath';
 import { BatchDeleteFileRequest } from '@/network/types/Request/file';
+import { AxiosError } from 'axios';
+import { ErrorResponse } from '../types/Response';
 
 //////////////// Get 方法 / Query方法 ////////////////
 
@@ -171,6 +174,21 @@ export function useGetDelListInTrash() {
 }
 
 //////////////// 其他方法 ////////////////
+
+/**
+ * 恢复文件接口
+ */
+export function useReStore() {
+  return useMutation<ReStoreApiResopnse, ErrorResponse, string>({
+    mutationFn: async (UUID: string) => {
+      const res = await http.post<ReStoreApiResopnse>(
+        `/file/trash/restore/${UUID}`
+      );
+
+      return res.data;
+    },
+  });
+}
 
 /**
  * 清空垃圾桶

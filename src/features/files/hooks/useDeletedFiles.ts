@@ -4,6 +4,7 @@ import {
   useDeleteFile,
   useGetDelListInTrash,
   usePushFileDataTrash,
+  useReStore,
 } from '@/network/hooks/file';
 import { message } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,6 +18,7 @@ export function useDeletedFiles() {
   const pushFileDataTrash = usePushFileDataTrash();
   const deleteAllTrash = useDeleteAllTrash();
   const deleteFile = useDeleteFile();
+  const restore = useReStore();
 
   const queryClient = useQueryClient();
   const messageApi = message;
@@ -59,6 +61,29 @@ export function useDeletedFiles() {
     [pushFileDataTrash, queryClient, messageApi]
   );
 
+  const restoreFn = useCallback(
+    (UUID: string): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        restore.mutate(UUID, {
+          onSuccess: () => {
+            queryClient.invalidateQueries({
+              queryKey: ['file', 'data', 'tree'],
+            });
+            queryClient.invalidateQueries({
+              queryKey: ['file', 'data', 'trash'],
+            });
+
+            resolve('文件已恢复');
+          },
+          onError: (err) => {
+            reject(err.message);
+          },
+        });
+      });
+    },
+    [queryClient, restore]
+  );
+
   const removeDeletedFile = useCallback(
     (UUID: string): Promise<string> => {
       return new Promise((resolve, reject) => {
@@ -97,6 +122,7 @@ export function useDeletedFiles() {
 
   return {
     deletedFiles: delList,
+    restoreFn,
     addDeletedFile,
     removeDeletedFile,
     clearDeletedFiles,

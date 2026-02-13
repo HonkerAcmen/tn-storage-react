@@ -71,6 +71,9 @@ type DeleteAllTrashResponse = object;
 // 单独删除垃圾桶数据接口类型
 type DeleteFileResponse = object;
 
+// 恢复垃圾桶数据接口类型
+type ReStoreResponse = object;
+
 // API 响应类型
 export type GetDownloadTotalApiResponse = BaseResponse<Record<string, unknown>>;
 export type GetUploadTotalApiResponse = BaseResponse<Record<string, unknown>>;
@@ -90,3 +93,4 @@ export type PushFileDataTrashApiResponse = BaseResponse<object>;
 export type getTrashFilesApiResponse = BaseResponse<getTrashFilesResponse>;
 export type DeleteAllTrashApiResponse = BaseResponse<DeleteAllTrashResponse>;
 export type DeleteFileApiResponse = BaseResponse<DeleteFileResponse>;
+export type ReStoreApiResopnse = BaseResponse<ReStoreResponse>;

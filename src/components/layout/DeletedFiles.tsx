@@ -42,7 +42,7 @@ function formatDeletedTime(date: Date): string {
 export default function DeletedFiles() {
   const [messageApi, messageContextHolder] = message.useMessage();
   const [modal, modalContextHolder] = Modal.useModal();
-  const { deletedFiles, removeDeletedFile, clearDeletedFiles } =
+  const { deletedFiles, removeDeletedFile, clearDeletedFiles, restoreFn } =
     useDeletedFiles();
   const { updateFile } = useFileData();
 
@@ -74,9 +74,14 @@ export default function DeletedFiles() {
   };
 
   // 恢复文件
-  const handleRestore = (fileId: string) => {
-    // removeDeletedFile(fileId);
-    messageApi.success('文件已恢复');
+  const handleRestore = (UUID: string) => {
+    restoreFn(UUID)
+      .then((msg) => {
+        messageApi.success(msg);
+      })
+      .catch((err) => {
+        messageApi.error(err);
+      });
   };
 
   // 永久删除文件
@@ -93,7 +98,7 @@ export default function DeletedFiles() {
             messageApi.success(msg);
           })
           .catch((err) => {
-            messageApi.error('删除出错: ' + err);
+            messageApi.error(err);
           });
       },
     });
@@ -239,7 +244,7 @@ export default function DeletedFiles() {
                     icon={<AiOutlineRest className="h-5 w-5 text-blue-500" />}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleRestore(item.id);
+                      handleRestore(item.UUID);
                     }}
                     className="flex items-center justify-center"
                   >

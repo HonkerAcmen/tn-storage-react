@@ -94,7 +94,7 @@ request.interceptors.response.use(
       message.error(error.message || '请求失败');
     }
 
-    return Promise.reject(error);
+    return Promise.reject(error.response?.data);
   }
 );
 
