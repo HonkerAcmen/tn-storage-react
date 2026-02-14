@@ -32,6 +32,7 @@ request.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // 可以在这里添加 token 等认证信息
     const token = localStorage.getItem('token');
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -78,7 +79,11 @@ request.interceptors.response.use(
     } else if (error.request) {
       // 请求已发出但没有收到响应
 
-      if (sessionStorage.getItem('networkConn') === 'true') {
+      if (
+        sessionStorage.getItem('networkConn') === null ||
+        sessionStorage.getItem('networkConn') === 'true' ||
+        window.location.pathname !== '/networkError'
+      ) {
         sessionStorage.setItem('networkConn', 'false');
         window.location.href = '/networkError';
       }
