@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import http from '@/network/http';
 import {
   BatchDeleteFileApiResponse,
+  CreateFolderApiResponse,
   DeleteAllTrashApiResponse,
   DeleteFileApiResponse,
   GetDownloadTotalApiResponse,
@@ -171,7 +172,28 @@ export function useGetDelListInTrash() {
   });
 }
 
-//////////////// 其他方法 ////////////////
+//////////////// 其他方法 POST DELETE PUT////////////////
+
+interface createFolderProps {
+  foldername: string;
+  parent: string;
+}
+
+/**
+ * 创建文件夹接口
+ */
+export function useCreateFolder() {
+  return useMutation<CreateFolderApiResponse, ErrorResponse, createFolderProps>(
+    {
+      mutationFn: async ({ foldername, parent }: createFolderProps) => {
+        const res = await http.post<CreateFolderApiResponse>(
+          `/file/folder/create/${foldername}/${parent}`
+        );
+        return res.data;
+      },
+    }
+  );
+}
 
 /**
  * 恢复文件接口

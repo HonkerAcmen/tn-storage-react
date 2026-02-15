@@ -18,7 +18,7 @@ import {
   AiOutlineCheck,
 } from 'react-icons/ai';
 
-import { getFileIcon } from '@/components/files/FileIcon';
+import { getFileIcon } from '@/components/FilesHandle/FileIcon';
 import { formatFileSize, formatDateTime } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 import { FileSystemTreeNode } from '@/network/types/Response/file';

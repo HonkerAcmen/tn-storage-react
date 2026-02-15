@@ -14,7 +14,7 @@ import EChart from '@/components/Echart';
 import { useFileData } from '@/contexts/FileDataContext';
 import { useFileActions, useFileMenu } from '@/features/files/hooks';
 import { formatDate, formatFileSize } from '@/utils/format/formatters';
-import { getFileIcon } from '@/components/files/FileIcon';
+import { getFileIcon } from '@/components/FilesHandle/FileIcon';
 
 import type { FileSystemTreeNode } from '@/network/types/Response/file';
 import type { TopLevelFormatterParams } from 'echarts/types/dist/shared';

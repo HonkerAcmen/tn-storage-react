@@ -1,7 +1,7 @@
 import { Typography, Space, Tag, Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { AiFillFolder, AiOutlineEllipsis } from 'react-icons/ai';
-import { getFileIcon, ICON_SIZE_MEDIUM } from './files/FileIcon';
+import { getFileIcon, ICON_SIZE_MEDIUM } from './FilesHandle/FileIcon';
 import { formatFileSize } from '@/utils/format/formatters';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 
