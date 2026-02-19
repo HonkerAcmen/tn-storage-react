@@ -67,6 +67,7 @@ request.interceptors.response.use(
     if (error.response) {
       const { status } = error.response;
 
+      // 请求守卫
       switch (status) {
         case 401:
           // 可以在这里处理登出逻辑

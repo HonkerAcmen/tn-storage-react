@@ -199,10 +199,14 @@ export function useCreateFolder() {
  * 恢复文件接口
  */
 export function useReStore() {
-  return useMutation<ReStoreApiResopnse, ErrorResponse, string>({
-    mutationFn: async (UUID: string) => {
+  return useMutation<
+    ReStoreApiResopnse,
+    ErrorResponse,
+    { UUID: string; type: string }
+  >({
+    mutationFn: async ({ UUID, type }: { UUID: string; type: string }) => {
       const res = await http.post<ReStoreApiResopnse>(
-        `/file/trash/restore/${UUID}`
+        `/file/trash/restore/${UUID}/${type}`
       );
 
       return res.data;
@@ -262,52 +266,55 @@ export function useUploadFile() {
  * 删除单个文件
  */
 export function useDeleteFile() {
-  return useMutation({
-    mutationFn: async ({ bucket, UUID }: { bucket: string; UUID: string }) =>
-      await http.delete<DeleteFileApiResponse>(`/file/${bucket}/${UUID}`),
-  });
-}
-
-/**
- * 批量删除文件
- */
-export function useBatchDeleteFile() {
-  return useMutation({
+  return useMutation<
+    DeleteFileApiResponse,
+    ErrorResponse,
+    {
+      bucket: string;
+      UUID: string;
+      type: string;
+    }
+  >({
     mutationFn: async ({
       bucket,
-      UUIDs,
+      UUID,
+      type,
     }: {
       bucket: string;
-      UUIDs: BatchDeleteFileRequest;
+      UUID: string;
+      type: string;
     }) => {
-      try {
-        const res = await http.delete<BatchDeleteFileApiResponse>(
-          `${batchDeleteFilePath}/${bucket}`,
-          {
-            data: UUIDs,
-          }
-        );
-        // message 提示由调用方处理
-        return res;
-      } catch {
-        // message 提示由调用方处理
-        throw new Error('Batch delete failed');
-      }
+      const res = await http.delete<DeleteFileApiResponse>(
+        `/file/${bucket}/${UUID}/${type}`
+      );
+      return res.data;
     },
   });
 }
 
 export function usePushFileDataTrash() {
-  return useMutation({
+  return useMutation<
+    PushFileDataTrashApiResponse,
+    ErrorResponse,
+    {
+      srcBucket: string;
+      UUID: string;
+      type: string;
+    }
+  >({
     mutationFn: async ({
       srcBucket,
       UUID,
+      type,
     }: {
       srcBucket: string;
       UUID: string;
-    }) =>
-      await http.post<PushFileDataTrashApiResponse>(
-        `/file/trash/move/${srcBucket}/${UUID}`
-      ),
+      type: string;
+    }) => {
+      const res = await http.post<PushFileDataTrashApiResponse>(
+        `/file/trash/move/${srcBucket}/${UUID}/${type}`
+      );
+      return res.data;
+    },
   });
 }

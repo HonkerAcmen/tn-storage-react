@@ -74,8 +74,8 @@ export default function DeletedFiles() {
   };
 
   // 恢复文件
-  const handleRestore = (UUID: string) => {
-    restoreFn(UUID)
+  const handleRestore = (UUID: string, type: string) => {
+    restoreFn(UUID, type)
       .then((msg) => {
         messageApi.success(msg);
       })
@@ -85,7 +85,11 @@ export default function DeletedFiles() {
   };
 
   // 永久删除文件
-  const handlePermanentDelete = (UUID: string, fileName: string) => {
+  const handlePermanentDelete = (
+    UUID: string,
+    fileName: string,
+    type: string
+  ) => {
     modal.confirm({
       title: '确认永久删除',
       content: `确定要永久删除 "${fileName}" 吗？此操作无法撤销。`,
@@ -93,7 +97,7 @@ export default function DeletedFiles() {
       okType: 'danger',
       cancelText: '取消',
       onOk() {
-        removeDeletedFile(UUID)
+        removeDeletedFile(UUID, type)
           .then((msg) => {
             messageApi.success(msg);
           })
@@ -128,10 +132,10 @@ export default function DeletedFiles() {
   const handleFileAction = (action: string, item: FileSystemTreeNode) => {
     switch (action) {
       case 'restore':
-        handleRestore(item.UUID);
+        handleRestore(item.UUID, item.type);
         break;
       case 'permanentDelete':
-        handlePermanentDelete(item.UUID, item.filename);
+        handlePermanentDelete(item.UUID, item.filename, item.type);
         break;
       case 'details':
         setSelectedFile(item);
@@ -244,7 +248,7 @@ export default function DeletedFiles() {
                     icon={<AiOutlineRest className="h-5 w-5 text-blue-500" />}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleRestore(item.UUID);
+                      handleRestore(item.UUID, item.type);
                     }}
                     className="flex items-center justify-center"
                   >

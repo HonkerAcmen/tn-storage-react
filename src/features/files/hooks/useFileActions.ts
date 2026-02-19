@@ -42,7 +42,7 @@ export function useFileActions() {
           break;
         case 'delete':
           // 先添加到已删除列表
-          addDeletedFile(item.UUID);
+          addDeletedFile(item.UUID, item.type);
           messageApi.success(`已放入回收站 ${item.filename}`);
           break;
         case 'details':

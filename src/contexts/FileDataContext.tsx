@@ -42,7 +42,7 @@ interface FileDataContextType {
     fileId: string,
     updates: Partial<FileSystemTreeNode>
   ) => Promise<void>;
-  deleteFile: (fileId: string) => Promise<void>;
+  deleteFile: (UUID: string, type: string) => Promise<void>;
   refreshFiles: () => void;
 }
 
@@ -161,12 +161,13 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   );
 
   const deleteFile = useCallback(
-    async (fileId: string) =>
+    async (UUID: string, type: string) =>
       new Promise<void>((resolve, reject) =>
         pushFileDataTrash.mutate(
           {
             srcBucket: DEFAULT_BUCKET,
-            UUID: fileId,
+            UUID,
+            type,
           },
           {
             onSuccess: () => {

@@ -28,12 +28,13 @@ export function useDeletedFiles() {
   }, [delListData]);
 
   const addDeletedFile = useCallback(
-    (UUID: string) => {
+    (UUID: string, type: string) => {
       return new Promise<void>((resolve, reject) =>
         pushFileDataTrash.mutate(
           {
             srcBucket: DEFAULT_BUCKET,
             UUID,
+            type,
           },
           {
             onSuccess: () => {
@@ -62,35 +63,39 @@ export function useDeletedFiles() {
   );
 
   const restoreFn = useCallback(
-    (UUID: string): Promise<string> => {
+    (UUID: string, type: string): Promise<string> => {
       return new Promise((resolve, reject) => {
-        restore.mutate(UUID, {
-          onSuccess: () => {
-            queryClient.invalidateQueries({
-              queryKey: ['file', 'data', 'tree'],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ['file', 'data', 'trash'],
-            });
+        restore.mutate(
+          { UUID, type },
+          {
+            onSuccess: () => {
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'data', 'tree'],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'data', 'trash'],
+              });
 
-            resolve('文件已恢复');
-          },
-          onError: (err) => {
-            reject(err.message);
-          },
-        });
+              resolve('文件已恢复');
+            },
+            onError: (err) => {
+              reject(err.message);
+            },
+          }
+        );
       });
     },
     [queryClient, restore]
   );
 
   const removeDeletedFile = useCallback(
-    (UUID: string): Promise<string> => {
+    (UUID: string, type: string): Promise<string> => {
       return new Promise((resolve, reject) => {
         deleteFile.mutate(
           {
             bucket: 'trash',
             UUID,
+            type,
           },
           {
             onSuccess: () => {
