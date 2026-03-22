@@ -5,6 +5,7 @@ import {
   useGetMyStorage,
   useUpdateMyUserData,
 } from '@/network/hooks/user';
+import { useGetRecents } from '@/network/hooks/file';
 import { message } from 'antd';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
@@ -20,6 +21,9 @@ import {
   AiOutlineCheck,
 } from 'react-icons/ai';
 import { formatFileSize } from '@/utils/format/formatters';
+import { useFileData } from '@/contexts/FileDataContext';
+import { useFavorites } from '@/features/files/hooks';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 interface ProfileProps {
   onClose: () => void;
@@ -101,6 +105,9 @@ function OverviewTab() {
   const { data: avatarResponse } = useGetMyAvatar();
   const { data: userdata } = useGetMyProfile();
   const { data: storageResponse } = useGetMyStorage();
+  const { data: recentsResponse } = useGetRecents();
+  const { allFiles } = useFileData();
+  const { favoriteUUIDs } = useFavorites();
   const updateUserData = useUpdateMyUserData();
   const avatarUpload = useAvatarUploadMe();
   // 将 Buffer 数据转换为图片 URL
@@ -130,6 +137,20 @@ function OverviewTab() {
 
   const userinfo = useMemo(() => userdata?.data, [userdata]);
   const storage = storageResponse?.data?.data;
+  const recentActivities = useMemo(() => {
+    const recentUUIDs = recentsResponse?.data?.data?.recent ?? [];
+    const fileMap = new Map(allFiles.map((file) => [file.UUID, file]));
+
+    return recentUUIDs
+      .slice(0, 5)
+      .map((uuid) => fileMap.get(uuid))
+      .filter((file): file is FileSystemTreeNode => Boolean(file))
+      .map((file) => ({
+        action: file.type === 'folder' ? '访问了文件夹' : '访问了文件',
+        file: file.filename,
+        time: new Date(file.updatedAt).toLocaleString('zh-CN'),
+      }));
+  }, [allFiles, recentsResponse]);
 
   const [profile, setProfile] = useState<UserProfile>({
     nickname: '',
@@ -482,7 +503,7 @@ function OverviewTab() {
             <div>
               <p className="text-sm text-gray-500">收藏数</p>
               <p className="mt-1 text-2xl font-bold text-gray-800">
-                {storage?.favoriteCount ?? 0}
+                {favoriteUUIDs.length || storage?.favoriteCount || 0}
               </p>
             </div>
             <div className="rounded-lg bg-amber-100 p-3">
@@ -496,12 +517,10 @@ function OverviewTab() {
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <h4 className="mb-4 text-lg font-semibold text-gray-800">最近活动</h4>
         <div className="space-y-3">
-          {[
-            { action: '上传了文件', file: '项目文档.pdf', time: '2小时前' },
-            { action: '创建了文件夹', file: '设计资源', time: '1天前' },
-            { action: '收藏了文件', file: '重要资料.docx', time: '3天前' },
-            { action: '分享了文件', file: '团队协作.xlsx', time: '5天前' },
-          ].map((activity, index) => (
+          {(recentActivities.length > 0
+            ? recentActivities
+            : [{ action: '暂无最近活动', file: '开始上传或访问文件后会出现在这里', time: '刚刚' }]
+          ).map((activity, index) => (
             <div
               key={index}
               className="flex items-center justify-between rounded-lg border border-gray-100 p-3 transition hover:bg-gray-50"
@@ -528,11 +547,53 @@ function OverviewTab() {
 
 // 我的文件标签页
 function FilesTab() {
+  const { allFiles } = useFileData();
+  const files = useMemo(
+    () =>
+      allFiles
+        .filter((item) => item.id !== '1')
+        .sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        ),
+    [allFiles]
+  );
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-gray-800">我的文件</h3>
       <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <p className="text-center text-gray-500">文件列表功能待实现</p>
+        <div className="mb-4 grid grid-cols-3 gap-4">
+          <SummaryCard title="文件总数" value={String(files.filter((item) => item.type === 'file').length)} />
+          <SummaryCard title="文件夹总数" value={String(files.filter((item) => item.type === 'folder').length)} />
+          <SummaryCard
+            title="最近更新"
+            value={files[0] ? new Date(files[0].updatedAt).toLocaleDateString('zh-CN') : '暂无'}
+          />
+        </div>
+        <div className="space-y-3">
+          {files.length === 0 ? (
+            <p className="py-8 text-center text-gray-500">当前还没有文件</p>
+          ) : (
+            files.slice(0, 10).map((file) => (
+              <div
+                key={file.UUID}
+                className="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3"
+              >
+                <div>
+                  <p className="font-medium text-gray-800">{file.filename}</p>
+                  <p className="text-sm text-gray-500">
+                    {file.type === 'folder' ? '文件夹' : file.ext || '文件'} · 更新时间{' '}
+                    {new Date(file.updatedAt).toLocaleString('zh-CN')}
+                  </p>
+                </div>
+                <span className="text-sm text-gray-500">
+                  {file.type === 'folder' ? '--' : formatFileSize(Number(file.size))}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
@@ -600,12 +661,55 @@ function StorageTab() {
 
 // 收藏标签页
 function FavoritesTab() {
+  const { favoriteUUIDs } = useFavorites();
+  const { allFiles } = useFileData();
+  const favorites = useMemo(() => {
+    const favoriteSet = new Set(favoriteUUIDs);
+    return allFiles.filter((file) => favoriteSet.has(file.UUID));
+  }, [allFiles, favoriteUUIDs]);
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-gray-800">我的收藏</h3>
       <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <p className="text-center text-gray-500">收藏列表功能待实现</p>
+        <div className="mb-4 grid grid-cols-2 gap-4">
+          <SummaryCard title="收藏数量" value={String(favorites.length)} />
+          <SummaryCard
+            title="最近收藏项"
+            value={favorites[0]?.filename ?? '暂无'}
+          />
+        </div>
+        <div className="space-y-3">
+          {favorites.length === 0 ? (
+            <p className="py-8 text-center text-gray-500">当前还没有收藏项</p>
+          ) : (
+            favorites.map((file) => (
+              <div
+                key={file.UUID}
+                className="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3"
+              >
+                <div>
+                  <p className="font-medium text-gray-800">{file.filename}</p>
+                  <p className="text-sm text-gray-500">
+                    {file.type === 'folder' ? '文件夹' : file.ext || '文件'} · 创建于{' '}
+                    {new Date(file.createdAt).toLocaleString('zh-CN')}
+                  </p>
+                </div>
+                <AiFillStar className="h-5 w-5 text-amber-400" />
+              </div>
+            ))
+          )}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function SummaryCard({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
+      <p className="text-sm text-gray-500">{title}</p>
+      <p className="mt-2 text-lg font-semibold text-gray-800">{value}</p>
     </div>
   );
 }

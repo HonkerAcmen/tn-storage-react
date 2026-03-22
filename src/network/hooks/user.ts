@@ -1,10 +1,14 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import http from '@/network/http';
 import {
   AvatarUploadApiResponse,
+  ChangePasswordApiResponse,
   GetUserAvatarApiResponse,
+  GetUserLoginHistoryApiResponse,
+  GetUserSettingsApiResponse,
   GetUserWithNameApiResponse,
   GetUserStorageApiResponse,
+  UpdateUserSettingsApiResponse,
   UpdateUserDataApiResponse,
 } from '@/network/types/Response/user';
 import {
@@ -12,7 +16,11 @@ import {
   GetUserAvatarPath,
   getUserWithNamePath,
 } from '../resPath';
-import { UpdateUserDataRequest } from '@/network/types/Request/user';
+import {
+  ChangePasswordRequest,
+  UpdateUserDataRequest,
+  UpdateUserSettingsRequest,
+} from '@/network/types/Request/user';
 
 export function useGetUserWithName(username: string) {
   return useQuery({
@@ -90,11 +98,15 @@ export function useAvatarUpload() {
 }
 
 export function useAvatarUploadMe() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ file }: { file: File }) => {
       const formData = new FormData();
       formData.append('avatar', file);
       return await http.post<AvatarUploadApiResponse>('/user/avatar/upload/me', formData);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['user', 'avatar', 'me'] });
     },
   });
 }
@@ -118,9 +130,13 @@ export function useUpdateUserData() {
 }
 
 export function useUpdateMyUserData() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (userdata: UpdateUserDataRequest) => {
       return await http.post<UpdateUserDataApiResponse>('/user/update/me', userdata);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['user', 'profile', 'me'] });
     },
   });
 }
@@ -130,6 +146,52 @@ export function useGetMyStorage() {
     queryKey: ['user', 'storage', 'me'],
     queryFn: async () => {
       return await http.get<GetUserStorageApiResponse>('/user/storage/me');
+    },
+  });
+}
+
+export function useGetMySettings() {
+  return useQuery({
+    queryKey: ['user', 'settings', 'me'],
+    queryFn: async () => {
+      return await http.get<GetUserSettingsApiResponse>('/user/settings/me');
+    },
+  });
+}
+
+export function useUpdateMySettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (settings: UpdateUserSettingsRequest) => {
+      return await http.post<UpdateUserSettingsApiResponse>(
+        '/user/settings/me',
+        settings
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['user', 'settings', 'me'] });
+    },
+  });
+}
+
+export function useGetMyLoginHistory() {
+  return useQuery({
+    queryKey: ['user', 'security', 'login-history'],
+    queryFn: async () => {
+      return await http.get<GetUserLoginHistoryApiResponse>(
+        '/user/security/login-history'
+      );
+    },
+  });
+}
+
+export function useChangeMyPassword() {
+  return useMutation({
+    mutationFn: async (payload: ChangePasswordRequest) => {
+      return await http.put<ChangePasswordApiResponse>(
+        '/user/changePassword/me',
+        payload
+      );
     },
   });
 }

@@ -23,6 +23,36 @@ interface StorageSummaryResponse {
   };
 }
 
+export interface UserSettingsResponse {
+  id: number;
+  user_id: number;
+  language: string;
+  theme: string;
+  auto_save: boolean;
+  default_upload_parent_id: number;
+  auto_clean_temp: boolean;
+  two_factor_enabled: boolean;
+  email_notification: boolean;
+  upload_notification: boolean;
+  share_notification: boolean;
+  role: string;
+  allow_file_upload: boolean;
+  allow_file_download: boolean;
+  allow_file_delete: boolean;
+  allow_favorite: boolean;
+  allow_share: boolean;
+  updatedAt: string;
+  createdAt: string;
+}
+
+export interface UserLoginHistoryResponse {
+  id: number;
+  user_id: number;
+  ip: string | null;
+  user_agent: string | null;
+  loginAt: string;
+}
+
 interface GetUserAvatarResponse {
   fieldname: string;
   originalname: string;
@@ -43,3 +73,9 @@ export type AvatarUploadApiResponse = BaseResponse<AvatarUploadResponse>; // 头
 export type GetUserAvatarApiResponse = BaseResponse<GetUserAvatarResponse>;
 export type UpdateUserDataApiResponse = BaseResponse<UpdateUserDataResponse>;
 export type GetUserStorageApiResponse = BaseResponse<StorageSummaryResponse>;
+export type GetUserSettingsApiResponse = BaseResponse<UserSettingsResponse>;
+export type UpdateUserSettingsApiResponse = BaseResponse<UserSettingsResponse>;
+export type GetUserLoginHistoryApiResponse = BaseResponse<
+  UserLoginHistoryResponse[]
+>;
+export type ChangePasswordApiResponse = BaseResponse<null>;
