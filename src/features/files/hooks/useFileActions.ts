@@ -6,6 +6,7 @@ import { useDeletedFiles } from './useDeletedFiles';
 import { useFileData } from '@/contexts/FileDataContext';
 import * as fileOperations from '@/features/files/services/fileOperations';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
+import { useGetMySettings } from '@/network/hooks/user';
 
 /**
  * 文件操作 Hook
@@ -17,6 +18,8 @@ export function useFileActions() {
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addDeletedFile } = useDeletedFiles();
   const { updateFile } = useFileData();
+  const { data: settingsResponse } = useGetMySettings();
+  const settings = settingsResponse?.data?.data;
 
   /**
    * 处理文件操作
@@ -35,7 +38,14 @@ export function useFileActions() {
           void fileOperations.downloadFile(item);
           break;
         case 'share':
-          fileOperations.shareFile(item);
+          if (!(settings?.allow_share ?? false)) {
+            messageApi.error('当前账户未开启分享权限');
+            break;
+          }
+          void fileOperations.shareFile(
+            item,
+            settings?.share_notification ?? true
+          );
           break;
         case 'rename':
           fileOperations.renameFile(item, updateFile, messageApi);
@@ -43,7 +53,6 @@ export function useFileActions() {
         case 'delete':
           // 先添加到已删除列表
           addDeletedFile(item.UUID, item.type);
-          messageApi.success(`已放入回收站 ${item.filename}`);
           break;
         case 'details':
           options?.onDetailsOpen?.(item);
@@ -68,7 +77,14 @@ export function useFileActions() {
           break;
       }
     },
-    [updateFile, messageApi, addDeletedFile, isFavorite, toggleFavorite]
+    [
+      updateFile,
+      messageApi,
+      addDeletedFile,
+      isFavorite,
+      settings,
+      toggleFavorite,
+    ]
   );
 
   /**

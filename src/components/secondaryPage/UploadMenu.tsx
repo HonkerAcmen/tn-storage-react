@@ -8,6 +8,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import FileUploadButton from '../FilesHandle/FileUploadButton';
 import FolderItem from '../FilesHandle/FolderItem';
 import { uploadFilesInChunks } from '@/features/files/services/chunkUpload';
+import { useGetMySettings } from '@/network/hooks/user';
+import { useEffect } from 'react';
 
 interface UploadMenuProps {
   open: boolean;
@@ -20,6 +22,7 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
    */
   const [messageApi, messageContextH] = message.useMessage();
   const { fileTree } = useFileData();
+  const { data: settingsResponse } = useGetMySettings();
   const [selectKey, setSelectKey] = useState('');
   const [fileList, setFileList] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -27,6 +30,7 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
   const [selectId, setSelectId] = useState('');
 
   const [progress, setProgress] = useState(0);
+  const settings = settingsResponse?.data?.data;
 
   const FILE_TYPE_MAP = [
     'doc',
@@ -93,8 +97,42 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
+  useEffect(() => {
+    const defaultParentId = String(settings?.default_upload_parent_id ?? '1');
+    const fallbackUUID = fileTree.UUID;
+
+    if (!selectId) {
+      if (defaultParentId === '1') {
+        setSelectId('1');
+        setSelectKey(fallbackUUID);
+        return;
+      }
+
+      const stack = [fileTree];
+      while (stack.length > 0) {
+        const current = stack.pop();
+        if (!current) {
+          continue;
+        }
+        if (current.id === defaultParentId) {
+          setSelectId(current.id);
+          setSelectKey(current.UUID);
+          return;
+        }
+        current.children?.forEach((child) => stack.push(child));
+      }
+
+      setSelectId('1');
+      setSelectKey(fallbackUUID);
+    }
+  }, [fileTree, selectId, settings?.default_upload_parent_id]);
+
   async function handleUpload(file: FileList | null) {
     const files: File[] = [];
+    if (!(settings?.allow_file_upload ?? true)) {
+      messageApi.error('当前账户未开启上传权限');
+      return;
+    }
     if (!selectKey) {
       messageApi.error('请选择一个文件夹');
       return;
@@ -138,7 +176,9 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
         },
       });
 
-      messageApi.success('所有文件上传成功！');
+      if (settings?.upload_notification ?? true) {
+        messageApi.success('所有文件上传成功！');
+      }
       queryClient.invalidateQueries({
         queryKey: ['file', 'data', 'tree'],
       });
@@ -189,7 +229,7 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
           取消
         </button>
         <FileUploadButton
-          isFolderSelect={selectKey ? false : true}
+          isFolderSelect={selectKey ? !(settings?.allow_file_upload ?? true) : true}
           multiple={true}
           uploading={uploading}
           onFileSelect={handleUpload}

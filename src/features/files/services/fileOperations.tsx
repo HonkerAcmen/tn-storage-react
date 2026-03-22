@@ -58,14 +58,15 @@ export async function downloadFile(file: FileSystemTreeNode): Promise<void> {
 /**
  * 分享文件
  */
-export function shareFile(_file: FileSystemTreeNode): void {
-  void _file;
-  // TODO: 实现真实的分享逻辑
-  // 消息提示由调用方处理
-  // 示例：生成分享链接
-  // const shareUrl = `${window.location.origin}/share/${file.id}`;
-  // navigator.clipboard.writeText(shareUrl);
-  // message.success('分享链接已复制到剪贴板');
+export async function shareFile(
+  file: FileSystemTreeNode,
+  shouldNotify = true
+): Promise<void> {
+  const shareUrl = `${window.location.origin}/file/${file.UUID}`;
+  await navigator.clipboard.writeText(shareUrl);
+  if (shouldNotify) {
+    message.success('链接已复制');
+  }
 }
 
 /**

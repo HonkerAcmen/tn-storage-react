@@ -6,6 +6,25 @@ import { useEffect } from 'react';
 import { isAuthed } from '@/utils/auth';
 import { useRouter } from 'next/router';
 import { QueryProvider } from '@/providers/QueryProvider';
+import { useGetMySettings } from '@/network/hooks/user';
+
+function UserPreferenceBridge({ enabled }: { enabled: boolean }) {
+  const { data } = useGetMySettings();
+  const settings = enabled ? data?.data?.data : undefined;
+
+  useEffect(() => {
+    if (!enabled || !settings) {
+      document.documentElement.removeAttribute('lang');
+      document.documentElement.removeAttribute('data-theme');
+      return;
+    }
+
+    document.documentElement.lang = settings.language || 'zh-CN';
+    document.documentElement.dataset.theme = settings.theme || 'system';
+  }, [enabled, settings]);
+
+  return null;
+}
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -63,6 +82,7 @@ export default function App({ Component, pageProps }: AppProps) {
       >
         <AntApp>
           <FileDataProvider>
+            <UserPreferenceBridge enabled={!isLoginPage && isAuthed()} />
             <Component {...pageProps} />
           </FileDataProvider>
         </AntApp>

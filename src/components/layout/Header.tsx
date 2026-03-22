@@ -8,8 +8,7 @@ import {
 } from 'react-icons/ai';
 
 import { logout } from '@/utils/auth';
-import { GetUserNameWithLocalsStroger } from '@/utils/auth/user';
-import { useGetAvatar } from '@/network/hooks/user';
+import { useGetMyAvatar, useGetMyProfile } from '@/network/hooks/user';
 import Profile from '../secondaryPage/Profile';
 import SearchResults from '../secondaryPage/SearchResults';
 import Settings from '../secondaryPage/Settings';
@@ -20,15 +19,9 @@ export default function Header() {
   const [showProfile, setShowProfile] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
-
-  const [username, setUsername] = useState('');
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUsername(GetUserNameWithLocalsStroger());
-  }, []);
-
-  const { data: avatarResponse } = useGetAvatar(username);
+  const { data: avatarResponse } = useGetMyAvatar();
+  const { data: profileResponse } = useGetMyProfile();
+  const username = profileResponse?.data?.data?.username ?? '';
 
   // 将 Buffer 数据转换为图片 URL
   const avatarUrl = useMemo(() => {

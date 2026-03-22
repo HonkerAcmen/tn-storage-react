@@ -474,19 +474,11 @@ function PermissionsSettings() {
       {contextHolder}
       <SettingRow
         title="角色"
-        desc="角色用于标记当前账户的权限身份"
+        desc="角色由服务端统一管理，个人设置中只读展示"
         control={
-          <select
-            value={currentDraft.role}
-            onChange={(e) =>
-              setDraft((prev) => ({ ...prev, role: e.target.value }))
-            }
-            className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
-          >
-            <option value="user">普通用户</option>
-            <option value="viewer">访客</option>
-            <option value="admin">管理员</option>
-          </select>
+          <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-600">
+            {roleLabel}
+          </div>
         }
       />
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">

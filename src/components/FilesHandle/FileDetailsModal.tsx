@@ -23,6 +23,8 @@ import { formatFileSize, formatDateTime } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { findPathToNode } from '@/utils/fileSystem/fileSystemUtils';
+import * as fileOperations from '@/features/files/services/fileOperations';
+import { useGetMySettings } from '@/network/hooks/user';
 
 interface FileDetailsModalProps {
   open: boolean;
@@ -42,9 +44,11 @@ export default function FileDetailsModal({
 }: FileDetailsModalProps) {
   const [messageApi, contextHolder] = message.useMessage();
   const { fileTree } = useFileData();
+  const { data: settingsResponse } = useGetMySettings();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const settings = settingsResponse?.data?.data;
 
   // 1. 提取文件名和后缀的解析逻辑 (useMemo 避免重复计算)
   const fileInfo = useMemo(() => {
@@ -224,13 +228,20 @@ export default function FileDetailsModal({
             <>
               <Button
                 icon={<AiOutlineDownload />}
-                onClick={() => messageApi.info('开始下载...')}
+                disabled={file.type === 'folder' || !(settings?.allow_file_download ?? true)}
+                onClick={() => void fileOperations.downloadFile(file)}
               >
                 下载
               </Button>
               <Button
                 icon={<AiOutlineShareAlt />}
-                onClick={() => messageApi.info('链接已复制')}
+                disabled={!(settings?.allow_share ?? false)}
+                onClick={() =>
+                  void fileOperations.shareFile(
+                    file,
+                    settings?.share_notification ?? true
+                  )
+                }
               >
                 分享
               </Button>
