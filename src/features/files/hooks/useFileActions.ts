@@ -32,7 +32,7 @@ export function useFileActions() {
     ) => {
       switch (action) {
         case 'download':
-          fileOperations.downloadFile(item);
+          void fileOperations.downloadFile(item);
           break;
         case 'share':
           fileOperations.shareFile(item);

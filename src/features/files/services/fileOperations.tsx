@@ -1,5 +1,11 @@
-import { Modal } from 'antd';
-import { FileSystemTreeNode } from '@/network/types/Response/file';
+import { message, Modal } from 'antd';
+import http from '@/network/http';
+import { getFilePath } from '@/network/resPath';
+import {
+  FileSystemTreeNode,
+  GetFileChunkManifestApiResponse,
+} from '@/network/types/Response/file';
+import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
 
 /**
  * 文件操作服务
@@ -10,24 +16,43 @@ import { FileSystemTreeNode } from '@/network/types/Response/file';
 /**
  * 下载文件
  */
-export function downloadFile(file: FileSystemTreeNode): void {
+export async function downloadFile(file: FileSystemTreeNode): Promise<void> {
   if (file.type === 'folder') {
-    // 消息提示由调用方处理
     return;
   }
 
-  // TODO: 实现真实的下载逻辑
-  // 消息提示由调用方处理
+  const chunkBuffers: BlobPart[] = [];
 
-  // 示例：创建下载链接
-  // const url = `/api/files/${file.id}/download`;
-  // const link = document.createElement('a');
-  // link.href = url;
-  // link.download =
-  //   file.type === 'file' && file.ext
-  //     ? `${file.filename}.${file.ext}`
-  //     : file.filename;
-  // link.click();
+  try {
+    const manifestRes = await http.get<GetFileChunkManifestApiResponse>(
+      `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunks`
+    );
+    const manifest = manifestRes.data.data;
+
+    for (let chunkIndex = 1; chunkIndex <= manifest.totalChunks; chunkIndex++) {
+      const chunkRes = await http.get<Blob>(
+        `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunk/${chunkIndex}`,
+        {
+          responseType: 'blob',
+        }
+      );
+      chunkBuffers.push(chunkRes.data);
+    }
+
+    const blob = new Blob(chunkBuffers, { type: manifest.mimetype });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = manifest.filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    chunkBuffers.length = 0;
+    console.error('下载分片失败:', err);
+    message.error('后端服务器不可用');
+  }
 }
 
 /**

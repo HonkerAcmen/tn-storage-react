@@ -69,6 +69,13 @@ export interface UploadStatusResponse {
   status: string;
 }
 
+export interface FileChunkManifest {
+  UUID: string;
+  filename: string;
+  mimetype: string;
+  totalChunks: number;
+}
+
 // 批量删除文件响应
 export interface BatchDeleteFileResponse {
   code: number;
@@ -113,6 +120,7 @@ export type InitMultipartUploadApiResponse =
   BaseResponse<MultipartUploadInitResponse>;
 export type UploadChunkApiResponse = BaseResponse<MultipartUploadChunkResponse>;
 export type GetFileApiResponse = BaseResponse<Record<string, unknown>>;
+export type GetFileChunkManifestApiResponse = BaseResponse<FileChunkManifest>;
 export type GetFilePagesInfoApiResponse = BaseResponse<FilePagesInfoResponse>;
 export type GetFileInfoApiResponse = BaseResponse<FileDetailInfo>;
 
