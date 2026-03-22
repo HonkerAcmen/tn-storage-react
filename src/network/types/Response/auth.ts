@@ -3,6 +3,7 @@ import { BaseResponse } from '.';
 interface LoginResponse {
   userId: number;
   username: string;
+  email: string;
   token: string;
   expiresIn: string;
 }

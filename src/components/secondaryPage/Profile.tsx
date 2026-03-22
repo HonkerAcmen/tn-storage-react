@@ -1,11 +1,10 @@
 import {
-  useAvatarUpload,
-  useGetAvatar,
-  useGetUserWithName,
-  useUpdateUserData,
+  useAvatarUploadMe,
+  useGetMyAvatar,
+  useGetMyProfile,
+  useGetMyStorage,
+  useUpdateMyUserData,
 } from '@/network/hooks/user';
-import { GetUserWithNameApiResponse } from '@/network/types/Response/user';
-import { GetUserNameWithLocalsStroger } from '@/utils/auth/user';
 import { message } from 'antd';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
@@ -20,6 +19,7 @@ import {
   AiOutlinePhone,
   AiOutlineCheck,
 } from 'react-icons/ai';
+import { formatFileSize } from '@/utils/format/formatters';
 
 interface ProfileProps {
   onClose: () => void;
@@ -98,14 +98,11 @@ function OverviewTab() {
   const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [messageApi, contextHolder] = message.useMessage();
-  const [username, setUsername] = useState(
-    () => GetUserNameWithLocalsStroger() || ''
-  );
-
-  const { data: avatarResponse } = useGetAvatar(username);
-  const { data: userdata } = useGetUserWithName(username);
-  const updateUserData = useUpdateUserData();
-  const avatarUpload = useAvatarUpload();
+  const { data: avatarResponse } = useGetMyAvatar();
+  const { data: userdata } = useGetMyProfile();
+  const { data: storageResponse } = useGetMyStorage();
+  const updateUserData = useUpdateMyUserData();
+  const avatarUpload = useAvatarUploadMe();
   // 将 Buffer 数据转换为图片 URL
   const avatarUrl = useMemo(() => {
     if (!avatarResponse?.data?.data?.buffer?.data) {
@@ -131,9 +128,8 @@ function OverviewTab() {
     }
   }, [avatarResponse]);
 
-  const userinfo = useMemo((): GetUserWithNameApiResponse | undefined => {
-    return userdata?.data;
-  }, [userdata]);
+  const userinfo = useMemo(() => userdata?.data, [userdata]);
+  const storage = storageResponse?.data?.data;
 
   const [profile, setProfile] = useState<UserProfile>({
     nickname: '',
@@ -148,19 +144,15 @@ function OverviewTab() {
   // 当头像数据加载成功后，更新 profile
   useEffect(() => {
     // 只在数据真正改变时才更新，避免无限循环
-    if (!username) {
-      return;
-    }
-
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setProfile((prev) => ({
-      nickname: userinfo?.data.username || username || '',
+      nickname: userinfo?.data.username || prev.nickname || '',
       email: userinfo?.data.email || prev.email || '',
       phone: userinfo?.data.phone || prev.phone || '',
       bio: userinfo?.data.desc || prev.bio || '',
       avatar: avatarUrl || prev.avatar || null,
     }));
-  }, [username, avatarUrl, userinfo]);
+  }, [avatarUrl, userinfo]);
 
   // 开始编辑
   const handleEdit = () => {
@@ -214,10 +206,7 @@ function OverviewTab() {
           }
         );
 
-        avatarUpload.mutateAsync({
-          username: editForm.nickname,
-          file: file,
-        });
+        avatarUpload.mutateAsync({ file: file });
       } else {
         messageApi.error('未知文件!');
         return;
@@ -464,7 +453,9 @@ function OverviewTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">总文件数</p>
-              <p className="mt-1 text-2xl font-bold text-gray-800">1,234</p>
+              <p className="mt-1 text-2xl font-bold text-gray-800">
+                {storage?.totalFiles ?? 0}
+              </p>
             </div>
             <div className="rounded-lg bg-blue-100 p-3">
               <AiFillFileText className="h-6 w-6 text-blue-600" />
@@ -476,7 +467,9 @@ function OverviewTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">存储使用</p>
-              <p className="mt-1 text-2xl font-bold text-gray-800">10.5 GB</p>
+              <p className="mt-1 text-2xl font-bold text-gray-800">
+                {formatFileSize(storage?.usedBytes ?? 0)}
+              </p>
             </div>
             <div className="rounded-lg bg-purple-100 p-3">
               <AiFillCloud className="h-6 w-6 text-purple-600" />
@@ -488,7 +481,9 @@ function OverviewTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">收藏数</p>
-              <p className="mt-1 text-2xl font-bold text-gray-800">89</p>
+              <p className="mt-1 text-2xl font-bold text-gray-800">
+                {storage?.favoriteCount ?? 0}
+              </p>
             </div>
             <div className="rounded-lg bg-amber-100 p-3">
               <AiFillStar className="h-6 w-6 text-amber-600" />
@@ -545,6 +540,13 @@ function FilesTab() {
 
 // 存储空间标签页
 function StorageTab() {
+  const { data: storageResponse } = useGetMyStorage();
+  const storage = storageResponse?.data?.data;
+  const usedBytes = storage?.usedBytes ?? 0;
+  const totalBytes = storage?.totalBytes ?? 100 * 1024 * 1024 * 1024;
+  const usedPercent =
+    totalBytes === 0 ? 0 : Math.min(100, Math.round((usedBytes / totalBytes) * 100));
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-gray-800">存储空间</h3>
@@ -552,28 +554,43 @@ function StorageTab() {
         <div className="mb-4">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">已使用</span>
-            <span className="text-sm text-gray-500">10.5 GB / 100 GB</span>
+            <span className="text-sm text-gray-500">
+              {formatFileSize(usedBytes)} / {formatFileSize(totalBytes)}
+            </span>
           </div>
           <div className="h-3 w-full rounded-full bg-gray-200">
-            <div className="h-3 w-[10.5%] rounded-full bg-linear-to-r from-[#5542f6] to-[#7c6cf5]"></div>
+            <div
+              className="h-3 rounded-full bg-linear-to-r from-[#5542f6] to-[#7c6cf5]"
+              style={{ width: `${usedPercent}%` }}
+            ></div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-sm text-gray-500">文档</p>
-            <p className="mt-1 text-lg font-semibold text-gray-800">2.3 GB</p>
+            <p className="mt-1 text-lg font-semibold text-gray-800">
+              {formatFileSize(storage?.categories.document ?? 0)}
+            </p>
           </div>
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-sm text-gray-500">图片</p>
-            <p className="mt-1 text-lg font-semibold text-gray-800">5.1 GB</p>
+            <p className="mt-1 text-lg font-semibold text-gray-800">
+              {formatFileSize(storage?.categories.image ?? 0)}
+            </p>
           </div>
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-sm text-gray-500">视频</p>
-            <p className="mt-1 text-lg font-semibold text-gray-800">2.8 GB</p>
+            <p className="mt-1 text-lg font-semibold text-gray-800">
+              {formatFileSize(storage?.categories.video ?? 0)}
+            </p>
           </div>
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-sm text-gray-500">其他</p>
-            <p className="mt-1 text-lg font-semibold text-gray-800">0.3 GB</p>
+            <p className="mt-1 text-lg font-semibold text-gray-800">
+              {formatFileSize(
+                (storage?.categories.audio ?? 0) + (storage?.categories.other ?? 0)
+              )}
+            </p>
           </div>
         </div>
       </div>

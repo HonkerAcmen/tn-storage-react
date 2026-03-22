@@ -18,12 +18,16 @@ export function useLogin() {
       const res = await http.post<LoginApiResponse>(loginPath, data);
       const token = res.data.data.token;
       const username = res.data.data.username;
+      const email = res.data.data.email;
+      const userId = String(res.data.data.userId);
 
       // 保存 token 到 localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('username', username);
+      localStorage.setItem('email', email);
+      localStorage.setItem('userId', userId);
 
-      return { token, username };
+      return { token, username, email, userId };
     },
   });
 }

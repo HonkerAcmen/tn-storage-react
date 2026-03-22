@@ -4,6 +4,7 @@ import {
   AvatarUploadApiResponse,
   GetUserAvatarApiResponse,
   GetUserWithNameApiResponse,
+  GetUserStorageApiResponse,
   UpdateUserDataApiResponse,
 } from '@/network/types/Response/user';
 import {
@@ -26,6 +27,16 @@ export function useGetUserWithName(username: string) {
   });
 }
 
+export function useGetMyProfile() {
+  return useQuery({
+    queryKey: ['user', 'profile', 'me'],
+    queryFn: async () => {
+      const res = await http.get<GetUserWithNameApiResponse>('/user/profile/me');
+      return res;
+    },
+  });
+}
+
 export function useGetAvatar(username: string) {
   return useQuery({
     queryKey: ['user', 'avatar', username],
@@ -36,6 +47,16 @@ export function useGetAvatar(username: string) {
       return res;
     },
     enabled: !!username,
+  });
+}
+
+export function useGetMyAvatar() {
+  return useQuery({
+    queryKey: ['user', 'avatar', 'me'],
+    queryFn: async () => {
+      const res = await http.get<GetUserAvatarApiResponse>('/user/avatar/me');
+      return res;
+    },
   });
 }
 
@@ -68,6 +89,16 @@ export function useAvatarUpload() {
   });
 }
 
+export function useAvatarUploadMe() {
+  return useMutation({
+    mutationFn: async ({ file }: { file: File }) => {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      return await http.post<AvatarUploadApiResponse>('/user/avatar/upload/me', formData);
+    },
+  });
+}
+
 export function useUpdateUserData() {
   return useMutation({
     mutationFn: async (userdata: UpdateUserDataRequest) => {
@@ -82,6 +113,23 @@ export function useUpdateUserData() {
         // message 提示由调用方处理
         throw new Error('Update failed');
       }
+    },
+  });
+}
+
+export function useUpdateMyUserData() {
+  return useMutation({
+    mutationFn: async (userdata: UpdateUserDataRequest) => {
+      return await http.post<UpdateUserDataApiResponse>('/user/update/me', userdata);
+    },
+  });
+}
+
+export function useGetMyStorage() {
+  return useQuery({
+    queryKey: ['user', 'storage', 'me'],
+    queryFn: async () => {
+      return await http.get<GetUserStorageApiResponse>('/user/storage/me');
     },
   });
 }
