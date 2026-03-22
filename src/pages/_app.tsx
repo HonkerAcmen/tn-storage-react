@@ -42,13 +42,6 @@ export default function App({ Component, pageProps }: AppProps) {
 
   // 路由守卫
   useEffect(() => {
-    if (!isLoginPage && !isAuthed()) {
-      if (sessionStorage.getItem('networkConn') === 'false') {
-        router.push('/networkError');
-      } else {
-        router.push('/login');
-      }
-    }
     if (isLoginPage && isAuthed()) {
       router.push('/');
     }

@@ -35,6 +35,7 @@ import {
 } from '../resPath';
 import { BatchDeleteFileRequest } from '@/network/types/Request/file';
 import { ErrorResponse } from '../types/Response';
+import { isAuthed } from '@/utils/auth';
 
 //////////////// Get 方法 / Query方法 ////////////////
 
@@ -57,12 +58,14 @@ export function useGetDownloadTotal() {
  * @returns
  */
 export function useGetFileSystemTree() {
+  const authed = isAuthed();
   return useQuery({
     queryKey: ['file', 'data', 'tree'],
     queryFn: async () => {
       const res = await http.get<GetFileSystemTreeApiResponse>('/file/tree');
       return res;
     },
+    enabled: authed,
   });
 }
 
@@ -169,24 +172,30 @@ export function useGetFileInfo(UUID: string) {
 }
 
 export function useGetDelListInTrash() {
+  const authed = isAuthed();
   return useQuery({
     queryKey: ['file', 'data', 'trash'],
     queryFn: async () =>
       await http.get<getTrashFilesApiResponse>('/file/trash'),
+    enabled: authed,
   });
 }
 
 export function useGetFavorites() {
+  const authed = isAuthed();
   return useQuery({
     queryKey: ['file', 'favorite'],
     queryFn: async () => await http.get<GetFavoritesApiResponse>('/file/favorite'),
+    enabled: authed,
   });
 }
 
 export function useGetRecents() {
+  const authed = isAuthed();
   return useQuery({
     queryKey: ['file', 'recent'],
     queryFn: async () => await http.get<GetRecentsApiResponse>('/file/recent'),
+    enabled: authed,
   });
 }
 

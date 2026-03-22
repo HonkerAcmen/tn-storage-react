@@ -66,12 +66,13 @@ request.interceptors.response.use(
     // 处理 HTTP 错误状态码
     if (error.response) {
       const { status } = error.response;
+      const token = localStorage.getItem('token');
 
       // 请求守卫
       switch (status) {
         case 401:
           // 可以在这里处理登出逻辑
-          if (window.location.pathname !== '/login') {
+          if (token && window.location.pathname !== '/login') {
             window.location.href = '/login';
             localStorage.removeItem('token');
           }

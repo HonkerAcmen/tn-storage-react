@@ -10,9 +10,11 @@ import {
 } from 'react-icons/ai';
 import {
   useChangeMyPassword,
+  useGetAdminUsers,
   useGetMyLoginHistory,
   useGetMySettings,
   useGetMyStorage,
+  useUpdateUserRole,
   useUpdateMySettings,
 } from '@/network/hooks/user';
 import { UpdateUserSettingsRequest } from '@/network/types/Request/user';
@@ -438,8 +440,13 @@ function NotificationSettings() {
 function PermissionsSettings() {
   const [messageApi, contextHolder] = message.useMessage();
   const { data } = useGetMySettings();
+  const { data: adminUsersResponse } = useGetAdminUsers(
+    data?.data?.data?.role === 'admin'
+  );
   const updateSettings = useUpdateMySettings();
+  const updateUserRole = useUpdateUserRole();
   const settings = data?.data?.data;
+  const adminUsers = adminUsersResponse?.data?.data ?? [];
   const [draft, setDraft] = useState<UpdateUserSettingsRequest>({});
 
   const currentDraft = {
@@ -451,7 +458,7 @@ function PermissionsSettings() {
     allow_file_delete:
       draft.allow_file_delete ?? settings?.allow_file_delete ?? true,
     allow_favorite: draft.allow_favorite ?? settings?.allow_favorite ?? true,
-    allow_share: draft.allow_share ?? settings?.allow_share ?? false,
+    allow_share: draft.allow_share ?? settings?.allow_share ?? true,
   };
 
   const save = async () => {
@@ -535,7 +542,7 @@ function PermissionsSettings() {
       />
       <SettingRow
         title="允许共享"
-        desc="为后续共享能力预留"
+        desc="普通用户默认可分享文件"
         control={
           <Toggle
             checked={Boolean(currentDraft.allow_share)}
@@ -546,6 +553,47 @@ function PermissionsSettings() {
         }
       />
       <SaveBar onSave={save} loading={updateSettings.isPending} />
+
+      {settings?.role === 'admin' && (
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <div className="mb-4">
+            <p className="font-medium text-gray-800">用户身份管理</p>
+            <p className="text-sm text-gray-500">
+              管理员可以将用户设置为管理员、普通用户或访客
+            </p>
+          </div>
+          <div className="space-y-3">
+            {adminUsers.map((user) => (
+              <div
+                key={user.id}
+                className="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3"
+              >
+                <div>
+                  <p className="font-medium text-gray-800">
+                    {user.username || '未命名用户'}
+                  </p>
+                  <p className="text-sm text-gray-500">{user.email}</p>
+                </div>
+                <select
+                  value={user.role}
+                  onChange={async (e) => {
+                    await updateUserRole.mutateAsync({
+                      id: user.id,
+                      role: e.target.value as 'admin' | 'user' | 'viewer',
+                    });
+                    messageApi.success('用户身份已更新');
+                  }}
+                  className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
+                >
+                  <option value="admin">管理员</option>
+                  <option value="user">普通用户</option>
+                  <option value="viewer">访客</option>
+                </select>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </Section>
   );
 }

@@ -2,7 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import http from '@/network/http';
 import {
   AvatarUploadApiResponse,
+  AdminUserRoleResponse,
   ChangePasswordApiResponse,
+  GetAdminUsersApiResponse,
   GetUserAvatarApiResponse,
   GetUserLoginHistoryApiResponse,
   GetUserSettingsApiResponse,
@@ -21,6 +23,7 @@ import {
   UpdateUserDataRequest,
   UpdateUserSettingsRequest,
 } from '@/network/types/Request/user';
+import { isAuthed } from '@/utils/auth';
 
 export function useGetUserWithName(username: string) {
   return useQuery({
@@ -36,12 +39,14 @@ export function useGetUserWithName(username: string) {
 }
 
 export function useGetMyProfile() {
+  const authed = isAuthed();
   return useQuery({
     queryKey: ['user', 'profile', 'me'],
     queryFn: async () => {
       const res = await http.get<GetUserWithNameApiResponse>('/user/profile/me');
       return res;
     },
+    enabled: authed,
   });
 }
 
@@ -59,12 +64,14 @@ export function useGetAvatar(username: string) {
 }
 
 export function useGetMyAvatar() {
+  const authed = isAuthed();
   return useQuery({
     queryKey: ['user', 'avatar', 'me'],
     queryFn: async () => {
       const res = await http.get<GetUserAvatarApiResponse>('/user/avatar/me');
       return res;
     },
+    enabled: authed,
   });
 }
 
@@ -142,20 +149,34 @@ export function useUpdateMyUserData() {
 }
 
 export function useGetMyStorage() {
+  const authed = isAuthed();
   return useQuery({
     queryKey: ['user', 'storage', 'me'],
     queryFn: async () => {
       return await http.get<GetUserStorageApiResponse>('/user/storage/me');
     },
+    enabled: authed,
   });
 }
 
 export function useGetMySettings() {
+  const authed = isAuthed();
   return useQuery({
     queryKey: ['user', 'settings', 'me'],
     queryFn: async () => {
       return await http.get<GetUserSettingsApiResponse>('/user/settings/me');
     },
+    enabled: authed,
+  });
+}
+
+export function useGetAdminUsers(enabled = true) {
+  return useQuery({
+    queryKey: ['user', 'admin', 'users'],
+    queryFn: async () => {
+      return await http.get<GetAdminUsersApiResponse>('/user/admin/users');
+    },
+    enabled,
   });
 }
 
@@ -174,7 +195,27 @@ export function useUpdateMySettings() {
   });
 }
 
+export function useUpdateUserRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      role,
+    }: {
+      id: number;
+      role: AdminUserRoleResponse['role'];
+    }) => {
+      return await http.put('/user/admin/role/' + id, { role });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['user', 'admin', 'users'] });
+      await queryClient.invalidateQueries({ queryKey: ['user', 'settings', 'me'] });
+    },
+  });
+}
+
 export function useGetMyLoginHistory() {
+  const authed = isAuthed();
   return useQuery({
     queryKey: ['user', 'security', 'login-history'],
     queryFn: async () => {
@@ -182,6 +223,7 @@ export function useGetMyLoginHistory() {
         '/user/security/login-history'
       );
     },
+    enabled: authed,
   });
 }
 

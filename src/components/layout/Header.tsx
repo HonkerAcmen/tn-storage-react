@@ -12,6 +12,8 @@ import { useGetMyAvatar, useGetMyProfile } from '@/network/hooks/user';
 import Profile from '../secondaryPage/Profile';
 import SearchResults from '../secondaryPage/SearchResults';
 import Settings from '../secondaryPage/Settings';
+import { isAuthed } from '@/utils/auth';
+import Link from 'next/link';
 
 export default function Header() {
   const [clickProfile, setClickProfile] = useState(false);
@@ -19,6 +21,7 @@ export default function Header() {
   const [showProfile, setShowProfile] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const authed = isAuthed();
   const { data: avatarResponse } = useGetMyAvatar();
   const { data: profileResponse } = useGetMyProfile();
   const username = profileResponse?.data?.data?.username ?? '';
@@ -75,67 +78,77 @@ export default function Header() {
       </div>
 
       <div className="mr-4 flex items-center">
-        <AiFillSetting
-          onClick={() => setShowSettings(true)}
-          className="mr-6 h-6 w-6 cursor-pointer transition-transform duration-500 hover:rotate-360 hover:text-[#5542f6] hover:drop-shadow-md"
-        />
-
-        <div className="relative flex items-center">
-          {avatarUrl ? (
-            <Image
-              src={avatarUrl}
-              alt="User avatar"
-              width={48}
-              height={48}
-              className="mr-6 h-12 w-12 cursor-pointer rounded-full bg-gray-200 object-cover"
+        {authed ? (
+          <>
+            <AiFillSetting
+              onClick={() => setShowSettings(true)}
+              className="mr-6 h-6 w-6 cursor-pointer transition-transform duration-500 hover:rotate-360 hover:text-[#5542f6] hover:drop-shadow-md"
             />
-          ) : (
-            <div className="mr-6 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gray-200 text-gray-400">
-              {username?.charAt(0)?.toUpperCase() || 'U'}
-            </div>
-          )}
-          <div
-            className="flex cursor-pointer items-center"
-            tabIndex={0}
-            onFocus={() => setClickProfile(!clickProfile)}
-            onBlur={(e) => {
-              // 延迟关闭，确保点击事件能正确触发
-              const currentTarget = e.currentTarget;
-              setTimeout(() => {
-                if (!currentTarget.contains(document.activeElement)) {
-                  setClickProfile(false);
-                }
-              }, 200);
-            }}
-          >
-            <p className="mr-2 whitespace-nowrap">{username || '管理员'}</p>
-            <AiFillCaretDown className="h-3 w-3 text-gray-500" />
-          </div>
 
-          <Modal
-            open={clickProfile}
-            onClose={() => setClickProfile(false)}
-            position={{ top: 'top-16', right: 'right-2' }}
-            size={{ width: 'w-40' }}
+            <div className="relative flex items-center">
+              {avatarUrl ? (
+                <Image
+                  src={avatarUrl}
+                  alt="User avatar"
+                  width={48}
+                  height={48}
+                  className="mr-6 h-12 w-12 cursor-pointer rounded-full bg-gray-200 object-cover"
+                />
+              ) : (
+                <div className="mr-6 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gray-200 text-gray-400">
+                  {username?.charAt(0)?.toUpperCase() || 'U'}
+                </div>
+              )}
+              <div
+                className="flex cursor-pointer items-center"
+                tabIndex={0}
+                onFocus={() => setClickProfile(!clickProfile)}
+                onBlur={(e) => {
+                  const currentTarget = e.currentTarget;
+                  setTimeout(() => {
+                    if (!currentTarget.contains(document.activeElement)) {
+                      setClickProfile(false);
+                    }
+                  }, 200);
+                }}
+              >
+                <p className="mr-2 whitespace-nowrap">{username || '管理员'}</p>
+                <AiFillCaretDown className="h-3 w-3 text-gray-500" />
+              </div>
+
+              <Modal
+                open={clickProfile}
+                onClose={() => setClickProfile(false)}
+                position={{ top: 'top-16', right: 'right-2' }}
+                size={{ width: 'w-40' }}
+              >
+                <li
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setClickProfile(false);
+                    setShowProfile(true);
+                  }}
+                  className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100"
+                >
+                  个人主页
+                </li>
+                <li
+                  onClick={() => logout()}
+                  className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100"
+                >
+                  退出系统
+                </li>
+              </Modal>
+            </div>
+          </>
+        ) : (
+          <Link
+            href="/login"
+            className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-700 transition hover:border-[#5542f6] hover:text-[#5542f6]"
           >
-            <li
-              onClick={(e) => {
-                e.stopPropagation();
-                setClickProfile(false);
-                setShowProfile(true);
-              }}
-              className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100"
-            >
-              个人主页
-            </li>
-            <li
-              onClick={() => logout()}
-              className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100"
-            >
-              退出系统
-            </li>
-          </Modal>
-        </div>
+            登录 / 注册
+          </Link>
+        )}
       </div>
 
       {/* 设置页面 */}

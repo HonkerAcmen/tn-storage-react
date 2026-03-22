@@ -53,6 +53,16 @@ export interface UserLoginHistoryResponse {
   loginAt: string;
 }
 
+export interface AdminUserRoleResponse {
+  id: number;
+  username: string;
+  email: string;
+  phone: string;
+  desc: string;
+  role: 'admin' | 'user' | 'viewer';
+  permissions: UserSettingsResponse;
+}
+
 interface GetUserAvatarResponse {
   fieldname: string;
   originalname: string;
@@ -79,3 +89,4 @@ export type GetUserLoginHistoryApiResponse = BaseResponse<
   UserLoginHistoryResponse[]
 >;
 export type ChangePasswordApiResponse = BaseResponse<null>;
+export type GetAdminUsersApiResponse = BaseResponse<AdminUserRoleResponse[]>;
