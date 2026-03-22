@@ -75,6 +75,12 @@ export function useDeletedFiles() {
               queryClient.invalidateQueries({
                 queryKey: ['file', 'data', 'trash'],
               });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'favorite'],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'recent'],
+              });
 
               resolve('文件已恢复');
             },
@@ -102,6 +108,12 @@ export function useDeletedFiles() {
               queryClient.invalidateQueries({
                 queryKey: ['file', 'data', 'trash'],
               });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'favorite'],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'recent'],
+              });
               resolve('已永久删除');
             },
             onError: (err) => {
@@ -122,6 +134,12 @@ export function useDeletedFiles() {
     await deleteAllTrash.mutateAsync('trash');
     queryClient.invalidateQueries({
       queryKey: ['file', 'data', 'trash'],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ['file', 'favorite'],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ['file', 'recent'],
     });
   }, [deleteAllTrash, queryClient]);
 

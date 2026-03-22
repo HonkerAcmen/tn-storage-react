@@ -76,6 +76,12 @@ export interface FileChunkManifest {
   totalChunks: number;
 }
 
+export interface RecentFileResponse {
+  recent: string[];
+  created: string[];
+  modified: string[];
+}
+
 // 批量删除文件响应
 export interface BatchDeleteFileResponse {
   code: number;
@@ -95,6 +101,8 @@ type DeleteFileResponse = object;
 
 // 恢复垃圾桶数据接口类型
 type ReStoreResponse = object;
+type FavoriteListResponse = string[];
+type FavoriteMutationResponse = object;
 
 // 新建文件数据接口类型
 interface CreateFolderResponse {
@@ -121,6 +129,7 @@ export type InitMultipartUploadApiResponse =
 export type UploadChunkApiResponse = BaseResponse<MultipartUploadChunkResponse>;
 export type GetFileApiResponse = BaseResponse<Record<string, unknown>>;
 export type GetFileChunkManifestApiResponse = BaseResponse<FileChunkManifest>;
+export type GetRecentsApiResponse = BaseResponse<RecentFileResponse>;
 export type GetFilePagesInfoApiResponse = BaseResponse<FilePagesInfoResponse>;
 export type GetFileInfoApiResponse = BaseResponse<FileDetailInfo>;
 
@@ -134,3 +143,6 @@ export type DeleteAllTrashApiResponse = BaseResponse<DeleteAllTrashResponse>;
 export type DeleteFileApiResponse = BaseResponse<DeleteFileResponse>;
 export type ReStoreApiResopnse = BaseResponse<ReStoreResponse>;
 export type CreateFolderApiResponse = BaseResponse<CreateFolderResponse>;
+export type GetFavoritesApiResponse = BaseResponse<FavoriteListResponse>;
+export type AddFavoriteApiResponse = BaseResponse<FavoriteMutationResponse>;
+export type RemoveFavoriteApiResponse = BaseResponse<FavoriteMutationResponse>;

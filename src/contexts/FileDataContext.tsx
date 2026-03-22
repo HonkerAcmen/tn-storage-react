@@ -211,6 +211,12 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
               queryClient.invalidateQueries({
                 queryKey: ['file', 'data', 'tree'],
               });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'favorite'],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'recent'],
+              });
               resolve();
             },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

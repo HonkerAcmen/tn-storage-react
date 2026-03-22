@@ -15,6 +15,7 @@ import { useFileData } from '@/contexts/FileDataContext';
 import { useFileActions, useFileMenu } from '@/features/files/hooks';
 import { formatDate, formatFileSize } from '@/utils/format/formatters';
 import { getFileIcon } from '@/components/FilesHandle/FileIcon';
+import { useGetRecents } from '@/network/hooks/file';
 
 import type { FileSystemTreeNode } from '@/network/types/Response/file';
 import type { TopLevelFormatterParams } from 'echarts/types/dist/shared';
@@ -39,6 +40,7 @@ export default function MyCloud() {
   const { allFiles, updateFile } = useFileData();
   const { handleFolderNavigation, isFavorite } = useFileActions();
   const { getFileMenuItems } = useFileMenu();
+  const { data: recentsData } = useGetRecents();
 
   // 详情模态框状态
   const [selectedFile, setSelectedFile] = useState<FileSystemTreeNode | null>(
@@ -66,17 +68,17 @@ export default function MyCloud() {
 
   // 获取最近上传的文件（按创建时间排序，取前4个）
   const recentlyUploaded = useMemo(() => {
-    return [...allFiles]
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
+    const fileByUUID = new Map(allFiles.map((file) => [file.UUID, file]));
+    const createdUUIDs = recentsData?.data.data.created ?? [];
+    return createdUUIDs
+      .map((uuid) => fileByUUID.get(uuid))
+      .filter((item): item is NonNullable<typeof item> => !!item)
       .slice(0, 4);
-  }, [allFiles]);
+  }, [allFiles, recentsData]);
 
   // 获取收藏的文件（取前3个）
   const favoriteFiles = useMemo(() => {
-    return allFiles.filter((file) => isFavorite(file.id)).slice(0, 3);
+    return allFiles.filter((file) => isFavorite(file.UUID)).slice(0, 3);
   }, [allFiles, isFavorite]);
 
   // 根据实际文件数据计算存储统计

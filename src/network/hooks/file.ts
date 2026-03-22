@@ -1,10 +1,13 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import http from '@/network/http';
 import {
+  AddFavoriteApiResponse,
   BatchDeleteFileApiResponse,
   CreateFolderApiResponse,
   DeleteAllTrashApiResponse,
   DeleteFileApiResponse,
+  GetFavoritesApiResponse,
+  GetRecentsApiResponse,
   GetDownloadTotalApiResponse,
   GetFileApiResponse,
   GetFileInfoApiResponse,
@@ -15,6 +18,7 @@ import {
   GetUploadTotalApiResponse,
   PushFileDataTrashApiResponse,
   ReStoreApiResopnse,
+  RemoveFavoriteApiResponse,
   SetDownloadTotalApiResponse,
   UploadFileApiResponse,
 } from '@/network/types/Response/file';
@@ -172,6 +176,20 @@ export function useGetDelListInTrash() {
   });
 }
 
+export function useGetFavorites() {
+  return useQuery({
+    queryKey: ['file', 'favorite'],
+    queryFn: async () => await http.get<GetFavoritesApiResponse>('/file/favorite'),
+  });
+}
+
+export function useGetRecents() {
+  return useQuery({
+    queryKey: ['file', 'recent'],
+    queryFn: async () => await http.get<GetRecentsApiResponse>('/file/recent'),
+  });
+}
+
 //////////////// 其他方法 POST DELETE PUT////////////////
 
 interface createFolderProps {
@@ -314,6 +332,37 @@ export function usePushFileDataTrash() {
       const res = await http.post<PushFileDataTrashApiResponse>(
         `/file/trash/move/${srcBucket}/${UUID}/${type}`
       );
+      return res.data;
+    },
+  });
+}
+
+export function useAddFavorite() {
+  return useMutation<AddFavoriteApiResponse, ErrorResponse, { UUID: string }>({
+    mutationFn: async ({ UUID }) => {
+      const res = await http.post<AddFavoriteApiResponse>(`/file/favorite/${UUID}`);
+      return res.data;
+    },
+  });
+}
+
+export function useRemoveFavorite() {
+  return useMutation<
+    RemoveFavoriteApiResponse,
+    ErrorResponse,
+    { UUID: string }
+  >({
+    mutationFn: async ({ UUID }) => {
+      const res = await http.delete<RemoveFavoriteApiResponse>(`/file/favorite/${UUID}`);
+      return res.data;
+    },
+  });
+}
+
+export function useMarkRecentAccess() {
+  return useMutation<unknown, ErrorResponse, { UUID: string }>({
+    mutationFn: async ({ UUID }) => {
+      const res = await http.post(`/file/recent/access/${UUID}`);
       return res.data;
     },
   });

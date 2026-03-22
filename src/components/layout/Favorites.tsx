@@ -33,7 +33,7 @@ export default function Favorites() {
 
   // 获取收藏的文件
   const favoriteFiles = useMemo(() => {
-    return allFiles.filter((file) => favoriteIds.includes(file.id));
+    return allFiles.filter((file) => favoriteIds.includes(file.UUID));
   }, [allFiles, favoriteIds]);
 
   // 处理文件更新
@@ -50,9 +50,13 @@ export default function Favorites() {
   };
 
   // 取消收藏
-  const handleUnfavorite = (fileId: string) => {
-    removeFavorite(fileId);
-    messageApi.success('已取消收藏');
+  const handleUnfavorite = async (fileUUID: string) => {
+    try {
+      await removeFavorite(fileUUID);
+      messageApi.success('已取消收藏');
+    } catch {
+      messageApi.error('取消收藏失败');
+    }
   };
 
   return (
@@ -99,7 +103,7 @@ export default function Favorites() {
                   icon={<AiFillStar className="h-5 w-5 text-amber-400" />}
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleUnfavorite(item.id);
+                    void handleUnfavorite(item.UUID);
                   }}
                   className="flex items-center justify-center"
                 />

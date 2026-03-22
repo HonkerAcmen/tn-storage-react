@@ -49,9 +49,14 @@ export function useFileActions() {
           options?.onDetailsOpen?.(item);
           break;
         case 'favorite': {
-          const wasFavorite = isFavorite(item.id);
-          toggleFavorite(item.id);
-          messageApi.success(wasFavorite ? '已取消收藏' : '已添加到收藏');
+          const wasFavorite = isFavorite(item.UUID);
+          void toggleFavorite(item.UUID)
+            .then((isNowFavorite) => {
+              messageApi.success(isNowFavorite ? '已添加到收藏' : '已取消收藏');
+            })
+            .catch(() => {
+              messageApi.error(wasFavorite ? '取消收藏失败' : '收藏失败');
+            });
           break;
         }
         case 'openFolder':

@@ -405,7 +405,7 @@ export default function AllFiles() {
                       <Button
                         type="text"
                         icon={
-                          isFavorite(item.id) ? (
+                          isFavorite(item.UUID) ? (
                             <AiFillStar className="h-5 w-5 text-amber-400" />
                           ) : (
                             <AiOutlineStar className="h-5 w-5 text-gray-400" />
@@ -491,7 +491,7 @@ export default function AllFiles() {
                         type="text"
                         size="small"
                         icon={
-                          isFavorite(item.id) ? (
+                          isFavorite(item.UUID) ? (
                             <AiFillStar className="h-4 w-4 text-amber-400" />
                           ) : (
                             <AiOutlineStar className="h-4 w-4 text-gray-400" />

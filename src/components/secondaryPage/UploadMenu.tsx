@@ -142,6 +142,9 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
       queryClient.invalidateQueries({
         queryKey: ['file', 'data', 'tree'],
       });
+      queryClient.invalidateQueries({
+        queryKey: ['file', 'recent'],
+      });
       setTimeout(() => {
         setFileList([]);
         setProgress(0);

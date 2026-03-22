@@ -40,7 +40,7 @@ export function useFileMenu(): {
         onFolderNavigate?: (folderId: string) => void;
       }
     ): MenuProps['items'] => {
-      const isFav = isFavorite(item.id);
+      const isFav = isFavorite(item.UUID);
 
       return [
         {

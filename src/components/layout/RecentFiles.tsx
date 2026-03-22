@@ -6,6 +6,7 @@ import { AiOutlineClockCircle } from 'react-icons/ai';
 import FileListItem from '@/components/FileListItem';
 import { formatRelativeTime, formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
+import { useGetRecents } from '@/network/hooks/file';
 
 function SectionEmptyState() {
   return (
@@ -22,6 +23,11 @@ export default function RecentFiles() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('recent');
   const { allFiles } = useFileData();
+  const { data: recentsData } = useGetRecents();
+
+  const fileByUUID = useMemo(() => {
+    return new Map(allFiles.map((file) => [file.UUID, file]));
+  }, [allFiles]);
 
   // 处理文件夹点击 - 导航到"所有文件"视图
   const handleFolderClick = (folderId: string) => {
@@ -37,37 +43,30 @@ export default function RecentFiles() {
 
   // 最近访问的文件（按 updatedAt 排序）
   const recentlyAccessed = useMemo(() => {
-    return [...allFiles]
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      )
+    const recentUUIDs = recentsData?.data.data.recent ?? [];
+    return recentUUIDs
+      .map((uuid) => fileByUUID.get(uuid))
+      .filter((item): item is NonNullable<typeof item> => !!item)
       .slice(0, 20);
-  }, [allFiles]);
+  }, [fileByUUID, recentsData]);
 
   // 最近上传的文件（按 createdAt 排序）
   const recentlyCreated = useMemo(() => {
-    return [...allFiles]
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      )
+    const createdUUIDs = recentsData?.data.data.created ?? [];
+    return createdUUIDs
+      .map((uuid) => fileByUUID.get(uuid))
+      .filter((item): item is NonNullable<typeof item> => !!item)
       .slice(0, 20);
-  }, [allFiles]);
+  }, [fileByUUID, recentsData]);
 
   // 最近修改的文件（按 updatedAt 排序，排除今天创建的）
   const recentlyModified = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return [...allFiles]
-      .filter((file) => new Date(file.createdAt) < today)
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      )
+    const modifiedUUIDs = recentsData?.data.data.modified ?? [];
+    return modifiedUUIDs
+      .map((uuid) => fileByUUID.get(uuid))
+      .filter((item): item is NonNullable<typeof item> => !!item)
       .slice(0, 20);
-  }, [allFiles]);
+  }, [fileByUUID, recentsData]);
 
   const tabItems: TabsProps['items'] = [
     {
