@@ -46,6 +46,21 @@ export interface UploadTaskResponse {
   message: string;
 }
 
+export interface MultipartUploadInitResponse {
+  taskId: string;
+  UUID: string;
+  totalChunks: number;
+  message: string;
+}
+
+export interface MultipartUploadChunkResponse {
+  taskId: string;
+  chunkIndex: number;
+  receivedChunks: number;
+  totalChunks: number;
+  status: string;
+}
+
 // 上传任务状态响应
 export interface UploadStatusResponse {
   taskId: string;
@@ -94,6 +109,9 @@ export type GetFilesTypeCountApiResponse = BaseResponse<
 >;
 export type UploadFileApiResponse = BaseResponse<UploadTaskResponse>;
 export type GetUploadStatusApiResponse = UploadStatusResponse;
+export type InitMultipartUploadApiResponse =
+  BaseResponse<MultipartUploadInitResponse>;
+export type UploadChunkApiResponse = BaseResponse<MultipartUploadChunkResponse>;
 export type GetFileApiResponse = BaseResponse<Record<string, unknown>>;
 export type GetFilePagesInfoApiResponse = BaseResponse<FilePagesInfoResponse>;
 export type GetFileInfoApiResponse = BaseResponse<FileDetailInfo>;

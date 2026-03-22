@@ -26,7 +26,9 @@ function SectionEmptyState({ description }: { description: string }) {
     <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 px-6 py-10">
       <Empty
         image={Empty.PRESENTED_IMAGE_SIMPLE}
-        description={<span className="text-sm text-gray-500">{description}</span>}
+        description={
+          <span className="text-sm text-gray-500">{description}</span>
+        }
       />
     </div>
   );
