@@ -23,14 +23,18 @@ export function downloadFile(file: FileSystemTreeNode): void {
   // const url = `/api/files/${file.id}/download`;
   // const link = document.createElement('a');
   // link.href = url;
-  // link.download = file.type === 'file' && file.ext ? `${file.name}.${file.ext}` : file.name;
+  // link.download =
+  //   file.type === 'file' && file.ext
+  //     ? `${file.filename}.${file.ext}`
+  //     : file.filename;
   // link.click();
 }
 
 /**
  * 分享文件
  */
-export function shareFile(file: FileSystemTreeNode): void {
+export function shareFile(_file: FileSystemTreeNode): void {
+  void _file;
   // TODO: 实现真实的分享逻辑
   // 消息提示由调用方处理
   // 示例：生成分享链接
@@ -61,7 +65,7 @@ export function renameFile(
         <input
           type="text"
           id="rename-input"
-          defaultValue={file.name}
+          defaultValue={file.filename}
           className="w-full rounded border border-gray-300 px-3 py-2"
           autoFocus
         />
@@ -71,12 +75,12 @@ export function renameFile(
       const input = document.getElementById('rename-input') as HTMLInputElement;
       const newName = input?.value.trim();
 
-      if (!newName || newName === file.name) {
+      if (!newName || newName === file.filename) {
         return;
       }
 
       try {
-        await onUpdate(file.id, { name: newName });
+        await onUpdate(file.id, { filename: newName });
         messageApi?.success('重命名成功');
       } catch (error) {
         console.error(error);

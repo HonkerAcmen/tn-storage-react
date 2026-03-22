@@ -99,7 +99,9 @@ export type GetFilePagesInfoApiResponse = BaseResponse<FilePagesInfoResponse>;
 export type GetFileInfoApiResponse = BaseResponse<FileDetailInfo>;
 
 export type BatchDeleteFileApiResponse = BaseResponse<BatchDeleteFileResponse>;
-export type GetFileSystemTreeApiResponse = BaseResponse<FileSystemTreeNode>;
+export type GetFileSystemTreeApiResponse = BaseResponse<
+  FileSystemTreeNode | FileSystemTreeNode[]
+>;
 export type PushFileDataTrashApiResponse = BaseResponse<object>;
 export type getTrashFilesApiResponse = BaseResponse<getTrashFilesResponse>;
 export type DeleteAllTrashApiResponse = BaseResponse<DeleteAllTrashResponse>;

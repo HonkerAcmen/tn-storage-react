@@ -1,11 +1,22 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { Tabs, Tag } from 'antd';
+import { Empty, Tabs, Tag } from 'antd';
 import type { TabsProps } from 'antd';
 import { AiOutlineClockCircle } from 'react-icons/ai';
 import FileListItem from '@/components/FileListItem';
 import { formatRelativeTime, formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
+
+function SectionEmptyState() {
+  return (
+    <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 px-6 py-10">
+      <Empty
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+        description={<span className="text-sm text-gray-500">无数据</span>}
+      />
+    </div>
+  );
+}
 
 export default function RecentFiles() {
   const router = useRouter();
@@ -68,22 +79,26 @@ export default function RecentFiles() {
         </span>
       ),
       children: (
-        <ul className="flex flex-col space-y-2">
-          {recentlyAccessed.map((item) => (
-            <FileListItem
-              key={item.id}
-              file={item}
-              showSize
-              showTime
-              timeValue={`${formatRelativeTime(new Date(item.updatedAt))} • 修改于 ${formatDate(new Date(item.updatedAt))}`}
-              onClick={() => {
-                if (item.type === 'folder') {
-                  handleFolderClick(item.id);
-                }
-              }}
-            />
-          ))}
-        </ul>
+        recentlyAccessed.length === 0 ? (
+          <SectionEmptyState />
+        ) : (
+          <ul className="flex flex-col space-y-2">
+            {recentlyAccessed.map((item) => (
+              <FileListItem
+                key={item.id}
+                file={item}
+                showSize
+                showTime
+                timeValue={`${formatRelativeTime(new Date(item.updatedAt))} • 修改于 ${formatDate(new Date(item.updatedAt))}`}
+                onClick={() => {
+                  if (item.type === 'folder') {
+                    handleFolderClick(item.id);
+                  }
+                }}
+              />
+            ))}
+          </ul>
+        )
       ),
     },
     {
@@ -95,29 +110,33 @@ export default function RecentFiles() {
         </span>
       ),
       children: (
-        <ul className="flex flex-col space-y-2">
-          {recentlyCreated.map((item) => (
-            <FileListItem
-              key={item.id}
-              file={item}
-              showSize
-              showTime
-              timeValue={`${formatRelativeTime(new Date(item.createdAt))} • 上传于 ${formatDate(new Date(item.createdAt))}`}
-              actions={
-                item.type === 'file' && (
-                  <Tag color="green" className="mr-2">
-                    新上传
-                  </Tag>
-                )
-              }
-              onClick={() => {
-                if (item.type === 'folder') {
-                  handleFolderClick(item.id);
+        recentlyCreated.length === 0 ? (
+          <SectionEmptyState />
+        ) : (
+          <ul className="flex flex-col space-y-2">
+            {recentlyCreated.map((item) => (
+              <FileListItem
+                key={item.id}
+                file={item}
+                showSize
+                showTime
+                timeValue={`${formatRelativeTime(new Date(item.createdAt))} • 上传于 ${formatDate(new Date(item.createdAt))}`}
+                actions={
+                  item.type === 'file' && (
+                    <Tag color="green" className="mr-2">
+                      新上传
+                    </Tag>
+                  )
                 }
-              }}
-            />
-          ))}
-        </ul>
+                onClick={() => {
+                  if (item.type === 'folder') {
+                    handleFolderClick(item.id);
+                  }
+                }}
+              />
+            ))}
+          </ul>
+        )
       ),
     },
     {
@@ -129,29 +148,33 @@ export default function RecentFiles() {
         </span>
       ),
       children: (
-        <ul className="flex flex-col space-y-2">
-          {recentlyModified.map((item) => (
-            <FileListItem
-              key={item.id}
-              file={item}
-              showSize
-              showTime
-              timeValue={`${formatRelativeTime(new Date(item.updatedAt))} • 修改于 ${formatDate(new Date(item.updatedAt))}`}
-              actions={
-                item.type === 'file' && (
-                  <Tag color="orange" className="mr-2">
-                    已修改
-                  </Tag>
-                )
-              }
-              onClick={() => {
-                if (item.type === 'folder') {
-                  handleFolderClick(item.id);
+        recentlyModified.length === 0 ? (
+          <SectionEmptyState />
+        ) : (
+          <ul className="flex flex-col space-y-2">
+            {recentlyModified.map((item) => (
+              <FileListItem
+                key={item.id}
+                file={item}
+                showSize
+                showTime
+                timeValue={`${formatRelativeTime(new Date(item.updatedAt))} • 修改于 ${formatDate(new Date(item.updatedAt))}`}
+                actions={
+                  item.type === 'file' && (
+                    <Tag color="orange" className="mr-2">
+                      已修改
+                    </Tag>
+                  )
                 }
-              }}
-            />
-          ))}
-        </ul>
+                onClick={() => {
+                  if (item.type === 'folder') {
+                    handleFolderClick(item.id);
+                  }
+                }}
+              />
+            ))}
+          </ul>
+        )
       ),
     },
   ];

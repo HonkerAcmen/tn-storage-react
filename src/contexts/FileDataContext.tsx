@@ -62,6 +62,13 @@ const EMPTY_ROOT: FileSystemTreeNode = {
   children: [],
 };
 
+function cloneEmptyRoot(): FileSystemTreeNode {
+  return {
+    ...EMPTY_ROOT,
+    children: [],
+  };
+}
+
 /**
  * 转换后端数据格式到前端格式（纯函数）
  */
@@ -82,6 +89,34 @@ const transformTreeNode = (node: BackendTreeNode): FileSystemTreeNode => {
   };
 };
 
+function normalizeFileTreeData(
+  rawData: FileSystemTreeNode | BackendTreeNode | Array<FileSystemTreeNode | BackendTreeNode>
+): FileSystemTreeNode {
+  if (!rawData) {
+    return cloneEmptyRoot();
+  }
+
+  if (Array.isArray(rawData)) {
+    const root = cloneEmptyRoot();
+    root.children = rawData.map((node) => transformTreeNode(node as BackendTreeNode));
+    return root;
+  }
+
+  const normalizedNode = transformTreeNode(rawData as BackendTreeNode);
+
+  if (
+    normalizedNode.type === 'folder' &&
+    normalizedNode.parent_id === 0 &&
+    normalizedNode.filename === 'root'
+  ) {
+    return normalizedNode;
+  }
+
+  const root = cloneEmptyRoot();
+  root.children = [normalizedNode];
+  return root;
+}
+
 /**
  * 构造缓存表
  * @param root 整个文件结构的根结点
@@ -93,6 +128,7 @@ function buildFileMap(
   const map = new Map<string, FileSystemTreeNode>();
 
   function transformation(root: FileSystemTreeNode) {
+    if (!root) return;
     map.set(root.id, root);
 
     if ('children' in root && root.children) {
@@ -128,16 +164,15 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   const fileTree = useMemo(() => {
     const fstData = fileSystemTreeData?.data?.data;
 
-    if (!fstData) {
+    if (!fstData || (Array.isArray(fstData) && fstData.length <= 0)) {
       return EMPTY_ROOT;
     }
 
-    // // 兼容后端可能返回数组或单个对象的情况
-    return Array.isArray(fstData) ? fstData[0] : fstData;
+    return normalizeFileTreeData(fstData);
   }, [fileSystemTreeData]);
 
   // 初始化为文件映射表
-  const fileMap = buildFileMap(fileTree);
+  const fileMap = useMemo(() => buildFileMap(fileTree), [fileTree]);
 
   // 3. 计算 allFiles (Memoized)
   // 这里修正为 扁平化所有文件
