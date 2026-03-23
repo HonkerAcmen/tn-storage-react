@@ -11,6 +11,7 @@ import {
   LoginRequest,
   RegisterRequest,
 } from '@/network/types/Request/auth';
+import { notifyAuthChanged } from '@/utils/auth';
 
 export function useLogin() {
   return useMutation({
@@ -26,6 +27,7 @@ export function useLogin() {
       localStorage.setItem('username', username);
       localStorage.setItem('email', email);
       localStorage.setItem('userId', userId);
+      notifyAuthChanged();
 
       return { token, username, email, userId };
     },

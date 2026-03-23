@@ -7,12 +7,11 @@ import {
   AiOutlineSearch,
 } from 'react-icons/ai';
 
-import { logout } from '@/utils/auth';
+import { logout, useAuthed } from '@/utils/auth';
 import { useGetMyAvatar, useGetMyProfile } from '@/network/hooks/user';
 import Profile from '../secondaryPage/Profile';
 import SearchResults from '../secondaryPage/SearchResults';
 import Settings from '../secondaryPage/Settings';
-import { isAuthed } from '@/utils/auth';
 import Link from 'next/link';
 
 export default function Header() {
@@ -21,7 +20,7 @@ export default function Header() {
   const [showProfile, setShowProfile] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const authed = isAuthed();
+  const authed = useAuthed();
   const { data: avatarResponse } = useGetMyAvatar();
   const { data: profileResponse } = useGetMyProfile();
   const username = profileResponse?.data?.data?.username ?? '';

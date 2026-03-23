@@ -22,14 +22,14 @@ import DeletedFiles from '../components/layout/DeletedFiles';
 import Favorites from '../components/layout/Favorites';
 import Header from '../components/layout/Header';
 import UploadMenu from '@/components/secondaryPage/UploadMenu';
-import { isAuthed } from '@/utils/auth';
+import { useAuthed } from '@/utils/auth';
 import { message } from 'antd';
 
 export default function Home() {
   const router = useRouter();
   const [seleId, setSeleId] = useState('sub1');
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const authed = isAuthed();
+  const authed = useAuthed();
   const [messageApi, contextHolder] = message.useMessage();
 
   const currentView = useMemo(() => {
