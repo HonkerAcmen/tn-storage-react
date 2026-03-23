@@ -27,6 +27,18 @@ function getServerAuthSnapshot(): boolean {
   return false;
 }
 
+function subscribeNoop() {
+  return () => {};
+}
+
+function getHydratedSnapshot(): boolean {
+  return true;
+}
+
+function getServerHydratedSnapshot(): boolean {
+  return false;
+}
+
 export function notifyAuthChanged() {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
@@ -47,9 +59,17 @@ export function useAuthed(): boolean {
   );
 }
 
+export function useHydrated(): boolean {
+  return useSyncExternalStore(
+    subscribeNoop,
+    getHydratedSnapshot,
+    getServerHydratedSnapshot
+  );
+}
+
 /**
  * 退出登录
- * 清除所有本地数据并回到首页访客模式
+ * 清除所有本地数据并回到访客页
  */
 export function logout() {
   localStorage.removeItem('token');
@@ -59,6 +79,6 @@ export function logout() {
   notifyAuthChanged();
   // 清除 React Query 缓存
   queryClient.clear();
-  // 回到首页，保持访客模式
-  window.location.href = '/';
+  // 回到访客页
+  window.location.href = '/visitor';
 }

@@ -29,6 +29,7 @@ function UserPreferenceBridge({ enabled }: { enabled: boolean }) {
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const isLoginPage = router.pathname === '/login';
+  const isVisitorPage = router.pathname === '/visitor';
   const authed = useAuthed();
 
   // 配置 message
@@ -46,7 +47,10 @@ export default function App({ Component, pageProps }: AppProps) {
     if (isLoginPage && authed) {
       router.push('/');
     }
-  }, [router, isLoginPage, authed]);
+    if (isVisitorPage && authed) {
+      router.push('/');
+    }
+  }, [router, isLoginPage, isVisitorPage, authed]);
 
   return (
     <QueryProvider>
@@ -76,7 +80,7 @@ export default function App({ Component, pageProps }: AppProps) {
       >
         <AntApp>
           <FileDataProvider>
-            <UserPreferenceBridge enabled={!isLoginPage && authed} />
+            <UserPreferenceBridge enabled={!isLoginPage && !isVisitorPage && authed} />
             <Component {...pageProps} />
           </FileDataProvider>
         </AntApp>
