@@ -67,13 +67,14 @@ export default function Header() {
           TNStorage
         </h2>
 
-        {/* 搜索按钮 */}
-        <button
-          onClick={() => setShowSearchResults(true)}
-          className="relative z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-200 transition duration-300 hover:scale-120 hover:rotate-15 hover:border-[#5542f6] hover:bg-gray-50 hover:text-[#5542f6]"
-        >
-          <AiOutlineSearch className="h-5 w-5 text-gray-600" />
-        </button>
+        {authed && (
+          <button
+            onClick={() => setShowSearchResults(true)}
+            className="relative z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-200 transition duration-300 hover:scale-120 hover:rotate-15 hover:border-[#5542f6] hover:bg-gray-50 hover:text-[#5542f6]"
+          >
+            <AiOutlineSearch className="h-5 w-5 text-gray-600" />
+          </button>
+        )}
       </div>
 
       <div className="mr-4 flex items-center">
