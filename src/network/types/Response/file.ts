@@ -82,6 +82,11 @@ export interface RecentFileResponse {
   modified: string[];
 }
 
+export interface ShareFileResponse {
+  token: string;
+  url: string;
+}
+
 // 批量删除文件响应
 export interface BatchDeleteFileResponse {
   code: number;
@@ -130,6 +135,7 @@ export type UploadChunkApiResponse = BaseResponse<MultipartUploadChunkResponse>;
 export type GetFileApiResponse = BaseResponse<Record<string, unknown>>;
 export type GetFileChunkManifestApiResponse = BaseResponse<FileChunkManifest>;
 export type GetRecentsApiResponse = BaseResponse<RecentFileResponse>;
+export type CreateShareApiResponse = BaseResponse<ShareFileResponse>;
 export type GetFilePagesInfoApiResponse = BaseResponse<FilePagesInfoResponse>;
 export type GetFileInfoApiResponse = BaseResponse<FileDetailInfo>;
 

@@ -57,7 +57,7 @@ export function useFileMenu(): {
               onClick: () => handleFileAction('download', item, options),
             }
           : null,
-        settings?.allow_share
+        item.type === 'file' && settings?.allow_share
           ? {
               key: 'share',
               label: (

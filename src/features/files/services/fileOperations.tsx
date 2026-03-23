@@ -2,6 +2,7 @@ import { message, Modal } from 'antd';
 import http from '@/network/http';
 import { getFilePath } from '@/network/resPath';
 import {
+  CreateShareApiResponse,
   FileSystemTreeNode,
   GetFileChunkManifestApiResponse,
 } from '@/network/types/Response/file';
@@ -62,10 +63,16 @@ export async function shareFile(
   file: FileSystemTreeNode,
   shouldNotify = true
 ): Promise<void> {
-  const shareUrl = `${window.location.origin}/file/${file.UUID}`;
+  if (file.type === 'folder') {
+    message.error('当前仅支持分享文件');
+    return;
+  }
+
+  const res = await http.post<CreateShareApiResponse>(`/file/share/${file.UUID}`);
+  const shareUrl = res.data.data.url;
   await navigator.clipboard.writeText(shareUrl);
   if (shouldNotify) {
-    message.success('链接已复制');
+    message.success('已复制');
   }
 }
 
