@@ -117,13 +117,13 @@ export default function Home() {
                 </p>
                 <div className="mt-4 flex gap-3">
                   <Link
-                    href="/login"
+                    href="/login?tab=login"
                     className="rounded-lg bg-[#5542f6] px-4 py-2 text-sm text-white"
                   >
                     登录
                   </Link>
                   <Link
-                    href="/login"
+                    href="/login?tab=register"
                     className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-700"
                   >
                     注册

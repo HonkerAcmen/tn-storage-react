@@ -49,7 +49,7 @@ export function useAuthed(): boolean {
 
 /**
  * 退出登录
- * 清除所有本地数据并跳转到登录页
+ * 清除所有本地数据并回到首页访客模式
  */
 export function logout() {
   localStorage.removeItem('token');
@@ -59,6 +59,6 @@ export function logout() {
   notifyAuthChanged();
   // 清除 React Query 缓存
   queryClient.clear();
-  // 立即跳转到登录页面（强制刷新）
-  window.location.href = '/login';
+  // 回到首页，保持访客模式
+  window.location.href = '/';
 }

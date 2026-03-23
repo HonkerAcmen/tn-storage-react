@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Form, Input, Button, Tabs, Checkbox, message } from 'antd';
 import type { TabsProps } from 'antd';
 import {
@@ -94,6 +94,17 @@ export default function Login() {
   };
 
   const [activeTab, setActiveTab] = useState('login');
+
+  useEffect(() => {
+    if (!router.isReady) {
+      return;
+    }
+
+    const nextTab = router.query.tab;
+    if (nextTab === 'register' || nextTab === 'login') {
+      setActiveTab(nextTab);
+    }
+  }, [router.isReady, router.query.tab]);
 
   const tabItems: TabsProps['items'] = [
     {

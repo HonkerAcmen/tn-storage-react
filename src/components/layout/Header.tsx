@@ -142,7 +142,7 @@ export default function Header() {
           </>
         ) : (
           <Link
-            href="/login"
+            href="/login?tab=login"
             className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-700 transition hover:border-[#5542f6] hover:text-[#5542f6]"
           >
             登录 / 注册
