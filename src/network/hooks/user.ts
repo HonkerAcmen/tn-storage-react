@@ -181,6 +181,10 @@ export function useGetMySettings() {
       return await http.get<GetUserSettingsApiResponse>('/user/settings/me');
     },
     enabled: authed,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -191,6 +195,10 @@ export function useGetAdminUsers(enabled = true) {
       return await http.get<GetAdminUsersApiResponse>('/user/admin/users');
     },
     enabled,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 
