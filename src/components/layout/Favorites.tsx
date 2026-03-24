@@ -16,7 +16,7 @@ import FileDetailsModal from '../FilesHandle/FileDetailsModal';
 export default function Favorites() {
   const [messageApi] = message.useMessage();
   const { favoriteIds, removeFavorite } = useFavorites();
-  const { allFiles, updateFile } = useFileData();
+  const { allFiles, updateFile, openPreviewDialog } = useFileData();
   const { handleFolderNavigation } = useFileActions();
   const { getFileMenuItems } = useFileMenu();
 
@@ -111,6 +111,8 @@ export default function Favorites() {
               onClick={() => {
                 if (item.type === 'folder') {
                   handleFolderClick(item.id);
+                } else {
+                  openPreviewDialog(item);
                 }
               }}
             />

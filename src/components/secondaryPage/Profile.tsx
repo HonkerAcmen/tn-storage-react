@@ -604,7 +604,7 @@ function OverviewTab() {
 
 // 我的文件标签页
 function FilesTab() {
-  const { allFiles } = useFileData();
+  const { allFiles, openPreviewDialog } = useFileData();
   const files = useMemo(
     () =>
       allFiles
@@ -647,7 +647,12 @@ function FilesTab() {
             files.slice(0, 10).map((file) => (
               <div
                 key={file.UUID}
-                className="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3"
+                className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-3 transition hover:bg-gray-50"
+                onClick={() => {
+                  if (file.type === 'file') {
+                    openPreviewDialog(file);
+                  }
+                }}
               >
                 <div>
                   <p className="font-medium text-gray-800">{file.filename}</p>
@@ -736,7 +741,7 @@ function StorageTab() {
 // 收藏标签页
 function FavoritesTab() {
   const { favoriteUUIDs } = useFavorites();
-  const { allFiles } = useFileData();
+  const { allFiles, openPreviewDialog } = useFileData();
   const favorites = useMemo(() => {
     const favoriteSet = new Set(favoriteUUIDs);
     return allFiles.filter((file) => favoriteSet.has(file.UUID));
@@ -760,7 +765,12 @@ function FavoritesTab() {
             favorites.map((file) => (
               <div
                 key={file.UUID}
-                className="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3"
+                className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-3 transition hover:bg-gray-50"
+                onClick={() => {
+                  if (file.type === 'file') {
+                    openPreviewDialog(file);
+                  }
+                }}
               >
                 <div>
                   <p className="font-medium text-gray-800">{file.filename}</p>

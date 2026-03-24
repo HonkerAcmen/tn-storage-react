@@ -37,7 +37,7 @@ function SectionEmptyState({ description }: { description: string }) {
 
 export default function MyCloud() {
   const [messageApi, contextHolder] = message.useMessage();
-  const { allFiles, updateFile } = useFileData();
+  const { allFiles, updateFile, openPreviewDialog } = useFileData();
   const { handleFolderNavigation, isFavorite } = useFileActions();
   const { getFileMenuItems } = useFileMenu();
   const { data: recentsData } = useGetRecents();
@@ -200,6 +200,8 @@ export default function MyCloud() {
                     onClick={() => {
                       if (item.type === 'folder') {
                         handleFolderClick(item.id);
+                      } else {
+                        openPreviewDialog(item);
                       }
                     }}
                   >
@@ -280,6 +282,8 @@ export default function MyCloud() {
                     onClick={() => {
                       if (item.type === 'folder') {
                         handleFolderClick(item.id);
+                      } else {
+                        openPreviewDialog(item);
                       }
                     }}
                   >
@@ -348,6 +352,8 @@ export default function MyCloud() {
                     onClick={() => {
                       if (item.type === 'folder') {
                         handleFolderClick(item.id);
+                      } else {
+                        openPreviewDialog(item);
                       }
                     }}
                   >
