@@ -89,41 +89,6 @@ export async function shareFile(
 }
 
 /**
- * 重命名文件
- * @param messageApi - 用于显示消息的 API，由调用方传入
- */
-export function renameFile(
-  file: FileSystemTreeNode,
-  onUpdate: (
-    fileId: string,
-    updates: Partial<FileSystemTreeNode>
-  ) => Promise<void>,
-  messageApi?: {
-    success: (content: string) => void;
-    error: (content: string) => void;
-  }
-): void {
-  const input = window.prompt('请输入新的文件名', file.filename);
-  if (input === null) {
-    return;
-  }
-
-  const newName = input.trim();
-  if (!newName || newName === file.filename) {
-    return;
-  }
-
-  void onUpdate(file.id, { filename: newName })
-    .then(() => {
-      messageApi?.success('重命名成功');
-    })
-    .catch((error) => {
-      console.error(error);
-      messageApi?.error('重命名失败');
-    });
-}
-
-/**
  * 预览文件
  */
 export function previewFile(file: FileSystemTreeNode): void {

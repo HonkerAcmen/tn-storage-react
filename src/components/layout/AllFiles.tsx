@@ -235,6 +235,17 @@ export default function AllFiles() {
             queryClient.invalidateQueries({
               queryKey: ['file', 'data', 'tree'],
             });
+            queryClient.invalidateQueries({
+              queryKey: ['file', 'recent'],
+            });
+            queryClient.refetchQueries({
+              queryKey: ['file', 'data', 'tree'],
+              type: 'active',
+            });
+            queryClient.refetchQueries({
+              queryKey: ['file', 'recent'],
+              type: 'active',
+            });
             messageApi.success(res.message);
             // 关闭加载状态
             setConfirmLoading(false);

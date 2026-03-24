@@ -2,31 +2,30 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import http from '@/network/http';
 import {
   AddFavoriteApiResponse,
-  BatchDeleteFileApiResponse,
   CreateFolderApiResponse,
   CreateShareApiResponse,
   DeleteAllTrashApiResponse,
   DeleteFileApiResponse,
-  GetFavoritesApiResponse,
-  GetShareListApiResponse,
-  GetRecentsApiResponse,
   GetDownloadTotalApiResponse,
+  GetFavoritesApiResponse,
   GetFileApiResponse,
   GetFileInfoApiResponse,
   GetFilesTypeCountApiResponse,
   GetFileSystemTreeApiResponse,
-  getTrashFilesApiResponse,
+  GetRecentsApiResponse,
+  GetShareListApiResponse,
   GetUploadStatusApiResponse,
   GetUploadTotalApiResponse,
+  getTrashFilesApiResponse,
   PushFileDataTrashApiResponse,
+  RemoveFavoriteApiResponse,
   ReStoreApiResopnse,
   RevokeShareApiResponse,
-  RemoveFavoriteApiResponse,
   SetDownloadTotalApiResponse,
   UploadFileApiResponse,
 } from '@/network/types/Response/file';
+import { isAuthed } from '@/utils/auth';
 import {
-  batchDeleteFilePath,
   getDownloadTotalPath,
   getFileInfoPath,
   getFilePath,
@@ -36,9 +35,7 @@ import {
   setDownloadTotalPath,
   uploadFilePath,
 } from '../resPath';
-import { BatchDeleteFileRequest } from '@/network/types/Request/file';
 import { ErrorResponse } from '../types/Response';
-import { isAuthed } from '@/utils/auth';
 
 //////////////// Get 方法 / Query方法 ////////////////
 
@@ -188,7 +185,8 @@ export function useGetFavorites() {
   const authed = isAuthed();
   return useQuery({
     queryKey: ['file', 'favorite'],
-    queryFn: async () => await http.get<GetFavoritesApiResponse>('/file/favorite'),
+    queryFn: async () =>
+      await http.get<GetFavoritesApiResponse>('/file/favorite'),
     enabled: authed,
   });
 }
@@ -364,7 +362,9 @@ export function usePushFileDataTrash() {
 export function useAddFavorite() {
   return useMutation<AddFavoriteApiResponse, ErrorResponse, { UUID: string }>({
     mutationFn: async ({ UUID }) => {
-      const res = await http.post<AddFavoriteApiResponse>(`/file/favorite/${UUID}`);
+      const res = await http.post<AddFavoriteApiResponse>(
+        `/file/favorite/${UUID}`
+      );
       return res.data;
     },
   });
@@ -377,7 +377,9 @@ export function useRemoveFavorite() {
     { UUID: string }
   >({
     mutationFn: async ({ UUID }) => {
-      const res = await http.delete<RemoveFavoriteApiResponse>(`/file/favorite/${UUID}`);
+      const res = await http.delete<RemoveFavoriteApiResponse>(
+        `/file/favorite/${UUID}`
+      );
       return res.data;
     },
   });
@@ -395,7 +397,9 @@ export function useMarkRecentAccess() {
 export function useCreateShare() {
   return useMutation<CreateShareApiResponse, ErrorResponse, { UUID: string }>({
     mutationFn: async ({ UUID }) => {
-      const res = await http.post<CreateShareApiResponse>(`/file/share/${UUID}`);
+      const res = await http.post<CreateShareApiResponse>(
+        `/file/share/${UUID}`
+      );
       return res.data;
     },
   });
@@ -405,7 +409,9 @@ export function useRevokeShare() {
   const queryClient = useQueryClient();
   return useMutation<RevokeShareApiResponse, ErrorResponse, { token: string }>({
     mutationFn: async ({ token }) => {
-      const res = await http.delete<RevokeShareApiResponse>(`/file/share/${token}`);
+      const res = await http.delete<RevokeShareApiResponse>(
+        `/file/share/${token}`
+      );
       return res.data;
     },
     onSuccess: async () => {
