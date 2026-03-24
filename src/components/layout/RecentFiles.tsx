@@ -43,28 +43,46 @@ export default function RecentFiles() {
 
   // 最近访问的文件（按 updatedAt 排序）
   const recentlyAccessed = useMemo(() => {
-    const recentUUIDs = recentsData?.data.data.recent ?? [];
-    return recentUUIDs
-      .map((uuid) => fileByUUID.get(uuid))
-      .filter((item): item is NonNullable<typeof item> => !!item)
+    const recentItems = recentsData?.data.data.recent ?? [];
+    return recentItems
+      .map((item) => {
+        const file = fileByUUID.get(item.UUID);
+        return file ? { file, time: item.time } : null;
+      })
+      .filter(
+        (item): item is { file: NonNullable<(typeof fileByUUID extends Map<any, infer V> ? V : never)>; time: string | null } =>
+          !!item
+      )
       .slice(0, 20);
   }, [fileByUUID, recentsData]);
 
   // 最近上传的文件（按 createdAt 排序）
   const recentlyCreated = useMemo(() => {
-    const createdUUIDs = recentsData?.data.data.created ?? [];
-    return createdUUIDs
-      .map((uuid) => fileByUUID.get(uuid))
-      .filter((item): item is NonNullable<typeof item> => !!item)
+    const createdItems = recentsData?.data.data.created ?? [];
+    return createdItems
+      .map((item) => {
+        const file = fileByUUID.get(item.UUID);
+        return file ? { file, time: item.time } : null;
+      })
+      .filter(
+        (item): item is { file: NonNullable<(typeof fileByUUID extends Map<any, infer V> ? V : never)>; time: string | null } =>
+          !!item
+      )
       .slice(0, 20);
   }, [fileByUUID, recentsData]);
 
   // 最近修改的文件（按 updatedAt 排序，排除今天创建的）
   const recentlyModified = useMemo(() => {
-    const modifiedUUIDs = recentsData?.data.data.modified ?? [];
-    return modifiedUUIDs
-      .map((uuid) => fileByUUID.get(uuid))
-      .filter((item): item is NonNullable<typeof item> => !!item)
+    const modifiedItems = recentsData?.data.data.modified ?? [];
+    return modifiedItems
+      .map((item) => {
+        const file = fileByUUID.get(item.UUID);
+        return file ? { file, time: item.time } : null;
+      })
+      .filter(
+        (item): item is { file: NonNullable<(typeof fileByUUID extends Map<any, infer V> ? V : never)>; time: string | null } =>
+          !!item
+      )
       .slice(0, 20);
   }, [fileByUUID, recentsData]);
 
@@ -82,13 +100,13 @@ export default function RecentFiles() {
           <SectionEmptyState />
         ) : (
           <ul className="flex flex-col space-y-2">
-            {recentlyAccessed.map((item) => (
+            {recentlyAccessed.map(({ file: item, time }) => (
               <FileListItem
                 key={item.id}
                 file={item}
                 showSize
                 showTime
-                timeValue={`${formatRelativeTime(new Date(item.updatedAt))} • 修改于 ${formatDate(new Date(item.updatedAt))}`}
+                timeValue={`${formatRelativeTime(new Date(time || item.updatedAt))} • 访问于 ${formatDate(new Date(time || item.updatedAt))}`}
                 onClick={() => {
                   if (item.type === 'folder') {
                     handleFolderClick(item.id);
@@ -115,13 +133,13 @@ export default function RecentFiles() {
           <SectionEmptyState />
         ) : (
           <ul className="flex flex-col space-y-2">
-            {recentlyCreated.map((item) => (
+            {recentlyCreated.map(({ file: item, time }) => (
               <FileListItem
                 key={item.id}
                 file={item}
                 showSize
                 showTime
-                timeValue={`${formatRelativeTime(new Date(item.createdAt))} • 上传于 ${formatDate(new Date(item.createdAt))}`}
+                timeValue={`${formatRelativeTime(new Date(time || item.createdAt))} • 上传于 ${formatDate(new Date(time || item.createdAt))}`}
                 actions={
                   item.type === 'file' && (
                     <Tag color="green" className="mr-2">
@@ -155,13 +173,13 @@ export default function RecentFiles() {
           <SectionEmptyState />
         ) : (
           <ul className="flex flex-col space-y-2">
-            {recentlyModified.map((item) => (
+            {recentlyModified.map(({ file: item, time }) => (
               <FileListItem
                 key={item.id}
                 file={item}
                 showSize
                 showTime
-                timeValue={`${formatRelativeTime(new Date(item.updatedAt))} • 修改于 ${formatDate(new Date(item.updatedAt))}`}
+                timeValue={`${formatRelativeTime(new Date(time || item.updatedAt))} • 修改于 ${formatDate(new Date(time || item.updatedAt))}`}
                 actions={
                   item.type === 'file' && (
                     <Tag color="orange" className="mr-2">

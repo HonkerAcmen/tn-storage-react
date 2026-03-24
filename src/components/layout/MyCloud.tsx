@@ -69,10 +69,13 @@ export default function MyCloud() {
   // 获取最近上传的文件（按创建时间排序，取前4个）
   const recentlyUploaded = useMemo(() => {
     const fileByUUID = new Map(allFiles.map((file) => [file.UUID, file]));
-    const createdUUIDs = recentsData?.data.data.created ?? [];
-    return createdUUIDs
-      .map((uuid) => fileByUUID.get(uuid))
-      .filter((item): item is NonNullable<typeof item> => !!item)
+    const createdItems = recentsData?.data.data.created ?? [];
+    return createdItems
+      .map((item) => {
+        const file = fileByUUID.get(item.UUID);
+        return file ? { file, time: item.time } : null;
+      })
+      .filter((item): item is { file: FileSystemTreeNode; time: string | null } => !!item)
       .slice(0, 4);
   }, [allFiles, recentsData]);
 
@@ -193,7 +196,7 @@ export default function MyCloud() {
               <SectionEmptyState description="无数据" />
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {recentlyUploaded.map((item) => (
+                {recentlyUploaded.map(({ file: item, time }) => (
                   <div
                     key={item.id}
                     className="group relative flex h-32 cursor-pointer flex-col rounded-2xl border border-gray-100 p-4 transition duration-175 hover:bg-gray-100"
@@ -213,7 +216,7 @@ export default function MyCloud() {
                             {item.filename}
                           </h2>
                           <span className="text-sm text-gray-600">
-                            {formatDate(new Date(item.createdAt))}
+                            {formatDate(new Date(time || item.createdAt))}
                           </span>
                         </div>
                       ) : (
@@ -225,7 +228,7 @@ export default function MyCloud() {
                             {item.filename}
                           </h2>
                           <span className="text-sm text-gray-600">
-                            {formatDate(new Date(item.createdAt))}
+                            {formatDate(new Date(time || item.createdAt))}
                           </span>
                         </div>
                       )}
@@ -275,7 +278,7 @@ export default function MyCloud() {
               <SectionEmptyState description="无数据" />
             ) : (
               <ul className="flex flex-col">
-                {recentlyUploaded.slice(0, 3).map((item) => (
+                {recentlyUploaded.slice(0, 3).map(({ file: item, time }) => (
                   <li
                     key={item.id}
                     className="group relative mb-2 flex h-20 cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-1 transition hover:bg-gray-100"
@@ -298,7 +301,7 @@ export default function MyCloud() {
                       <p className="text-gray-700">{item.filename}</p>
                     </div>
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <span>添加于 {formatDate(new Date(item.createdAt))}</span>
+                      <span>添加于 {formatDate(new Date(time || item.createdAt))}</span>
 
                       <div
                         className="opacity-0 transition-opacity group-hover:opacity-100"

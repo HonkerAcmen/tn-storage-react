@@ -76,10 +76,15 @@ export interface FileChunkManifest {
   totalChunks: number;
 }
 
+export interface RecentFileRecord {
+  UUID: string;
+  time: string | null;
+}
+
 export interface RecentFileResponse {
-  recent: string[];
-  created: string[];
-  modified: string[];
+  recent: RecentFileRecord[];
+  created: RecentFileRecord[];
+  modified: RecentFileRecord[];
 }
 
 export interface ShareFileResponse {

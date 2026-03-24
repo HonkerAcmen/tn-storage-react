@@ -150,17 +150,20 @@ function OverviewTab() {
     [avatarUrl, userinfo]
   );
   const recentActivities = useMemo(() => {
-    const recentUUIDs = recentsResponse?.data?.data?.recent ?? [];
+    const recentItems = recentsResponse?.data?.data?.recent ?? [];
     const fileMap = new Map(allFiles.map((file) => [file.UUID, file]));
 
-    return recentUUIDs
+    return recentItems
       .slice(0, 5)
-      .map((uuid) => fileMap.get(uuid))
-      .filter((file): file is FileSystemTreeNode => Boolean(file))
-      .map((file) => ({
+      .map((item) => {
+        const file = fileMap.get(item.UUID);
+        return file ? { file, time: item.time } : null;
+      })
+      .filter((item): item is { file: FileSystemTreeNode; time: string | null } => Boolean(item))
+      .map(({ file, time }) => ({
         action: file.type === 'folder' ? '访问了文件夹' : '访问了文件',
         file: file.filename,
-        time: new Date(file.updatedAt).toLocaleString('zh-CN'),
+        time: new Date(time || file.updatedAt).toLocaleString('zh-CN'),
       }));
   }, [allFiles, recentsResponse]);
   const [editForm, setEditForm] = useState<UserProfile>({
