@@ -12,11 +12,13 @@ import {
 } from 'antd';
 import {
   AiFillFolder,
+  AiOutlineCopy,
   AiOutlineEye,
   AiOutlineDownload,
   AiOutlineShareAlt,
   AiOutlineEdit,
   AiOutlineCheck,
+  AiOutlineFolderOpen,
 } from 'react-icons/ai';
 
 import { getFileIcon } from '@/components/FilesHandle/FileIcon';
@@ -44,7 +46,7 @@ export default function FileDetailsModal({
   onUpdate,
 }: FileDetailsModalProps) {
   const [messageApi, contextHolder] = message.useMessage();
-  const { fileTree, openPreviewDialog } = useFileData();
+  const { fileTree, openPreviewDialog, openTransferDialog } = useFileData();
   const { data: settingsResponse } = useGetMySettings();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -252,6 +254,20 @@ export default function FileDetailsModal({
                 }
               >
                 分享
+              </Button>
+              <Button
+                icon={<AiOutlineFolderOpen />}
+                disabled={!(settings?.allow_file_upload ?? true)}
+                onClick={() => openTransferDialog(file, 'move')}
+              >
+                移动
+              </Button>
+              <Button
+                icon={<AiOutlineCopy />}
+                disabled={!(settings?.allow_file_upload ?? true)}
+                onClick={() => openTransferDialog(file, 'copy')}
+              >
+                复制
               </Button>
               <Button
                 type="primary"

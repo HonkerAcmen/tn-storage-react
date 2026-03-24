@@ -18,6 +18,7 @@ import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
 import { mapToList } from '@/utils/fileSystem/fileSystemUtils';
 import FilePreviewModal from '@/components/FilesHandle/FilePreviewModal';
+import FolderItem from '@/components/FilesHandle/FolderItem';
 
 // --- 类型定义 ---
 
@@ -47,6 +48,10 @@ interface FileDataContextType {
   ) => Promise<void>;
   openRenameDialog: (file: FileSystemTreeNode) => void;
   openPreviewDialog: (file: FileSystemTreeNode) => void;
+  openTransferDialog: (
+    file: FileSystemTreeNode,
+    mode: 'move' | 'copy'
+  ) => void;
   deleteFile: (UUID: string, type: string) => Promise<void>;
   refreshFiles: () => void;
 }
@@ -164,6 +169,12 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   const [previewTarget, setPreviewTarget] = useState<FileSystemTreeNode | null>(
     null
   );
+  const [transferTarget, setTransferTarget] =
+    useState<FileSystemTreeNode | null>(null);
+  const [transferMode, setTransferMode] = useState<'move' | 'copy'>('move');
+  const [transferTargetId, setTransferTargetId] = useState('1');
+  const [transferTargetKey, setTransferTargetKey] = useState('');
+  const [transferLoading, setTransferLoading] = useState(false);
 
   // 1. 获取数据
   const {
@@ -289,6 +300,16 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
     setPreviewTarget(file);
   }, []);
 
+  const openTransferDialog = useCallback(
+    (file: FileSystemTreeNode, mode: 'move' | 'copy') => {
+      setTransferTarget(file);
+      setTransferMode(mode);
+      setTransferTargetId('1');
+      setTransferTargetKey(fileTree.UUID);
+    },
+    [fileTree.UUID]
+  );
+
   const handleRenameConfirm = useCallback(async () => {
     if (!renameTarget) {
       return;
@@ -325,6 +346,67 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
     setRenameValue('');
   }, []);
 
+  const handleTransferCancel = useCallback(() => {
+    setTransferTarget(null);
+    setTransferTargetId('1');
+    setTransferTargetKey(fileTree.UUID);
+  }, [fileTree.UUID]);
+
+  const handleTransferConfirm = useCallback(async () => {
+    if (!transferTarget) {
+      return;
+    }
+
+    try {
+      setTransferLoading(true);
+      await http.post(
+        `/file/${transferMode}/${transferTarget.UUID}`,
+        {
+          targetParentId: Number(transferTargetId),
+        }
+      );
+
+      await queryClient.invalidateQueries({
+        queryKey: ['file', 'data', 'tree'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['file', 'recent'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['file', 'favorite'],
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['file', 'data', 'tree'],
+        type: 'active',
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['file', 'recent'],
+        type: 'active',
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['file', 'favorite'],
+        type: 'active',
+      });
+
+      messageApi.success(transferMode === 'move' ? '移动成功' : '复制成功');
+      handleTransferCancel();
+    } catch (error) {
+      const err = error as { message?: string };
+      messageApi.error(
+        err?.message || (transferMode === 'move' ? '移动失败' : '复制失败')
+      );
+    } finally {
+      setTransferLoading(false);
+    }
+  }, [
+    handleTransferCancel,
+    messageApi,
+    queryClient,
+    transferMode,
+    transferTarget,
+    transferTargetId,
+  ]);
+
   const refreshFiles = useCallback(() => {
     refetch();
   }, [refetch]);
@@ -340,6 +422,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
       updateFile,
       openRenameDialog,
       openPreviewDialog,
+      openTransferDialog,
       deleteFile,
       refreshFiles,
     }),
@@ -351,6 +434,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
       updateFile,
       openRenameDialog,
       openPreviewDialog,
+      openTransferDialog,
       deleteFile,
       refreshFiles,
     ]
@@ -389,6 +473,35 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
         file={previewTarget}
         onClose={() => setPreviewTarget(null)}
       />
+      <Modal
+        open={Boolean(transferTarget)}
+        title={transferMode === 'move' ? '移动到文件夹' : '复制到文件夹'}
+        okText={transferMode === 'move' ? '移动' : '复制'}
+        cancelText="取消"
+        onOk={() => void handleTransferConfirm()}
+        onCancel={handleTransferCancel}
+        confirmLoading={transferLoading}
+        destroyOnClose
+        width={700}
+      >
+        <div className="space-y-4 pt-2">
+          <p className="text-sm text-gray-500">
+            {transferMode === 'move' ? '选择要移动到的目标文件夹。' : '选择要复制到的目标文件夹。'}
+          </p>
+          <div className="max-h-96 overflow-y-auto rounded-lg border border-gray-200 p-3">
+            <ul>
+              <FolderItem
+                key={fileTree.UUID}
+                item={fileTree}
+                selectId={transferTargetId}
+                selectKey={transferTargetKey}
+                onSelect={(key: string) => setTransferTargetKey(key)}
+                onSelectId={(id: string) => setTransferTargetId(id)}
+              />
+            </ul>
+          </div>
+        </div>
+      </Modal>
     </FileDataContext.Provider>
   );
 }

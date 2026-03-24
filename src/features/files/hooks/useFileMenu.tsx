@@ -1,11 +1,13 @@
 import { useCallback } from 'react';
 import type { MenuProps } from 'antd';
 import {
+  AiOutlineCopy,
   AiOutlineDownload,
   AiOutlineShareAlt,
   AiOutlineEdit,
   AiOutlineDelete,
   AiOutlineInfoCircle,
+  AiOutlineFolderOpen,
   AiFillStar,
   AiOutlineStar,
 } from 'react-icons/ai';
@@ -78,6 +80,26 @@ export function useFileMenu(): {
             </div>
           ),
           onClick: () => handleFileAction('rename', item, options),
+        },
+        {
+          key: 'move',
+          label: (
+            <div className="flex items-center space-x-2">
+              <AiOutlineFolderOpen className="h-4 w-4" />
+              <span>移动</span>
+            </div>
+          ),
+          onClick: () => handleFileAction('move', item, options),
+        },
+        {
+          key: 'copy',
+          label: (
+            <div className="flex items-center space-x-2">
+              <AiOutlineCopy className="h-4 w-4" />
+              <span>复制</span>
+            </div>
+          ),
+          onClick: () => handleFileAction('copy', item, options),
         },
         settings?.allow_favorite ?? true
           ? {
