@@ -42,7 +42,7 @@ type SortType = 'latest' | 'oldest' | 'name' | 'type';
 export default function AllFiles() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
-  const { fileTree, updateFile, fileMap } = useFileData();
+  const { fileTree, updateFile, fileMap, openPreviewDialog } = useFileData();
 
   // 获取当前文件夹ID，如果没有则在根路径下显示根目录的直接子节点
   const currentFolderId = router.query.folderId as string | '1';
@@ -428,8 +428,7 @@ export default function AllFiles() {
                       if (item.type === 'folder') {
                         handleFolderClick(item.id);
                       } else {
-                        setSelectedFile(item);
-                        setShowDetails(true);
+                        openPreviewDialog(item);
                       }
                     }}
                   />
@@ -460,9 +459,7 @@ export default function AllFiles() {
                   if (item.type === 'folder') {
                     handleFolderClick(item.id);
                   } else {
-                    // 打开文件详情
-                    setSelectedFile(item);
-                    setShowDetails(true);
+                    openPreviewDialog(item);
                   }
                 }}
               >

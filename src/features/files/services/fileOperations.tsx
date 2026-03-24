@@ -15,6 +15,35 @@ import { queryClient } from '@/network/queryClient';
  */
 
 /**
+ * 获取文件 Blob 数据，供预览和下载复用
+ */
+export async function fetchFileBlob(
+  file: FileSystemTreeNode
+): Promise<{ blob: Blob; filename: string; mimetype: string }> {
+  const manifestRes = await http.get<GetFileChunkManifestApiResponse>(
+    `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunks`
+  );
+  const manifest = manifestRes.data.data;
+  const chunkBuffers: BlobPart[] = [];
+
+  for (let chunkIndex = 1; chunkIndex <= manifest.totalChunks; chunkIndex++) {
+    const chunkRes = await http.get<Blob>(
+      `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunk/${chunkIndex}`,
+      {
+        responseType: 'blob',
+      }
+    );
+    chunkBuffers.push(chunkRes.data);
+  }
+
+  return {
+    blob: new Blob(chunkBuffers, { type: manifest.mimetype }),
+    filename: manifest.filename,
+    mimetype: manifest.mimetype,
+  };
+}
+
+/**
  * 下载文件
  */
 export async function downloadFile(file: FileSystemTreeNode): Promise<void> {
@@ -22,35 +51,17 @@ export async function downloadFile(file: FileSystemTreeNode): Promise<void> {
     return;
   }
 
-  const chunkBuffers: BlobPart[] = [];
-
   try {
-    const manifestRes = await http.get<GetFileChunkManifestApiResponse>(
-      `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunks`
-    );
-    const manifest = manifestRes.data.data;
-
-    for (let chunkIndex = 1; chunkIndex <= manifest.totalChunks; chunkIndex++) {
-      const chunkRes = await http.get<Blob>(
-        `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunk/${chunkIndex}`,
-        {
-          responseType: 'blob',
-        }
-      );
-      chunkBuffers.push(chunkRes.data);
-    }
-
-    const blob = new Blob(chunkBuffers, { type: manifest.mimetype });
+    const { blob, filename } = await fetchFileBlob(file);
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = manifest.filename;
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
   } catch (err) {
-    chunkBuffers.length = 0;
     console.error('下载分片失败:', err);
     message.error('后端服务器不可用');
   }

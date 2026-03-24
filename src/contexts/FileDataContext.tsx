@@ -17,6 +17,7 @@ import {
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
 import { mapToList } from '@/utils/fileSystem/fileSystemUtils';
+import FilePreviewModal from '@/components/FilesHandle/FilePreviewModal';
 
 // --- 类型定义 ---
 
@@ -45,6 +46,7 @@ interface FileDataContextType {
     updates: Partial<FileSystemTreeNode>
   ) => Promise<void>;
   openRenameDialog: (file: FileSystemTreeNode) => void;
+  openPreviewDialog: (file: FileSystemTreeNode) => void;
   deleteFile: (UUID: string, type: string) => Promise<void>;
   refreshFiles: () => void;
 }
@@ -159,6 +161,9 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   );
   const [renameValue, setRenameValue] = useState('');
   const [renameLoading, setRenameLoading] = useState(false);
+  const [previewTarget, setPreviewTarget] = useState<FileSystemTreeNode | null>(
+    null
+  );
 
   // 1. 获取数据
   const {
@@ -280,6 +285,10 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
     setRenameValue(file.filename);
   }, []);
 
+  const openPreviewDialog = useCallback((file: FileSystemTreeNode) => {
+    setPreviewTarget(file);
+  }, []);
+
   const handleRenameConfirm = useCallback(async () => {
     if (!renameTarget) {
       return;
@@ -330,6 +339,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
       loading: isLoading,
       updateFile,
       openRenameDialog,
+      openPreviewDialog,
       deleteFile,
       refreshFiles,
     }),
@@ -340,6 +350,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
       isLoading,
       updateFile,
       openRenameDialog,
+      openPreviewDialog,
       deleteFile,
       refreshFiles,
     ]
@@ -373,6 +384,11 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
           />
         </div>
       </Modal>
+      <FilePreviewModal
+        open={Boolean(previewTarget)}
+        file={previewTarget}
+        onClose={() => setPreviewTarget(null)}
+      />
     </FileDataContext.Provider>
   );
 }

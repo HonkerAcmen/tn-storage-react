@@ -12,6 +12,7 @@ import {
 } from 'antd';
 import {
   AiFillFolder,
+  AiOutlineEye,
   AiOutlineDownload,
   AiOutlineShareAlt,
   AiOutlineEdit,
@@ -43,7 +44,7 @@ export default function FileDetailsModal({
   onUpdate,
 }: FileDetailsModalProps) {
   const [messageApi, contextHolder] = message.useMessage();
-  const { fileTree } = useFileData();
+  const { fileTree, openPreviewDialog } = useFileData();
   const { data: settingsResponse } = useGetMySettings();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -226,6 +227,13 @@ export default function FileDetailsModal({
             </>
           ) : (
             <>
+              <Button
+                icon={<AiOutlineEye />}
+                disabled={file.type === 'folder' ? false : !(settings?.allow_file_download ?? true)}
+                onClick={() => openPreviewDialog(file)}
+              >
+                预览
+              </Button>
               <Button
                 icon={<AiOutlineDownload />}
                 disabled={file.type === 'folder' || !(settings?.allow_file_download ?? true)}

@@ -22,7 +22,7 @@ function SectionEmptyState() {
 export default function RecentFiles() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('recent');
-  const { allFiles } = useFileData();
+  const { allFiles, openPreviewDialog } = useFileData();
   const { data: recentsData } = useGetRecents();
 
   const fileByUUID = useMemo(() => {
@@ -92,6 +92,8 @@ export default function RecentFiles() {
                 onClick={() => {
                   if (item.type === 'folder') {
                     handleFolderClick(item.id);
+                  } else {
+                    openPreviewDialog(item);
                   }
                 }}
               />
@@ -130,6 +132,8 @@ export default function RecentFiles() {
                 onClick={() => {
                   if (item.type === 'folder') {
                     handleFolderClick(item.id);
+                  } else {
+                    openPreviewDialog(item);
                   }
                 }}
               />
@@ -168,6 +172,8 @@ export default function RecentFiles() {
                 onClick={() => {
                   if (item.type === 'folder') {
                     handleFolderClick(item.id);
+                  } else {
+                    openPreviewDialog(item);
                   }
                 }}
               />
