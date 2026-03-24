@@ -1,12 +1,14 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import http from '@/network/http';
 import {
   AddFavoriteApiResponse,
   BatchDeleteFileApiResponse,
   CreateFolderApiResponse,
+  CreateShareApiResponse,
   DeleteAllTrashApiResponse,
   DeleteFileApiResponse,
   GetFavoritesApiResponse,
+  GetShareListApiResponse,
   GetRecentsApiResponse,
   GetDownloadTotalApiResponse,
   GetFileApiResponse,
@@ -18,6 +20,7 @@ import {
   GetUploadTotalApiResponse,
   PushFileDataTrashApiResponse,
   ReStoreApiResopnse,
+  RevokeShareApiResponse,
   RemoveFavoriteApiResponse,
   SetDownloadTotalApiResponse,
   UploadFileApiResponse,
@@ -199,6 +202,18 @@ export function useGetRecents() {
   });
 }
 
+export function useGetShares() {
+  const authed = isAuthed();
+  return useQuery({
+    queryKey: ['file', 'share'],
+    queryFn: async () => await http.get<GetShareListApiResponse>('/file/share'),
+    enabled: authed,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+  });
+}
+
 //////////////// 其他方法 POST DELETE PUT////////////////
 
 interface createFolderProps {
@@ -373,6 +388,30 @@ export function useMarkRecentAccess() {
     mutationFn: async ({ UUID }) => {
       const res = await http.post(`/file/recent/access/${UUID}`);
       return res.data;
+    },
+  });
+}
+
+export function useCreateShare() {
+  return useMutation<CreateShareApiResponse, ErrorResponse, { UUID: string }>({
+    mutationFn: async ({ UUID }) => {
+      const res = await http.post<CreateShareApiResponse>(`/file/share/${UUID}`);
+      return res.data;
+    },
+  });
+}
+
+export function useRevokeShare() {
+  const queryClient = useQueryClient();
+  return useMutation<RevokeShareApiResponse, ErrorResponse, { token: string }>({
+    mutationFn: async ({ token }) => {
+      const res = await http.delete<RevokeShareApiResponse>(`/file/share/${token}`);
+      return res.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['file', 'share'],
+      });
     },
   });
 }

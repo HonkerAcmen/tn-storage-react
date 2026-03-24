@@ -2,11 +2,11 @@ import { message, Modal } from 'antd';
 import http from '@/network/http';
 import { getFilePath } from '@/network/resPath';
 import {
-  CreateShareApiResponse,
   FileSystemTreeNode,
   GetFileChunkManifestApiResponse,
 } from '@/network/types/Response/file';
 import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
+import { queryClient } from '@/network/queryClient';
 
 /**
  * 文件操作服务
@@ -68,9 +68,10 @@ export async function shareFile(
     return;
   }
 
-  const res = await http.post<CreateShareApiResponse>(`/file/share/${file.UUID}`);
+  const res = await http.post(`/file/share/${file.UUID}`);
   const shareUrl = res.data.data.url;
   await navigator.clipboard.writeText(shareUrl);
+  await queryClient.invalidateQueries({ queryKey: ['file', 'share'] });
   if (shouldNotify) {
     message.success('已复制');
   }

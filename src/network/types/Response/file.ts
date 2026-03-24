@@ -85,6 +85,19 @@ export interface RecentFileResponse {
 export interface ShareFileResponse {
   token: string;
   url: string;
+  expiresAt: string | null;
+}
+
+export interface ShareRecordResponse {
+  token: string;
+  file_uuid: string;
+  bucket: string;
+  createdAt: string;
+  expiresAt: string | null;
+  revokedAt: string | null;
+  downloadCount: number;
+  lastAccessAt: string | null;
+  file: FileSystemTreeNode | null;
 }
 
 // 批量删除文件响应
@@ -136,6 +149,8 @@ export type GetFileApiResponse = BaseResponse<Record<string, unknown>>;
 export type GetFileChunkManifestApiResponse = BaseResponse<FileChunkManifest>;
 export type GetRecentsApiResponse = BaseResponse<RecentFileResponse>;
 export type CreateShareApiResponse = BaseResponse<ShareFileResponse>;
+export type GetShareListApiResponse = BaseResponse<ShareRecordResponse[]>;
+export type RevokeShareApiResponse = BaseResponse<null>;
 export type GetFilePagesInfoApiResponse = BaseResponse<FilePagesInfoResponse>;
 export type GetFileInfoApiResponse = BaseResponse<FileDetailInfo>;
 

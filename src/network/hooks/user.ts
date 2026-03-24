@@ -219,6 +219,25 @@ export function useUpdateMySettings() {
   });
 }
 
+export function useResetMyPermissions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      return await http.post<GetUserSettingsApiResponse>(
+        '/user/settings/me/reset-permissions'
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['user', 'settings', 'me'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['user', 'admin', 'users'],
+      });
+    },
+  });
+}
+
 export function useUpdateUserRole() {
   const queryClient = useQueryClient();
   return useMutation({

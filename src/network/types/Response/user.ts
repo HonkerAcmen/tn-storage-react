@@ -41,6 +41,7 @@ export interface UserSettingsResponse {
   allow_file_delete: boolean;
   allow_favorite: boolean;
   allow_share: boolean;
+  permissions_customized: boolean;
   updatedAt: string;
   createdAt: string;
 }

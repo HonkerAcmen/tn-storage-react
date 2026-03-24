@@ -14,9 +14,11 @@ import {
   useGetMyLoginHistory,
   useGetMySettings,
   useGetMyStorage,
+  useResetMyPermissions,
   useUpdateUserRole,
   useUpdateMySettings,
 } from '@/network/hooks/user';
+import { useGetShares, useRevokeShare } from '@/network/hooks/file';
 import { UpdateUserSettingsRequest } from '@/network/types/Request/user';
 import { formatFileSize } from '@/utils/format/formatters';
 
@@ -443,14 +445,17 @@ function PermissionsSettings() {
   const { data: adminUsersResponse } = useGetAdminUsers(
     data?.data?.data?.role === 'admin'
   );
+  const { data: sharesResponse } = useGetShares();
   const updateSettings = useUpdateMySettings();
+  const resetPermissions = useResetMyPermissions();
   const updateUserRole = useUpdateUserRole();
+  const revokeShare = useRevokeShare();
   const settings = data?.data?.data;
   const adminUsers = adminUsersResponse?.data?.data ?? [];
+  const shares = sharesResponse?.data?.data ?? [];
   const [draft, setDraft] = useState<UpdateUserSettingsRequest>({});
 
   const currentDraft = {
-    role: draft.role ?? settings?.role ?? 'user',
     allow_file_upload:
       draft.allow_file_upload ?? settings?.allow_file_upload ?? true,
     allow_file_download:
@@ -466,100 +471,200 @@ function PermissionsSettings() {
     messageApi.success('权限设置已保存');
   };
 
+  const resetToRoleDefaults = async () => {
+    await resetPermissions.mutateAsync();
+    setDraft({});
+    messageApi.success('已恢复为角色默认权限');
+  };
+
   const roleLabel = useMemo(
     () =>
-      currentDraft.role === 'admin'
+      settings?.role === 'admin'
         ? '管理员'
-        : currentDraft.role === 'viewer'
+        : settings?.role === 'viewer'
           ? '访客'
           : '普通用户',
-    [currentDraft.role]
+    [settings?.role]
   );
 
   return (
     <Section title="权限设置">
       {contextHolder}
-      <SettingRow
-        title="角色"
-        desc="角色由服务端统一管理，个人设置中只读展示"
-        control={
-          <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-600">
-            {roleLabel}
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <p className="font-medium text-gray-800">我的权限</p>
+            <p className="text-sm text-gray-500">
+              当前角色：{roleLabel}
+              。你可以在角色模板基础上做个性化调整。
+            </p>
           </div>
-        }
-      />
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-        当前角色：{roleLabel}
-        。下列权限会直接影响上传、下载、删除和收藏接口是否可用。
+          <div className="flex items-center gap-3">
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                settings?.permissions_customized
+                  ? 'bg-amber-100 text-amber-700'
+                  : 'bg-emerald-100 text-emerald-700'
+              }`}
+            >
+              {settings?.permissions_customized ? '已自定义权限' : '角色默认权限'}
+            </span>
+            <ActionButton
+              onClick={() => void resetToRoleDefaults()}
+              loading={resetPermissions.isPending}
+            >
+              恢复角色默认
+            </ActionButton>
+          </div>
+        </div>
+        <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+          下列权限会直接影响上传、下载、删除、收藏和分享接口是否可用。
+        </div>
+        <div className="space-y-4">
+          <SettingRow
+            title="允许上传"
+            desc="控制初始化上传、上传分片和新建文件夹"
+            control={
+              <Toggle
+                checked={Boolean(currentDraft.allow_file_upload)}
+                onChange={(checked) =>
+                  setDraft((prev) => ({ ...prev, allow_file_upload: checked }))
+                }
+              />
+            }
+          />
+          <SettingRow
+            title="允许下载"
+            desc="控制文件下载和分片读取"
+            control={
+              <Toggle
+                checked={Boolean(currentDraft.allow_file_download)}
+                onChange={(checked) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    allow_file_download: checked,
+                  }))
+                }
+              />
+            }
+          />
+          <SettingRow
+            title="允许删除"
+            desc="控制移入回收站、彻底删除和清空回收站"
+            control={
+              <Toggle
+                checked={Boolean(currentDraft.allow_file_delete)}
+                onChange={(checked) =>
+                  setDraft((prev) => ({ ...prev, allow_file_delete: checked }))
+                }
+              />
+            }
+          />
+          <SettingRow
+            title="允许收藏"
+            desc="控制收藏和取消收藏接口"
+            control={
+              <Toggle
+                checked={Boolean(currentDraft.allow_favorite)}
+                onChange={(checked) =>
+                  setDraft((prev) => ({ ...prev, allow_favorite: checked }))
+                }
+              />
+            }
+          />
+          <SettingRow
+            title="允许共享"
+            desc="普通用户默认可分享文件"
+            control={
+              <Toggle
+                checked={Boolean(currentDraft.allow_share)}
+                onChange={(checked) =>
+                  setDraft((prev) => ({ ...prev, allow_share: checked }))
+                }
+              />
+            }
+          />
+        </div>
+        <div className="mt-4">
+          <SaveBar onSave={save} loading={updateSettings.isPending} />
+        </div>
       </div>
-      <SettingRow
-        title="允许上传"
-        desc="控制初始化上传、上传分片和新建文件夹"
-        control={
-          <Toggle
-            checked={Boolean(currentDraft.allow_file_upload)}
-            onChange={(checked) =>
-              setDraft((prev) => ({ ...prev, allow_file_upload: checked }))
-            }
-          />
-        }
-      />
-      <SettingRow
-        title="允许下载"
-        desc="控制文件下载和分片读取"
-        control={
-          <Toggle
-            checked={Boolean(currentDraft.allow_file_download)}
-            onChange={(checked) =>
-              setDraft((prev) => ({ ...prev, allow_file_download: checked }))
-            }
-          />
-        }
-      />
-      <SettingRow
-        title="允许删除"
-        desc="控制移入回收站、彻底删除和清空回收站"
-        control={
-          <Toggle
-            checked={Boolean(currentDraft.allow_file_delete)}
-            onChange={(checked) =>
-              setDraft((prev) => ({ ...prev, allow_file_delete: checked }))
-            }
-          />
-        }
-      />
-      <SettingRow
-        title="允许收藏"
-        desc="控制收藏和取消收藏接口"
-        control={
-          <Toggle
-            checked={Boolean(currentDraft.allow_favorite)}
-            onChange={(checked) =>
-              setDraft((prev) => ({ ...prev, allow_favorite: checked }))
-            }
-          />
-        }
-      />
-      <SettingRow
-        title="允许共享"
-        desc="普通用户默认可分享文件"
-        control={
-          <Toggle
-            checked={Boolean(currentDraft.allow_share)}
-            onChange={(checked) =>
-              setDraft((prev) => ({ ...prev, allow_share: checked }))
-            }
-          />
-        }
-      />
-      <SaveBar onSave={save} loading={updateSettings.isPending} />
+
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <div className="mb-4">
+          <p className="font-medium text-gray-800">分享管理</p>
+          <p className="text-sm text-gray-500">
+            查看已创建的分享链接，复制下载地址，或手动失效。
+          </p>
+        </div>
+        <div className="space-y-3">
+          {shares.length === 0 ? (
+            <p className="text-sm text-gray-500">暂无分享记录</p>
+          ) : (
+            shares.map((share) => (
+              <div
+                key={share.token}
+                className="rounded-lg border border-gray-100 px-4 py-3"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-gray-800">
+                      {share.file?.filename || share.file_uuid}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      下载次数 {share.downloadCount} · 创建于{' '}
+                      {new Date(share.createdAt).toLocaleString('zh-CN')}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {share.revokedAt
+                        ? `已失效：${new Date(share.revokedAt).toLocaleString('zh-CN')}`
+                        : share.expiresAt
+                          ? `过期时间：${new Date(share.expiresAt).toLocaleString('zh-CN')}`
+                          : '长期有效'}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      最近访问：
+                      {share.lastAccessAt
+                        ? new Date(share.lastAccessAt).toLocaleString('zh-CN')
+                        : '暂无'}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        const shareUrl = `${window.location.origin}/api/v1/file/share/download/${share.token}`;
+                        await navigator.clipboard.writeText(shareUrl);
+                        messageApi.success('已复制');
+                      }}
+                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50"
+                    >
+                      复制链接
+                    </button>
+                    {!share.revokedAt && (
+                      <button
+                        onClick={async () => {
+                          await revokeShare.mutateAsync({ token: share.token });
+                          messageApi.success('分享链接已失效');
+                        }}
+                        className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600 transition hover:bg-red-50"
+                      >
+                        设为失效
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
 
       {settings?.role === 'admin' && (
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <div className="mb-4">
-            <p className="font-medium text-gray-800">用户身份管理</p>
+            <p className="font-medium text-gray-800">用户管理</p>
             <p className="text-sm text-gray-500">
-              管理员可以将用户设置为管理员、普通用户或访客
+              管理员可以将用户设置为管理员、普通用户或访客。切换身份时会同步应用角色默认权限。
             </p>
           </div>
           <div className="space-y-3">
