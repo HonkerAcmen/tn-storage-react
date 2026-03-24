@@ -4,8 +4,9 @@ import {
   useCallback,
   ReactNode,
   useMemo,
+  useState,
 } from 'react';
-import { message } from 'antd';
+import { Input, Modal, message } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import http from '@/network/http';
 
@@ -43,6 +44,7 @@ interface FileDataContextType {
     fileId: string,
     updates: Partial<FileSystemTreeNode>
   ) => Promise<void>;
+  openRenameDialog: (file: FileSystemTreeNode) => void;
   deleteFile: (UUID: string, type: string) => Promise<void>;
   refreshFiles: () => void;
 }
@@ -152,6 +154,11 @@ const FileDataContext = createContext<FileDataContextType | undefined>(
 export function FileDataProvider({ children }: { children: ReactNode }) {
   const [messageApi, contextHolder] = message.useMessage();
   const queryClient = useQueryClient();
+  const [renameTarget, setRenameTarget] = useState<FileSystemTreeNode | null>(
+    null
+  );
+  const [renameValue, setRenameValue] = useState('');
+  const [renameLoading, setRenameLoading] = useState(false);
 
   // 1. 获取数据
   const {
@@ -268,6 +275,47 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
     [pushFileDataTrash, messageApi, queryClient]
   );
 
+  const openRenameDialog = useCallback((file: FileSystemTreeNode) => {
+    setRenameTarget(file);
+    setRenameValue(file.filename);
+  }, []);
+
+  const handleRenameConfirm = useCallback(async () => {
+    if (!renameTarget) {
+      return;
+    }
+
+    const nextName = renameValue.trim();
+    if (!nextName) {
+      messageApi.error('文件名不能为空');
+      return;
+    }
+
+    if (nextName === renameTarget.filename) {
+      setRenameTarget(null);
+      setRenameValue('');
+      return;
+    }
+
+    try {
+      setRenameLoading(true);
+      await updateFile(renameTarget.id, { filename: nextName });
+      messageApi.success('重命名成功');
+      setRenameTarget(null);
+      setRenameValue('');
+    } catch (error) {
+      const err = error as { message?: string };
+      messageApi.error(err?.message || '重命名失败');
+    } finally {
+      setRenameLoading(false);
+    }
+  }, [messageApi, renameTarget, renameValue, updateFile]);
+
+  const handleRenameCancel = useCallback(() => {
+    setRenameTarget(null);
+    setRenameValue('');
+  }, []);
+
   const refreshFiles = useCallback(() => {
     refetch();
   }, [refetch]);
@@ -281,6 +329,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
       allFiles,
       loading: isLoading,
       updateFile,
+      openRenameDialog,
       deleteFile,
       refreshFiles,
     }),
@@ -290,6 +339,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
       allFiles,
       isLoading,
       updateFile,
+      openRenameDialog,
       deleteFile,
       refreshFiles,
     ]
@@ -299,6 +349,30 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
     <FileDataContext.Provider value={contextValue}>
       {contextHolder}
       {children}
+      <Modal
+        open={Boolean(renameTarget)}
+        title="重命名"
+        okText="保存"
+        cancelText="取消"
+        onOk={() => void handleRenameConfirm()}
+        onCancel={handleRenameCancel}
+        confirmLoading={renameLoading}
+        destroyOnClose
+      >
+        <div className="space-y-4 pt-2">
+          <p className="text-sm text-gray-500">
+            为 {renameTarget?.type === 'folder' ? '文件夹' : '文件'} 设置新的名称。
+          </p>
+          <Input
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            placeholder="请输入新的名称"
+            autoFocus
+            maxLength={255}
+            onPressEnter={() => void handleRenameConfirm()}
+          />
+        </div>
+      </Modal>
     </FileDataContext.Provider>
   );
 }

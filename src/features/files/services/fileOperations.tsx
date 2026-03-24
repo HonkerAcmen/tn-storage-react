@@ -1,4 +1,4 @@
-import { message, Modal } from 'antd';
+import { message } from 'antd';
 import http from '@/network/http';
 import { getFilePath } from '@/network/resPath';
 import {
@@ -92,36 +92,24 @@ export function renameFile(
     error: (content: string) => void;
   }
 ): void {
-  Modal.confirm({
-    title: '重命名',
-    content: (
-      <div className="mt-4">
-        <input
-          type="text"
-          id="rename-input"
-          defaultValue={file.filename}
-          className="w-full rounded border border-gray-300 px-3 py-2"
-          autoFocus
-        />
-      </div>
-    ),
-    onOk: async () => {
-      const input = document.getElementById('rename-input') as HTMLInputElement;
-      const newName = input?.value.trim();
+  const input = window.prompt('请输入新的文件名', file.filename);
+  if (input === null) {
+    return;
+  }
 
-      if (!newName || newName === file.filename) {
-        return;
-      }
+  const newName = input.trim();
+  if (!newName || newName === file.filename) {
+    return;
+  }
 
-      try {
-        await onUpdate(file.id, { filename: newName });
-        messageApi?.success('重命名成功');
-      } catch (error) {
-        console.error(error);
-        messageApi?.error('重命名失败');
-      }
-    },
-  });
+  void onUpdate(file.id, { filename: newName })
+    .then(() => {
+      messageApi?.success('重命名成功');
+    })
+    .catch((error) => {
+      console.error(error);
+      messageApi?.error('重命名失败');
+    });
 }
 
 /**

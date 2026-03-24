@@ -17,7 +17,7 @@ export function useFileActions() {
   const router = useRouter();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addDeletedFile } = useDeletedFiles();
-  const { updateFile } = useFileData();
+  const { openRenameDialog } = useFileData();
   const { data: settingsResponse } = useGetMySettings();
   const settings = settingsResponse?.data?.data;
 
@@ -48,7 +48,7 @@ export function useFileActions() {
           );
           break;
         case 'rename':
-          fileOperations.renameFile(item, updateFile, messageApi);
+          openRenameDialog(item);
           break;
         case 'delete':
           // 先添加到已删除列表
@@ -78,7 +78,7 @@ export function useFileActions() {
       }
     },
     [
-      updateFile,
+      openRenameDialog,
       messageApi,
       addDeletedFile,
       isFavorite,
