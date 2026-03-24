@@ -139,6 +139,16 @@ function OverviewTab() {
 
   const userinfo = useMemo(() => userdata?.data, [userdata]);
   const storage = storageResponse?.data?.data;
+  const baseProfile = useMemo<UserProfile>(
+    () => ({
+      nickname: userinfo?.data.username || '',
+      email: userinfo?.data.email || '',
+      phone: userinfo?.data.phone || '',
+      bio: userinfo?.data.desc || '',
+      avatar: avatarUrl || null,
+    }),
+    [avatarUrl, userinfo]
+  );
   const recentActivities = useMemo(() => {
     const recentUUIDs = recentsResponse?.data?.data?.recent ?? [];
     const fileMap = new Map(allFiles.map((file) => [file.UUID, file]));
@@ -153,36 +163,22 @@ function OverviewTab() {
         time: new Date(file.updatedAt).toLocaleString('zh-CN'),
       }));
   }, [allFiles, recentsResponse]);
-
-  const [profile, setProfile] = useState<UserProfile>({
+  const [editForm, setEditForm] = useState<UserProfile>({
     nickname: '',
     email: '',
     phone: '',
     avatar: null,
     bio: '',
   });
-
-  const [editForm, setEditForm] = useState<UserProfile>(profile);
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
-  const displayAvatar = avatarUrl || profile.avatar || null;
+  const displayAvatar = isEditing ? editForm.avatar : baseProfile.avatar;
 
-  // 当头像数据加载成功后，更新 profile
   useEffect(() => {
-    // 只在数据真正改变时才更新，避免无限循环
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setProfile((prev) => ({
-      nickname: userinfo?.data.username || prev.nickname || '',
-      email: userinfo?.data.email || prev.email || '',
-      phone: userinfo?.data.phone || prev.phone || '',
-      bio: userinfo?.data.desc || prev.bio || '',
-      avatar: avatarUrl || prev.avatar || null,
-    }));
-
-    if (avatarUrl && previewUrlRef.current) {
+    if (!isEditing && avatarUrl && previewUrlRef.current) {
       URL.revokeObjectURL(previewUrlRef.current);
       previewUrlRef.current = null;
     }
-  }, [avatarUrl, userinfo]);
+  }, [avatarUrl, isEditing]);
 
   useEffect(() => {
     return () => {
@@ -202,7 +198,7 @@ function OverviewTab() {
 
   // 开始编辑
   const handleEdit = () => {
-    setEditForm({ ...profile });
+    setEditForm({ ...baseProfile });
     setPendingAvatarFile(null);
     setIsEditing(true);
   };
@@ -213,7 +209,7 @@ function OverviewTab() {
       URL.revokeObjectURL(previewUrlRef.current);
       previewUrlRef.current = null;
     }
-    setEditForm({ ...profile });
+    setEditForm({ ...baseProfile });
     setPendingAvatarFile(null);
     setIsEditing(false);
   };
@@ -263,20 +259,6 @@ function OverviewTab() {
         await avatarUpload.mutateAsync({ file: pendingAvatarFile });
       }
 
-      setProfile((prev) => ({
-        ...prev,
-        nickname: normalizedForm.nickname,
-        email: normalizedForm.email,
-        phone: normalizedForm.phone,
-        bio: normalizedForm.bio,
-      }));
-      setEditForm((prev) => ({
-        ...prev,
-        nickname: normalizedForm.nickname,
-        email: normalizedForm.email,
-        phone: normalizedForm.phone,
-        bio: normalizedForm.bio,
-      }));
       setPendingAvatarFile(null);
       setIsEditing(false);
       messageApi.success('资料已更新');
@@ -329,7 +311,10 @@ function OverviewTab() {
     const previewUrl = URL.createObjectURL(renamedFile);
     previewUrlRef.current = previewUrl;
     setPendingAvatarFile(renamedFile);
+
+    // 传入表单数据对象中，当点击上传按钮后自动上传图片数据
     setEditForm((prev) => ({ ...prev, avatar: previewUrl }));
+
     e.target.value = '';
   };
 
@@ -341,7 +326,7 @@ function OverviewTab() {
   // 邮箱验证状态
   const isEmailVerified = true;
   // 手机号绑定状态
-  const isPhoneBound = profile.phone.length > 0;
+  const isPhoneBound = baseProfile.phone.length > 0;
 
   return (
     <div className="space-y-6">
@@ -365,20 +350,20 @@ function OverviewTab() {
                 >
                   {!displayAvatar && (
                     <span className="text-3xl font-bold">
-                      {profile.nickname.charAt(0)}
+                      {baseProfile.nickname.charAt(0)}
                     </span>
                   )}
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold">{profile.nickname}</h3>
-                <p className="mt-1 text-sm text-white/80">{profile.email}</p>
-                {profile.phone && (
-                  <p className="mt-1 text-sm text-white/80">{profile.phone}</p>
+                <h3 className="text-2xl font-bold">{baseProfile.nickname}</h3>
+                <p className="mt-1 text-sm text-white/80">{baseProfile.email}</p>
+                {baseProfile.phone && (
+                  <p className="mt-1 text-sm text-white/80">{baseProfile.phone}</p>
                 )}
-                {profile.bio && (
+                {baseProfile.bio && (
                   <p className="mt-2 line-clamp-2 text-sm text-white/70">
-                    {profile.bio}
+                    {baseProfile.bio}
                   </p>
                 )}
                 <div className="mt-2 flex items-center space-x-4 text-sm">
