@@ -179,11 +179,19 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
       if (settings?.upload_notification ?? true) {
         messageApi.success('所有文件上传成功！');
       }
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ['file', 'data', 'tree'],
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ['file', 'recent'],
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['file', 'data', 'tree'],
+        type: 'active',
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['file', 'recent'],
+        type: 'active',
       });
       setTimeout(() => {
         setFileList([]);
