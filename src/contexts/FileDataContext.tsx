@@ -7,6 +7,7 @@ import {
 } from 'react';
 import { message } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
+import http from '@/network/http';
 
 import {
   useGetFileSystemTree,
@@ -187,12 +188,48 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   // 4. 操作方法
   const updateFile = useCallback(
     async (fileId: string, updates: Partial<FileSystemTreeNode>) => {
-      // TODO: 实现 update 逻辑
-      // 建议：使用 queryClient.setQueryData 进行乐观更新 (Optimistic Update)
-      console.log('Update file placeholder', fileId, updates);
-      return Promise.resolve();
+      const target = fileMap.get(fileId);
+      if (!target) {
+        throw new Error('文件未找到');
+      }
+
+      if (updates.filename !== undefined) {
+        const filename = updates.filename.trim();
+        if (!filename) {
+          throw new Error('文件名不能为空');
+        }
+
+        await http.put(`/file/rename/${target.UUID}`, {
+          filename,
+        });
+
+        await queryClient.invalidateQueries({
+          queryKey: ['file', 'data', 'tree'],
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ['file', 'recent'],
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ['file', 'favorite'],
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['file', 'data', 'tree'],
+          type: 'active',
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['file', 'recent'],
+          type: 'active',
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['file', 'favorite'],
+          type: 'active',
+        });
+        return;
+      }
+
+      throw new Error('当前仅支持重命名操作');
     },
-    []
+    [fileMap, queryClient]
   );
 
   const deleteFile = useCallback(
