@@ -41,7 +41,7 @@ const RENDER_MAP: Record<string, JSX.Element> = {
 
 export default function FileList() {
   const router = useRouter();
-  const { fileTree, fileMap } = useFileData();
+  const { fileTree, fileMap, openPreviewDialog } = useFileData();
 
   // 获取当前文件夹ID，默认为根节点ID '1'
   const currentFolderId = (router.query.folderId as string) || '1';
@@ -76,8 +76,7 @@ export default function FileList() {
     if (item.type === 'folder') {
       handleNavigate(item.id);
     } else {
-      console.log('Preview file:', item.filename);
-      // 这里可以加入文件预览逻辑
+      openPreviewDialog(item);
     }
   }
 

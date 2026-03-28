@@ -1,26 +1,33 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import http from '@/network/http';
 import {
-  BatchDeleteFileApiResponse,
+  AddFavoriteApiResponse,
+  CreateFolderApiResponse,
+  CreateShareApiResponse,
+  DeleteAllTrashApiResponse,
   DeleteFileApiResponse,
   GetDownloadTotalApiResponse,
+  GetFavoritesApiResponse,
   GetFileApiResponse,
   GetFileInfoApiResponse,
-  GetFilePagesInfoApiResponse,
   GetFilesTypeCountApiResponse,
   GetFileSystemTreeApiResponse,
+  GetRecentsApiResponse,
+  GetShareListApiResponse,
   GetUploadStatusApiResponse,
   GetUploadTotalApiResponse,
+  getTrashFilesApiResponse,
   PushFileDataTrashApiResponse,
+  RemoveFavoriteApiResponse,
+  ReStoreApiResopnse,
+  RevokeShareApiResponse,
   SetDownloadTotalApiResponse,
   UploadFileApiResponse,
 } from '@/network/types/Response/file';
+import { isAuthed } from '@/utils/auth';
 import {
-  batchDeleteFilePath,
-  deleteFilePath,
   getDownloadTotalPath,
   getFileInfoPath,
-  getFilePagesInfoPath,
   getFilePath,
   getFilesTypeCountPath,
   getUploadStatusPath,
@@ -28,21 +35,20 @@ import {
   setDownloadTotalPath,
   uploadFilePath,
 } from '../resPath';
-import {
-  BatchDeleteFileRequest,
-  FilePagesInfoRequest,
-} from '@/network/types/Request/file';
+import { ErrorResponse } from '../types/Response';
+
+//////////////// Get 方法 / Query方法 ////////////////
 
 /**
  * 获取每日下载量统计数据
  */
 export function useGetDownloadTotal() {
-  return useQuery({
+  return useQuery<GetDownloadTotalApiResponse, ErrorResponse>({
     queryKey: ['file', 'download', 'total'],
     queryFn: async () => {
       const res =
         await http.get<GetDownloadTotalApiResponse>(getDownloadTotalPath);
-      return res;
+      return res.data;
     },
   });
 }
@@ -52,12 +58,14 @@ export function useGetDownloadTotal() {
  * @returns
  */
 export function useGetFileSystemTree() {
+  const authed = isAuthed();
   return useQuery({
     queryKey: ['file', 'data', 'tree'],
     queryFn: async () => {
       const res = await http.get<GetFileSystemTreeApiResponse>('/file/tree');
       return res;
     },
+    enabled: authed,
   });
 }
 
@@ -65,11 +73,11 @@ export function useGetFileSystemTree() {
  * 获取上传总数
  */
 export function useGetUploadTotal() {
-  return useQuery({
+  return useQuery<GetUploadTotalApiResponse, ErrorResponse>({
     queryKey: ['file', 'upload', 'total'],
     queryFn: async () => {
       const res = await http.get<GetUploadTotalApiResponse>(getUploadTotalPath);
-      return res;
+      return res.data;
     },
   });
 }
@@ -78,11 +86,11 @@ export function useGetUploadTotal() {
  * 设置某日下载的数量
  */
 export function useSetDownloadTotal() {
-  return useMutation({
+  return useMutation<SetDownloadTotalApiResponse, ErrorResponse>({
     mutationFn: async () => {
       const res =
         await http.get<SetDownloadTotalApiResponse>(setDownloadTotalPath);
-      return res;
+      return res.data;
     },
   });
 }
@@ -91,46 +99,13 @@ export function useSetDownloadTotal() {
  * 获取不同文件类型的数量统计
  */
 export function useGetFilesTypeCount() {
-  return useQuery({
+  return useQuery<GetFilesTypeCountApiResponse, ErrorResponse>({
     queryKey: ['file', 'upload', 'typeTotal'],
     queryFn: async () => {
       const res = await http.get<GetFilesTypeCountApiResponse>(
         getFilesTypeCountPath
       );
-      return res;
-    },
-  });
-}
-
-/**
- * 上传文件到指定桶
- */
-export function useUploadFile() {
-  return useMutation({
-    mutationFn: async ({
-      bucket,
-      parentid,
-      files,
-    }: {
-      bucket: string;
-      parentid: number;
-      files: File[];
-    }) => {
-      const formData = new FormData();
-      files.forEach((file) => {
-        formData.append('files', file, encodeURIComponent(file.name));
-      });
-
-      const res = await http.post<UploadFileApiResponse>(
-        `${uploadFilePath}/${bucket}/${parentid}`,
-        formData,
-        {
-          headers: {
-            'Accept-Charset': 'utf-8',
-          },
-        }
-      );
-      return res;
+      return res.data;
     },
   });
 }
@@ -181,27 +156,6 @@ export function useGetFile(bucket: string, id: string, enabled = true) {
 }
 
 /**
- * 分页查询所有文件信息
- */
-export function useGetFilePagesInfo(params?: FilePagesInfoRequest) {
-  return useQuery({
-    queryKey: ['file', 'info', 'pages', params],
-    queryFn: async () => {
-      const queryParams = new URLSearchParams();
-      if (params?.page) queryParams.append('page', params.page);
-      if (params?.pageSize) queryParams.append('pageSize', params.pageSize);
-
-      const url = queryParams.toString()
-        ? `${getFilePagesInfoPath}?${queryParams.toString()}`
-        : getFilePagesInfoPath;
-
-      const res = await http.get<GetFilePagesInfoApiResponse>(url);
-      return res;
-    },
-  });
-}
-
-/**
  * 获取单个文件的详细信息
  */
 export function useGetFileInfo(UUID: string) {
@@ -217,59 +171,253 @@ export function useGetFileInfo(UUID: string) {
   });
 }
 
+export function useGetDelListInTrash() {
+  const authed = isAuthed();
+  return useQuery({
+    queryKey: ['file', 'data', 'trash'],
+    queryFn: async () =>
+      await http.get<getTrashFilesApiResponse>('/file/trash'),
+    enabled: authed,
+  });
+}
+
+export function useGetFavorites() {
+  const authed = isAuthed();
+  return useQuery({
+    queryKey: ['file', 'favorite'],
+    queryFn: async () =>
+      await http.get<GetFavoritesApiResponse>('/file/favorite'),
+    enabled: authed,
+  });
+}
+
+export function useGetRecents() {
+  const authed = isAuthed();
+  return useQuery({
+    queryKey: ['file', 'recent'],
+    queryFn: async () => await http.get<GetRecentsApiResponse>('/file/recent'),
+    enabled: authed,
+  });
+}
+
+export function useGetShares() {
+  const authed = isAuthed();
+  return useQuery({
+    queryKey: ['file', 'share'],
+    queryFn: async () => await http.get<GetShareListApiResponse>('/file/share'),
+    enabled: authed,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+  });
+}
+
+//////////////// 其他方法 POST DELETE PUT////////////////
+
+interface createFolderProps {
+  foldername: string;
+  parent: string;
+}
+
 /**
- * 删除单个文件
+ * 创建文件夹接口
  */
-export function useDeleteFile() {
-  return useMutation({
-    mutationFn: async ({ bucket, UUID }: { bucket: string; UUID: string }) => {
-      return await http.delete<DeleteFileApiResponse>(
-        `${deleteFilePath}/${bucket}/${UUID}`
+export function useCreateFolder() {
+  return useMutation<CreateFolderApiResponse, ErrorResponse, createFolderProps>(
+    {
+      mutationFn: async ({ foldername, parent }: createFolderProps) => {
+        const res = await http.post<CreateFolderApiResponse>(
+          `/file/folder/create/${foldername}/${parent}`
+        );
+        return res.data;
+      },
+    }
+  );
+}
+
+/**
+ * 恢复文件接口
+ */
+export function useReStore() {
+  return useMutation<
+    ReStoreApiResopnse,
+    ErrorResponse,
+    { UUID: string; type: string }
+  >({
+    mutationFn: async ({ UUID, type }: { UUID: string; type: string }) => {
+      const res = await http.post<ReStoreApiResopnse>(
+        `/file/trash/restore/${UUID}/${type}`
       );
+
+      return res.data;
     },
   });
 }
 
 /**
- * 批量删除文件
+ * 清空垃圾桶
  */
-export function useBatchDeleteFile() {
+export function useDeleteAllTrash() {
+  return useMutation<DeleteAllTrashApiResponse, ErrorResponse, string>({
+    mutationFn: async (bucketName: string) => {
+      const res = await http.delete<DeleteAllTrashApiResponse>(
+        `/file/trash/empty/${bucketName}`
+      );
+
+      return res.data;
+    },
+  });
+}
+
+/**
+ * 上传文件到指定桶
+ */
+export function useUploadFile() {
   return useMutation({
     mutationFn: async ({
       bucket,
-      UUIDs,
+      parentid,
+      files,
     }: {
       bucket: string;
-      UUIDs: BatchDeleteFileRequest;
+      parentid: number;
+      files: File[];
     }) => {
-      try {
-        const res = await http.delete<BatchDeleteFileApiResponse>(
-          `${batchDeleteFilePath}/${bucket}`,
-          {
-            data: UUIDs,
-          }
-        );
-        // message 提示由调用方处理
-        return res;
-      } catch {
-        // message 提示由调用方处理
-        throw new Error('Batch delete failed');
-      }
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append('files', file, encodeURIComponent(file.name));
+      });
+
+      const res = await http.post<UploadFileApiResponse>(
+        `${uploadFilePath}/${bucket}/${parentid}`,
+        formData,
+        {
+          headers: {
+            'Accept-Charset': 'utf-8',
+          },
+        }
+      );
+      return res;
+    },
+  });
+}
+
+/**
+ * 删除单个文件
+ */
+export function useDeleteFile() {
+  return useMutation<
+    DeleteFileApiResponse,
+    ErrorResponse,
+    {
+      bucket: string;
+      UUID: string;
+      type: string;
+    }
+  >({
+    mutationFn: async ({
+      bucket,
+      UUID,
+      type,
+    }: {
+      bucket: string;
+      UUID: string;
+      type: string;
+    }) => {
+      const res = await http.delete<DeleteFileApiResponse>(
+        `/file/${bucket}/${UUID}/${type}`
+      );
+      return res.data;
     },
   });
 }
 
 export function usePushFileDataTrash() {
-  return useMutation({
+  return useMutation<
+    PushFileDataTrashApiResponse,
+    ErrorResponse,
+    {
+      srcBucket: string;
+      UUID: string;
+      type: string;
+    }
+  >({
     mutationFn: async ({
       srcBucket,
       UUID,
+      type,
     }: {
       srcBucket: string;
       UUID: string;
-    }) =>
-      await http.post<PushFileDataTrashApiResponse>(
-        `/file/delete/trash/${srcBucket}/${UUID}`
-      ),
+      type: string;
+    }) => {
+      const res = await http.post<PushFileDataTrashApiResponse>(
+        `/file/trash/move/${srcBucket}/${UUID}/${type}`
+      );
+      return res.data;
+    },
+  });
+}
+
+export function useAddFavorite() {
+  return useMutation<AddFavoriteApiResponse, ErrorResponse, { UUID: string }>({
+    mutationFn: async ({ UUID }) => {
+      const res = await http.post<AddFavoriteApiResponse>(
+        `/file/favorite/${UUID}`
+      );
+      return res.data;
+    },
+  });
+}
+
+export function useRemoveFavorite() {
+  return useMutation<
+    RemoveFavoriteApiResponse,
+    ErrorResponse,
+    { UUID: string }
+  >({
+    mutationFn: async ({ UUID }) => {
+      const res = await http.delete<RemoveFavoriteApiResponse>(
+        `/file/favorite/${UUID}`
+      );
+      return res.data;
+    },
+  });
+}
+
+export function useMarkRecentAccess() {
+  return useMutation<unknown, ErrorResponse, { UUID: string }>({
+    mutationFn: async ({ UUID }) => {
+      const res = await http.post(`/file/recent/access/${UUID}`);
+      return res.data;
+    },
+  });
+}
+
+export function useCreateShare() {
+  return useMutation<CreateShareApiResponse, ErrorResponse, { UUID: string }>({
+    mutationFn: async ({ UUID }) => {
+      const res = await http.post<CreateShareApiResponse>(
+        `/file/share/${UUID}`
+      );
+      return res.data;
+    },
+  });
+}
+
+export function useRevokeShare() {
+  const queryClient = useQueryClient();
+  return useMutation<RevokeShareApiResponse, ErrorResponse, { token: string }>({
+    mutationFn: async ({ token }) => {
+      const res = await http.delete<RevokeShareApiResponse>(
+        `/file/share/${token}`
+      );
+      return res.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['file', 'share'],
+      });
+    },
   });
 }

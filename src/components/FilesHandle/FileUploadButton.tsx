@@ -43,9 +43,13 @@ export default function FileUploadButton({
       />
 
       <button
-        disabled={isFolderSelect}
+        disabled={isFolderSelect || uploading}
         onClick={handleClick}
-        className={`h-8 w-24 ${!uploading ? 'cursor-no-drop bg-gray-300 hover:bg-gray-400' : 'cursor-pointer'} ${isFolderSelect ? 'cursor-no-drop bg-gray-300 hover:bg-gray-400' : 'cursor-pointer'} rounded-lg bg-[#5542f6] text-white transition duration-200 hover:bg-[#4532e6]`}
+        className={`h-8 w-24 rounded-lg text-white transition duration-200 ${
+          isFolderSelect || uploading
+            ? 'cursor-no-drop bg-gray-300 hover:bg-gray-300'
+            : 'cursor-pointer bg-[#5542f6] hover:bg-[#4532e6]'
+        }`}
       >
         {children}
       </button>

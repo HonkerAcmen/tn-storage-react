@@ -9,7 +9,7 @@ import {
 
 import { Menu, MenuProps } from 'antd';
 
-import { JSX, useState, useMemo } from 'react';
+import { JSX, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
 
 import RecentFiles from '../components/layout/RecentFiles';
@@ -21,11 +21,22 @@ import DeletedFiles from '../components/layout/DeletedFiles';
 import Favorites from '../components/layout/Favorites';
 import Header from '../components/layout/Header';
 import UploadMenu from '@/components/secondaryPage/UploadMenu';
+import { useAuthed, useHydrated } from '@/utils/auth';
+import { message } from 'antd';
 
 export default function Home() {
   const router = useRouter();
   const [seleId, setSeleId] = useState('sub1');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const authed = useAuthed();
+  const hydrated = useHydrated();
+  const [messageApi, contextHolder] = message.useMessage();
+
+  useEffect(() => {
+    if (hydrated && !authed) {
+      router.replace('/visitor');
+    }
+  }, [hydrated, authed, router]);
 
   const currentView = useMemo(() => {
     if (router.query.view && typeof router.query.view === 'string') {
@@ -71,8 +82,13 @@ export default function Home() {
     sub5: <DeletedFiles />,
   };
 
+  if (!hydrated || !authed) {
+    return null;
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
+      {contextHolder}
       {/* 顶部导航栏 */}
       <Header />
 
@@ -81,7 +97,14 @@ export default function Home() {
         {/* 左侧边栏 */}
         <aside className="flex flex-col items-center border-r border-gray-200 bg-white">
           <div
-            onClick={() => setShowUploadModal(true)}
+            onClick={() => {
+              if (!authed) {
+                messageApi.info('上传文件需要先登录为普通用户');
+                router.push('/login?tab=login');
+                return;
+              }
+              setShowUploadModal(true);
+            }}
             className="relative mt-6 mb-6 flex h-12 w-[90%] cursor-pointer items-center justify-center rounded-sm border border-gray-200 text-[16px] text-gray-600 transition duration-150 hover:bg-gray-100"
           >
             <AiOutlineCloudUpload className="mr-2 ml-2 flex h-5 w-5 flex-1" />
@@ -90,16 +113,14 @@ export default function Home() {
 
           <Menu
             onClick={onClick}
-            selectedKeys={[currentView]} // 让选中状态与当前一致
+            selectedKeys={[currentView]}
             style={{ width: 240 }}
             items={menuItems}
           />
         </aside>
 
         {/* 主内容区 */}
-        <main className="bg-white">
-          {renderMap[currentView] ?? <div>未知选项</div>}
-        </main>
+        <main className="bg-white">{renderMap[currentView] ?? <div>未知选项</div>}</main>
       </div>
 
       {/* 上传模态框 */}

@@ -1,94 +1,57 @@
-import { useState, useCallback } from 'react';
-import { getFromStorage, saveToStorage } from '@/utils/storage';
+import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  useAddFavorite,
+  useGetFavorites,
+  useRemoveFavorite,
+} from '@/network/hooks/file';
 
-const FAVORITES_STORAGE_KEY = 'favorites';
-
-/**
- * 从 localStorage 获取收藏列表
- */
-function getFavoritesFromStorage(): string[] {
-  return getFromStorage<string[]>(FAVORITES_STORAGE_KEY) || [];
-}
-
-/**
- * 保存收藏列表到 localStorage
- */
-function saveFavoritesToStorage(favorites: string[]): void {
-  saveToStorage(FAVORITES_STORAGE_KEY, favorites);
-}
-
-/**
- * 初始化默认收藏数据
- * ，真实环境下返回空数组
- */
-function initializeDefaultFavorites(): string[] {
-  return [];
-}
-
-/**
- * 收藏管理 Hook
- */
 export function useFavorites() {
-  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
-    const stored = getFavoritesFromStorage();
-    if (stored.length === 0) {
-      return initializeDefaultFavorites();
-    }
-    return stored;
-  });
-
-  const toggleFavorite = useCallback(
-    (fileId: string): boolean => {
-      setFavoriteIds((prev) => {
-        const index = prev.indexOf(fileId);
-        let newFavorites: string[];
-
-        if (index > -1) {
-          // 取消收藏
-          newFavorites = prev.filter((id) => id !== fileId);
-        } else {
-          // 添加收藏
-          newFavorites = [...prev, fileId];
-        }
-
-        saveFavoritesToStorage(newFavorites);
-        return newFavorites;
-      });
-
-      return !favoriteIds.includes(fileId);
-    },
-    [favoriteIds]
-  );
+  const queryClient = useQueryClient();
+  const { data } = useGetFavorites();
+  const addFavoriteMutation = useAddFavorite();
+  const removeFavoriteMutation = useRemoveFavorite();
+  const favoriteUUIDs = data?.data?.data ?? [];
 
   const isFavorite = useCallback(
-    (fileId: string): boolean => {
-      return favoriteIds.includes(fileId);
-    },
-    [favoriteIds]
+    (fileUUID: string): boolean => favoriteUUIDs.includes(fileUUID),
+    [favoriteUUIDs]
   );
 
   const addFavorite = useCallback(
-    (fileId: string): void => {
-      if (!favoriteIds.includes(fileId)) {
-        const newFavorites = [...favoriteIds, fileId];
-        setFavoriteIds(newFavorites);
-        saveFavoritesToStorage(newFavorites);
-      }
+    async (fileUUID: string): Promise<void> => {
+      await addFavoriteMutation.mutateAsync({ UUID: fileUUID });
+      await queryClient.invalidateQueries({ queryKey: ['file', 'favorite'] });
     },
-    [favoriteIds]
+    [addFavoriteMutation, queryClient]
   );
 
   const removeFavorite = useCallback(
-    (fileId: string): void => {
-      const newFavorites = favoriteIds.filter((id) => id !== fileId);
-      setFavoriteIds(newFavorites);
-      saveFavoritesToStorage(newFavorites);
+    async (fileUUID: string): Promise<void> => {
+      await removeFavoriteMutation.mutateAsync({ UUID: fileUUID });
+      await queryClient.invalidateQueries({ queryKey: ['file', 'favorite'] });
     },
-    [favoriteIds]
+    [queryClient, removeFavoriteMutation]
+  );
+
+  const toggleFavorite = useCallback(
+    async (fileUUID: string): Promise<boolean> => {
+      const alreadyFavorite = favoriteUUIDs.includes(fileUUID);
+
+      if (alreadyFavorite) {
+        await removeFavorite(fileUUID);
+        return false;
+      }
+
+      await addFavorite(fileUUID);
+      return true;
+    },
+    [addFavorite, favoriteUUIDs, removeFavorite]
   );
 
   return {
-    favoriteIds,
+    favoriteIds: favoriteUUIDs,
+    favoriteUUIDs,
     toggleFavorite,
     isFavorite,
     addFavorite,

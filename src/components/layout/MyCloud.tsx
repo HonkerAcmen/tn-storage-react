@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Button, Dropdown, message } from 'antd';
+import { Button, Dropdown, Empty, message } from 'antd';
 import {
   AiFillCustomerService,
   AiFillFile,
@@ -14,18 +14,33 @@ import EChart from '@/components/Echart';
 import { useFileData } from '@/contexts/FileDataContext';
 import { useFileActions, useFileMenu } from '@/features/files/hooks';
 import { formatDate, formatFileSize } from '@/utils/format/formatters';
-import { getFileIcon } from '@/components/files/FileIcon';
+import { getFileIcon } from '@/components/FilesHandle/FileIcon';
+import { useGetRecents } from '@/network/hooks/file';
 
 import type { FileSystemTreeNode } from '@/network/types/Response/file';
 import type { TopLevelFormatterParams } from 'echarts/types/dist/shared';
 import FileDetailsModal from '../FilesHandle/FileDetailsModal';
 import { FILE_TYPE_MAP } from '@/utils/fileUtils';
 
+function SectionEmptyState({ description }: { description: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 px-6 py-10">
+      <Empty
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+        description={
+          <span className="text-sm text-gray-500">{description}</span>
+        }
+      />
+    </div>
+  );
+}
+
 export default function MyCloud() {
   const [messageApi, contextHolder] = message.useMessage();
-  const { allFiles, updateFile } = useFileData();
+  const { allFiles, updateFile, openPreviewDialog } = useFileData();
   const { handleFolderNavigation, isFavorite } = useFileActions();
   const { getFileMenuItems } = useFileMenu();
+  const { data: recentsData } = useGetRecents();
 
   // 详情模态框状态
   const [selectedFile, setSelectedFile] = useState<FileSystemTreeNode | null>(
@@ -53,17 +68,20 @@ export default function MyCloud() {
 
   // 获取最近上传的文件（按创建时间排序，取前4个）
   const recentlyUploaded = useMemo(() => {
-    return [...allFiles]
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
+    const fileByUUID = new Map(allFiles.map((file) => [file.UUID, file]));
+    const createdItems = recentsData?.data.data.created ?? [];
+    return createdItems
+      .map((item) => {
+        const file = fileByUUID.get(item.UUID);
+        return file ? { file, time: item.time } : null;
+      })
+      .filter((item): item is { file: FileSystemTreeNode; time: string | null } => !!item)
       .slice(0, 4);
-  }, [allFiles]);
+  }, [allFiles, recentsData]);
 
   // 获取收藏的文件（取前3个）
   const favoriteFiles = useMemo(() => {
-    return allFiles.filter((file) => isFavorite(file.id)).slice(0, 3);
+    return allFiles.filter((file) => isFavorite(file.UUID)).slice(0, 3);
   }, [allFiles, isFavorite]);
 
   // 根据实际文件数据计算存储统计
@@ -82,7 +100,10 @@ export default function MyCloud() {
 
     files.map((file) => {
       const fileSize = parseInt(file.size) || 0;
-      const fileExtName = file.filename.split('.')[1];
+      const fileExtName = file.filename
+        .split('.')
+        [file.filename.split('.').length - 1].toLocaleLowerCase()
+        .trim();
 
       if (!fileExtName) {
         stats.other.count++;
@@ -152,6 +173,11 @@ export default function MyCloud() {
     ];
   }, [allFiles]);
 
+  const hasStorageData = useMemo(
+    () => saveData.some((item) => item.fileSize > 0),
+    [saveData]
+  );
+
   return (
     <>
       {contextHolder}
@@ -166,249 +192,267 @@ export default function MyCloud() {
             <p className="mb-4 text-sm text-[#2e2c34]">从你的活动来看</p>
 
             {/* 自适应网格卡片 */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {recentlyUploaded.map((item) => (
-                <div
-                  key={item.id}
-                  className="group relative flex h-32 cursor-pointer flex-col rounded-2xl border border-gray-100 p-4 transition duration-175 hover:bg-gray-100"
-                  onClick={() => {
-                    if (item.type === 'folder') {
-                      handleFolderClick(item.id);
-                    }
-                  }}
-                >
-                  <div className="mb-2">
-                    {item.type === 'folder' ? (
-                      <div>
-                        <AiFillFolder className="h-10 w-10 text-amber-400" />
-                        <h2 className="line-clamp-1 text-gray-800">
-                          {item.filename}
-                        </h2>
-                        <span className="text-sm text-gray-600">
-                          {formatDate(new Date(item.createdAt))}
-                        </span>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="text-gray-400">
-                          {getFileIcon(item.ext, 'medium')}
-                        </div>
-                        <h2 className="line-clamp-1 text-gray-800">
-                          {item.filename}
-                        </h2>
-                        <span className="text-sm text-gray-600">
-                          {formatDate(new Date(item.createdAt))}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 右下角功能按钮 */}
+            {recentlyUploaded.length === 0 ? (
+              <SectionEmptyState description="无数据" />
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {recentlyUploaded.map(({ file: item, time }) => (
                   <div
-                    className="absolute right-2 bottom-2 opacity-0 transition-opacity group-hover:opacity-100"
-                    onClick={(e) => e.stopPropagation()}
+                    key={item.id}
+                    className="group relative flex h-32 cursor-pointer flex-col rounded-2xl border border-gray-100 p-4 transition duration-175 hover:bg-gray-100"
+                    onClick={() => {
+                      if (item.type === 'folder') {
+                        handleFolderClick(item.id);
+                      } else {
+                        openPreviewDialog(item);
+                      }
+                    }}
                   >
-                    <Dropdown
-                      menu={{
-                        items: getFileMenuItems(item, {
-                          onDetailsOpen: () => {
-                            setSelectedFile(item);
-                            setShowDetails(true);
-                          },
-                          onFolderNavigate: handleFolderClick,
-                        }),
-                        onClick: (e) => {
-                          e.domEvent.stopPropagation();
-                        },
-                      }}
-                      trigger={['click']}
-                      placement="bottomRight"
+                    <div className="mb-2">
+                      {item.type === 'folder' ? (
+                        <div>
+                          <AiFillFolder className="h-10 w-10 text-amber-400" />
+                          <h2 className="line-clamp-1 text-gray-800">
+                            {item.filename}
+                          </h2>
+                          <span className="text-sm text-gray-600">
+                            {formatDate(new Date(time || item.createdAt))}
+                          </span>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="text-gray-400">
+                            {getFileIcon(item.ext, 'medium')}
+                          </div>
+                          <h2 className="line-clamp-1 text-gray-800">
+                            {item.filename}
+                          </h2>
+                          <span className="text-sm text-gray-600">
+                            {formatDate(new Date(time || item.createdAt))}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div
+                      className="absolute right-2 bottom-2 opacity-0 transition-opacity group-hover:opacity-100"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <Button
-                        type="text"
-                        icon={
-                          <AiOutlineEllipsis className="h-5 w-5 text-gray-600" />
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex items-center justify-center"
-                      />
-                    </Dropdown>
+                      <Dropdown
+                        menu={{
+                          items: getFileMenuItems(item, {
+                            onDetailsOpen: () => {
+                              setSelectedFile(item);
+                              setShowDetails(true);
+                            },
+                            onFolderNavigate: handleFolderClick,
+                          }),
+                          onClick: (e) => {
+                            e.domEvent.stopPropagation();
+                          },
+                        }}
+                        trigger={['click']}
+                        placement="bottomRight"
+                      >
+                        <Button
+                          type="text"
+                          icon={
+                            <AiOutlineEllipsis className="h-5 w-5 text-gray-600" />
+                          }
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center justify-center"
+                        />
+                      </Dropdown>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* 最近上传 */}
           <section>
             <p className="mb-4 text-sm text-[#2e2c34]">最近上传</p>
 
-            <ul className="flex flex-col">
-              {recentlyUploaded.slice(0, 3).map((item) => (
-                <li
-                  key={item.id}
-                  className="group relative mb-2 flex h-20 cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-1 transition hover:bg-gray-100"
-                  onClick={() => {
-                    if (item.type === 'folder') {
-                      handleFolderClick(item.id);
-                    }
-                  }}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="text-gray-400">
-                      {item.type === 'folder' ? (
-                        <AiFillFolder className="h-8 w-8 text-amber-400" />
-                      ) : (
-                        getFileIcon(item.ext, 'small')
-                      )}
+            {recentlyUploaded.length === 0 ? (
+              <SectionEmptyState description="无数据" />
+            ) : (
+              <ul className="flex flex-col">
+                {recentlyUploaded.slice(0, 3).map(({ file: item, time }) => (
+                  <li
+                    key={item.id}
+                    className="group relative mb-2 flex h-20 cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-1 transition hover:bg-gray-100"
+                    onClick={() => {
+                      if (item.type === 'folder') {
+                        handleFolderClick(item.id);
+                      } else {
+                        openPreviewDialog(item);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="text-gray-400">
+                        {item.type === 'folder' ? (
+                          <AiFillFolder className="h-8 w-8 text-amber-400" />
+                        ) : (
+                          getFileIcon(item.ext, 'small')
+                        )}
+                      </div>
+                      <p className="text-gray-700">{item.filename}</p>
                     </div>
-                    <p className="text-gray-700">{item.filename}</p>
-                  </div>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <span>添加于 {formatDate(new Date(item.createdAt))}</span>
+                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <span>添加于 {formatDate(new Date(time || item.createdAt))}</span>
 
-                    {/* 右下角功能按钮 */}
-                    <div
-                      className="opacity-0 transition-opacity group-hover:opacity-100"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Dropdown
-                        menu={{
-                          items: getFileMenuItems(item, {
-                            onDetailsOpen: () => {
-                              setSelectedFile(item);
-                              setShowDetails(true);
-                            },
-                            onFolderNavigate: handleFolderClick,
-                          }),
-                          onClick: (e) => {
-                            e.domEvent.stopPropagation();
-                          },
-                        }}
-                        trigger={['click']}
-                        placement="bottomRight"
+                      <div
+                        className="opacity-0 transition-opacity group-hover:opacity-100"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <Button
-                          type="text"
-                          icon={
-                            <AiOutlineEllipsis className="h-5 w-5 text-gray-600" />
-                          }
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex items-center justify-center"
-                        />
-                      </Dropdown>
+                        <Dropdown
+                          menu={{
+                            items: getFileMenuItems(item, {
+                              onDetailsOpen: () => {
+                                setSelectedFile(item);
+                                setShowDetails(true);
+                              },
+                              onFolderNavigate: handleFolderClick,
+                            }),
+                            onClick: (e) => {
+                              e.domEvent.stopPropagation();
+                            },
+                          }}
+                          trigger={['click']}
+                          placement="bottomRight"
+                        >
+                          <Button
+                            type="text"
+                            icon={
+                              <AiOutlineEllipsis className="h-5 w-5 text-gray-600" />
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center justify-center"
+                          />
+                        </Dropdown>
+                      </div>
                     </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           {/* 已收藏 */}
           <section>
             <p className="mb-4 text-sm text-[#2e2c34]">已收藏</p>
 
-            <ul className="flex flex-col divide-y divide-gray-200">
-              {favoriteFiles.map((item) => (
-                <li
-                  key={item.id}
-                  className="group relative mb-2 flex h-16 cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-1 transition duration-150 hover:bg-gray-50"
-                  onClick={() => {
-                    if (item.type === 'folder') {
-                      handleFolderClick(item.id);
-                    }
-                  }}
-                >
-                  <div className="flex items-center space-x-3">
-                    {item.type === 'folder' ? (
-                      <AiFillFolder className="h-8 w-8 text-amber-400" />
-                    ) : (
-                      <div className="text-gray-400">
-                        {getFileIcon(item.ext, 'small')}
-                      </div>
-                    )}
-                    <p className="text-gray-700">{item.filename}</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <AiFillStar className="mr-2 h-6 w-6 text-amber-400" />
-                    {/* 右下角功能按钮 */}
-                    <div
-                      className="opacity-0 transition-opacity group-hover:opacity-100"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Dropdown
-                        menu={{
-                          items: getFileMenuItems(item, {
-                            onDetailsOpen: () => {
-                              setSelectedFile(item);
-                              setShowDetails(true);
-                            },
-                            onFolderNavigate: handleFolderClick,
-                          }),
-                          onClick: (e) => {
-                            e.domEvent.stopPropagation();
-                          },
-                        }}
-                        trigger={['click']}
-                        placement="bottomRight"
-                      >
-                        <Button
-                          type="text"
-                          icon={
-                            <AiOutlineEllipsis className="h-5 w-5 text-gray-600" />
-                          }
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex items-center justify-center"
-                        />
-                      </Dropdown>
+            {favoriteFiles.length === 0 ? (
+              <SectionEmptyState description="无数据" />
+            ) : (
+              <ul className="flex flex-col divide-y divide-gray-200">
+                {favoriteFiles.map((item) => (
+                  <li
+                    key={item.id}
+                    className="group relative mb-2 flex h-16 cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-1 transition duration-150 hover:bg-gray-50"
+                    onClick={() => {
+                      if (item.type === 'folder') {
+                        handleFolderClick(item.id);
+                      } else {
+                        openPreviewDialog(item);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {item.type === 'folder' ? (
+                        <AiFillFolder className="h-8 w-8 text-amber-400" />
+                      ) : (
+                        <div className="text-gray-400">
+                          {getFileIcon(item.ext, 'small')}
+                        </div>
+                      )}
+                      <p className="text-gray-700">{item.filename}</p>
                     </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    <div className="flex items-center space-x-2">
+                      <AiFillStar className="mr-2 h-6 w-6 text-amber-400" />
+                      <div
+                        className="opacity-0 transition-opacity group-hover:opacity-100"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Dropdown
+                          menu={{
+                            items: getFileMenuItems(item, {
+                              onDetailsOpen: () => {
+                                setSelectedFile(item);
+                                setShowDetails(true);
+                              },
+                              onFolderNavigate: handleFolderClick,
+                            }),
+                            onClick: (e) => {
+                              e.domEvent.stopPropagation();
+                            },
+                          }}
+                          trigger={['click']}
+                          placement="bottomRight"
+                        >
+                          <Button
+                            type="text"
+                            icon={
+                              <AiOutlineEllipsis className="h-5 w-5 text-gray-600" />
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center justify-center"
+                          />
+                        </Dropdown>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         </div>
 
         {/* ================= 右侧图表 ================= */}
         <div className="col-span-4 rounded-2xl bg-white p-6">
           <h2 className="mb-4 text-lg font-semibold text-gray-800">存储大小</h2>
-          <div
-            className="flex h-50 items-center justify-center rounded-xl text-gray-400"
-            style={{ boxShadow: '0px 0px 5px #eaeaea' }}
-          >
-            <EChart
-              option={{
-                tooltip: {
-                  trigger: 'item',
-                  formatter: (params: TopLevelFormatterParams) => {
-                    // 处理数组或单个对象的情况
-                    const param = Array.isArray(params) ? params[0] : params;
-                    const item = saveData.find((d) => d.name === param.name);
-                    if (item) {
-                      return `${param.name}<br/>${item.fileNumber} 个文件<br/>${formatFileSize(item.fileSize)}`;
-                    }
-                    return `${param.name}: ${param.value}`;
+          {hasStorageData ? (
+            <div
+              className="flex h-50 items-center justify-center rounded-xl text-gray-400"
+              style={{ boxShadow: '0px 0px 5px #eaeaea' }}
+            >
+              <EChart
+                option={{
+                  tooltip: {
+                    trigger: 'item',
+                    formatter: (params: TopLevelFormatterParams) => {
+                      const param = Array.isArray(params) ? params[0] : params;
+                      const item = saveData.find((d) => d.name === param.name);
+                      if (item) {
+                        return `${param.name}<br/>${item.fileNumber} 个文件<br/>${formatFileSize(item.fileSize)}`;
+                      }
+                      return `${param.name}: ${param.value}`;
+                    },
                   },
-                },
-                series: [
-                  {
-                    name: '存储大小',
-                    type: 'pie',
-                    radius: ['40%', '50%'],
-                    center: ['50%', '70%'],
-                    startAngle: 180,
-                    endAngle: 360,
-                    data: saveData
-                      .filter((item) => item.fileSize > 0) // 只显示有数据的类型
-                      .map((item) => ({
-                        value: item.fileSize,
-                        name: item.name,
-                      })),
-                  },
-                ],
-              }}
-            />
-          </div>
+                  series: [
+                    {
+                      name: '存储大小',
+                      type: 'pie',
+                      radius: ['40%', '50%'],
+                      center: ['50%', '70%'],
+                      startAngle: 180,
+                      endAngle: 360,
+                      data: saveData
+                        .filter((item) => item.fileSize > 0)
+                        .map((item) => ({
+                          value: item.fileSize,
+                          name: item.name,
+                        })),
+                    },
+                  ],
+                }}
+              />
+            </div>
+          ) : (
+            <SectionEmptyState description="无数据" />
+          )}
           <ul className="mt-4">
             {saveData.map((item, i) => (
               <li

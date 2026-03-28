@@ -28,10 +28,15 @@ export function searchNodes(
 
   const allNodes = mapToList(fileMap);
   const lowerKeyword = keyword.toLowerCase();
+  if (allNodes.length <= 0) {
+    return [];
+  }
 
   return allNodes.filter((node) => {
     const displayName =
-      node.type === 'file' && node.ext ? `${node.name}.${node.ext}` : node.name;
+      node.type === 'file' && node.ext
+        ? `${node.filename}.${node.ext}`
+        : node.filename;
     return displayName.toLowerCase().includes(lowerKeyword);
   });
 }
@@ -147,7 +152,11 @@ export function updateNodeInTree(
     // 根据节点类型分别处理，确保类型安全
     if (node.type === 'folder') {
       // 如果是根节点 (FileSystemTreeResponse)
-      if (node.name === 'root' && node.parent_id === 0 && 'children' in node) {
+      if (
+        node.filename === 'root' &&
+        node.parent_id === 0 &&
+        'children' in node
+      ) {
         return {
           ...node,
           ...updates,
@@ -181,7 +190,11 @@ export function updateNodeInTree(
         .filter((child): child is FileSystemTreeNode => child !== null);
 
       // 如果是根节点，返回 FileSystemTreeResponse
-      if (node.name === 'root' && node.parent_id === 0 && 'children' in node) {
+      if (
+        node.filename === 'root' &&
+        node.parent_id === 0 &&
+        'children' in node
+      ) {
         return {
           ...node,
           children: updatedChildren,

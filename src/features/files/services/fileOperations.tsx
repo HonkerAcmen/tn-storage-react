@@ -1,5 +1,12 @@
-import { Modal } from 'antd';
-import { FileSystemTreeNode } from '@/network/types/Response/file';
+import { message } from 'antd';
+import http from '@/network/http';
+import { getFilePath } from '@/network/resPath';
+import {
+  FileSystemTreeNode,
+  GetFileChunkManifestApiResponse,
+} from '@/network/types/Response/file';
+import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
+import { queryClient } from '@/network/queryClient';
 
 /**
  * 文件操作服务
@@ -8,82 +15,77 @@ import { FileSystemTreeNode } from '@/network/types/Response/file';
  */
 
 /**
+ * 获取文件 Blob 数据，供预览和下载复用
+ */
+export async function fetchFileBlob(
+  file: FileSystemTreeNode
+): Promise<{ blob: Blob; filename: string; mimetype: string }> {
+  const manifestRes = await http.get<GetFileChunkManifestApiResponse>(
+    `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunks`
+  );
+  const manifest = manifestRes.data.data;
+  const chunkBuffers: BlobPart[] = [];
+
+  for (let chunkIndex = 1; chunkIndex <= manifest.totalChunks; chunkIndex++) {
+    const chunkRes = await http.get<Blob>(
+      `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunk/${chunkIndex}`,
+      {
+        responseType: 'blob',
+      }
+    );
+    chunkBuffers.push(chunkRes.data);
+  }
+
+  return {
+    blob: new Blob(chunkBuffers, { type: manifest.mimetype }),
+    filename: manifest.filename,
+    mimetype: manifest.mimetype,
+  };
+}
+
+/**
  * 下载文件
  */
-export function downloadFile(file: FileSystemTreeNode): void {
+export async function downloadFile(file: FileSystemTreeNode): Promise<void> {
   if (file.type === 'folder') {
-    // 消息提示由调用方处理
     return;
   }
 
-  // TODO: 实现真实的下载逻辑
-  // 消息提示由调用方处理
-
-  // 示例：创建下载链接
-  // const url = `/api/files/${file.id}/download`;
-  // const link = document.createElement('a');
-  // link.href = url;
-  // link.download = file.type === 'file' && file.ext ? `${file.name}.${file.ext}` : file.name;
-  // link.click();
+  try {
+    const { blob, filename } = await fetchFileBlob(file);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('下载分片失败:', err);
+    message.error('后端服务器不可用');
+  }
 }
 
 /**
  * 分享文件
  */
-export function shareFile(file: FileSystemTreeNode): void {
-  // TODO: 实现真实的分享逻辑
-  // 消息提示由调用方处理
-  // 示例：生成分享链接
-  // const shareUrl = `${window.location.origin}/share/${file.id}`;
-  // navigator.clipboard.writeText(shareUrl);
-  // message.success('分享链接已复制到剪贴板');
-}
-
-/**
- * 重命名文件
- * @param messageApi - 用于显示消息的 API，由调用方传入
- */
-export function renameFile(
+export async function shareFile(
   file: FileSystemTreeNode,
-  onUpdate: (
-    fileId: string,
-    updates: Partial<FileSystemTreeNode>
-  ) => Promise<void>,
-  messageApi?: {
-    success: (content: string) => void;
-    error: (content: string) => void;
+  shouldNotify = true
+): Promise<void> {
+  if (file.type === 'folder') {
+    message.error('当前仅支持分享文件');
+    return;
   }
-): void {
-  Modal.confirm({
-    title: '重命名',
-    content: (
-      <div className="mt-4">
-        <input
-          type="text"
-          id="rename-input"
-          defaultValue={file.name}
-          className="w-full rounded border border-gray-300 px-3 py-2"
-          autoFocus
-        />
-      </div>
-    ),
-    onOk: async () => {
-      const input = document.getElementById('rename-input') as HTMLInputElement;
-      const newName = input?.value.trim();
 
-      if (!newName || newName === file.name) {
-        return;
-      }
-
-      try {
-        await onUpdate(file.id, { name: newName });
-        messageApi?.success('重命名成功');
-      } catch (error) {
-        console.error(error);
-        messageApi?.error('重命名失败');
-      }
-    },
-  });
+  const res = await http.post(`/file/share/${file.UUID}`);
+  const shareUrl = res.data.data.url;
+  await navigator.clipboard.writeText(shareUrl);
+  await queryClient.invalidateQueries({ queryKey: ['file', 'share'] });
+  if (shouldNotify) {
+    message.success('已复制');
+  }
 }
 
 /**

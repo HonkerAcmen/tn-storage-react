@@ -1,16 +1,33 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { Tabs, Tag } from 'antd';
+import { Empty, Tabs, Tag } from 'antd';
 import type { TabsProps } from 'antd';
 import { AiOutlineClockCircle } from 'react-icons/ai';
 import FileListItem from '@/components/FileListItem';
 import { formatRelativeTime, formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
+import { useGetRecents } from '@/network/hooks/file';
+
+function SectionEmptyState() {
+  return (
+    <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 px-6 py-10">
+      <Empty
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+        description={<span className="text-sm text-gray-500">无数据</span>}
+      />
+    </div>
+  );
+}
 
 export default function RecentFiles() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('recent');
-  const { allFiles } = useFileData();
+  const { allFiles, openPreviewDialog } = useFileData();
+  const { data: recentsData } = useGetRecents();
+
+  const fileByUUID = useMemo(() => {
+    return new Map(allFiles.map((file) => [file.UUID, file]));
+  }, [allFiles]);
 
   // 处理文件夹点击 - 导航到"所有文件"视图
   const handleFolderClick = (folderId: string) => {
@@ -26,37 +43,48 @@ export default function RecentFiles() {
 
   // 最近访问的文件（按 updatedAt 排序）
   const recentlyAccessed = useMemo(() => {
-    return [...allFiles]
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    const recentItems = recentsData?.data.data.recent ?? [];
+    return recentItems
+      .map((item) => {
+        const file = fileByUUID.get(item.UUID);
+        return file ? { file, time: item.time } : null;
+      })
+      .filter(
+        (item): item is { file: NonNullable<(typeof fileByUUID extends Map<any, infer V> ? V : never)>; time: string | null } =>
+          !!item
       )
       .slice(0, 20);
-  }, [allFiles]);
+  }, [fileByUUID, recentsData]);
 
   // 最近上传的文件（按 createdAt 排序）
   const recentlyCreated = useMemo(() => {
-    return [...allFiles]
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    const createdItems = recentsData?.data.data.created ?? [];
+    return createdItems
+      .map((item) => {
+        const file = fileByUUID.get(item.UUID);
+        return file ? { file, time: item.time } : null;
+      })
+      .filter(
+        (item): item is { file: NonNullable<(typeof fileByUUID extends Map<any, infer V> ? V : never)>; time: string | null } =>
+          !!item
       )
       .slice(0, 20);
-  }, [allFiles]);
+  }, [fileByUUID, recentsData]);
 
   // 最近修改的文件（按 updatedAt 排序，排除今天创建的）
   const recentlyModified = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return [...allFiles]
-      .filter((file) => new Date(file.createdAt) < today)
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    const modifiedItems = recentsData?.data.data.modified ?? [];
+    return modifiedItems
+      .map((item) => {
+        const file = fileByUUID.get(item.UUID);
+        return file ? { file, time: item.time } : null;
+      })
+      .filter(
+        (item): item is { file: NonNullable<(typeof fileByUUID extends Map<any, infer V> ? V : never)>; time: string | null } =>
+          !!item
       )
       .slice(0, 20);
-  }, [allFiles]);
+  }, [fileByUUID, recentsData]);
 
   const tabItems: TabsProps['items'] = [
     {
@@ -68,22 +96,28 @@ export default function RecentFiles() {
         </span>
       ),
       children: (
-        <ul className="flex flex-col space-y-2">
-          {recentlyAccessed.map((item) => (
-            <FileListItem
-              key={item.id}
-              file={item}
-              showSize
-              showTime
-              timeValue={`${formatRelativeTime(new Date(item.updatedAt))} • 修改于 ${formatDate(new Date(item.updatedAt))}`}
-              onClick={() => {
-                if (item.type === 'folder') {
-                  handleFolderClick(item.id);
-                }
-              }}
-            />
-          ))}
-        </ul>
+        recentlyAccessed.length === 0 ? (
+          <SectionEmptyState />
+        ) : (
+          <ul className="flex flex-col space-y-2">
+            {recentlyAccessed.map(({ file: item, time }) => (
+              <FileListItem
+                key={item.id}
+                file={item}
+                showSize
+                showTime
+                timeValue={`${formatRelativeTime(new Date(time || item.updatedAt))} • 访问于 ${formatDate(new Date(time || item.updatedAt))}`}
+                onClick={() => {
+                  if (item.type === 'folder') {
+                    handleFolderClick(item.id);
+                  } else {
+                    openPreviewDialog(item);
+                  }
+                }}
+              />
+            ))}
+          </ul>
+        )
       ),
     },
     {
@@ -95,29 +129,35 @@ export default function RecentFiles() {
         </span>
       ),
       children: (
-        <ul className="flex flex-col space-y-2">
-          {recentlyCreated.map((item) => (
-            <FileListItem
-              key={item.id}
-              file={item}
-              showSize
-              showTime
-              timeValue={`${formatRelativeTime(new Date(item.createdAt))} • 上传于 ${formatDate(new Date(item.createdAt))}`}
-              actions={
-                item.type === 'file' && (
-                  <Tag color="green" className="mr-2">
-                    新上传
-                  </Tag>
-                )
-              }
-              onClick={() => {
-                if (item.type === 'folder') {
-                  handleFolderClick(item.id);
+        recentlyCreated.length === 0 ? (
+          <SectionEmptyState />
+        ) : (
+          <ul className="flex flex-col space-y-2">
+            {recentlyCreated.map(({ file: item, time }) => (
+              <FileListItem
+                key={item.id}
+                file={item}
+                showSize
+                showTime
+                timeValue={`${formatRelativeTime(new Date(time || item.createdAt))} • 上传于 ${formatDate(new Date(time || item.createdAt))}`}
+                actions={
+                  item.type === 'file' && (
+                    <Tag color="green" className="mr-2">
+                      新上传
+                    </Tag>
+                  )
                 }
-              }}
-            />
-          ))}
-        </ul>
+                onClick={() => {
+                  if (item.type === 'folder') {
+                    handleFolderClick(item.id);
+                  } else {
+                    openPreviewDialog(item);
+                  }
+                }}
+              />
+            ))}
+          </ul>
+        )
       ),
     },
     {
@@ -129,29 +169,35 @@ export default function RecentFiles() {
         </span>
       ),
       children: (
-        <ul className="flex flex-col space-y-2">
-          {recentlyModified.map((item) => (
-            <FileListItem
-              key={item.id}
-              file={item}
-              showSize
-              showTime
-              timeValue={`${formatRelativeTime(new Date(item.updatedAt))} • 修改于 ${formatDate(new Date(item.updatedAt))}`}
-              actions={
-                item.type === 'file' && (
-                  <Tag color="orange" className="mr-2">
-                    已修改
-                  </Tag>
-                )
-              }
-              onClick={() => {
-                if (item.type === 'folder') {
-                  handleFolderClick(item.id);
+        recentlyModified.length === 0 ? (
+          <SectionEmptyState />
+        ) : (
+          <ul className="flex flex-col space-y-2">
+            {recentlyModified.map(({ file: item, time }) => (
+              <FileListItem
+                key={item.id}
+                file={item}
+                showSize
+                showTime
+                timeValue={`${formatRelativeTime(new Date(time || item.updatedAt))} • 修改于 ${formatDate(new Date(time || item.updatedAt))}`}
+                actions={
+                  item.type === 'file' && (
+                    <Tag color="orange" className="mr-2">
+                      已修改
+                    </Tag>
+                  )
                 }
-              }}
-            />
-          ))}
-        </ul>
+                onClick={() => {
+                  if (item.type === 'folder') {
+                    handleFolderClick(item.id);
+                  } else {
+                    openPreviewDialog(item);
+                  }
+                }}
+              />
+            ))}
+          </ul>
+        )
       ),
     },
   ];

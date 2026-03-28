@@ -1,9 +1,16 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import http from '@/network/http';
 import {
   AvatarUploadApiResponse,
+  AdminUserRoleResponse,
+  ChangePasswordApiResponse,
+  GetAdminUsersApiResponse,
   GetUserAvatarApiResponse,
+  GetUserLoginHistoryApiResponse,
+  GetUserSettingsApiResponse,
   GetUserWithNameApiResponse,
+  GetUserStorageApiResponse,
+  UpdateUserSettingsApiResponse,
   UpdateUserDataApiResponse,
 } from '@/network/types/Response/user';
 import {
@@ -11,7 +18,12 @@ import {
   GetUserAvatarPath,
   getUserWithNamePath,
 } from '../resPath';
-import { UpdateUserDataRequest } from '@/network/types/Request/user';
+import {
+  ChangePasswordRequest,
+  UpdateUserDataRequest,
+  UpdateUserSettingsRequest,
+} from '@/network/types/Request/user';
+import { isAuthed } from '@/utils/auth';
 
 export function useGetUserWithName(username: string) {
   return useQuery({
@@ -26,6 +38,19 @@ export function useGetUserWithName(username: string) {
   });
 }
 
+export function useGetMyProfile() {
+  const authed = isAuthed();
+  return useQuery({
+    queryKey: ['user', 'profile', 'me'],
+    queryFn: async () => {
+      const res =
+        await http.get<GetUserWithNameApiResponse>('/user/profile/me');
+      return res;
+    },
+    enabled: authed,
+  });
+}
+
 export function useGetAvatar(username: string) {
   return useQuery({
     queryKey: ['user', 'avatar', username],
@@ -36,6 +61,18 @@ export function useGetAvatar(username: string) {
       return res;
     },
     enabled: !!username,
+  });
+}
+
+export function useGetMyAvatar() {
+  const authed = isAuthed();
+  return useQuery({
+    queryKey: ['user', 'avatar', 'me'],
+    queryFn: async () => {
+      const res = await http.get<GetUserAvatarApiResponse>('/user/avatar/me');
+      return res;
+    },
+    enabled: authed,
   });
 }
 
@@ -68,6 +105,28 @@ export function useAvatarUpload() {
   });
 }
 
+export function useAvatarUploadMe() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ file }: { file: File }) => {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      return await http.post<AvatarUploadApiResponse>(
+        '/user/avatar/upload/me',
+        formData
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['user', 'avatar', 'me'],
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['user', 'avatar', 'me'],
+      });
+    },
+  });
+}
+
 export function useUpdateUserData() {
   return useMutation({
     mutationFn: async (userdata: UpdateUserDataRequest) => {
@@ -82,6 +141,146 @@ export function useUpdateUserData() {
         // message 提示由调用方处理
         throw new Error('Update failed');
       }
+    },
+  });
+}
+
+export function useUpdateMyUserData() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (userdata: UpdateUserDataRequest) => {
+      return await http.post<UpdateUserDataApiResponse>(
+        '/user/update/me',
+        userdata
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['user', 'profile', 'me'],
+      });
+    },
+  });
+}
+
+export function useGetMyStorage() {
+  const authed = isAuthed();
+  return useQuery({
+    queryKey: ['user', 'storage', 'me'],
+    queryFn: async () => {
+      return await http.get<GetUserStorageApiResponse>('/user/storage/me');
+    },
+    enabled: authed,
+  });
+}
+
+export function useGetMySettings() {
+  const authed = isAuthed();
+  return useQuery({
+    queryKey: ['user', 'settings', 'me'],
+    queryFn: async () => {
+      return await http.get<GetUserSettingsApiResponse>('/user/settings/me');
+    },
+    enabled: authed,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useGetAdminUsers(enabled = true) {
+  return useQuery({
+    queryKey: ['user', 'admin', 'users'],
+    queryFn: async () => {
+      return await http.get<GetAdminUsersApiResponse>('/user/admin/users');
+    },
+    enabled,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useUpdateMySettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (settings: UpdateUserSettingsRequest) => {
+      return await http.post<UpdateUserSettingsApiResponse>(
+        '/user/settings/me',
+        settings
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['user', 'settings', 'me'],
+      });
+    },
+  });
+}
+
+export function useResetMyPermissions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      return await http.post<GetUserSettingsApiResponse>(
+        '/user/settings/me/reset-permissions'
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['user', 'settings', 'me'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['user', 'admin', 'users'],
+      });
+    },
+  });
+}
+
+export function useUpdateUserRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      role,
+    }: {
+      id: number;
+      role: AdminUserRoleResponse['role'];
+    }) => {
+      return await http.put('/user/admin/role/' + id, { role });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['user', 'admin', 'users'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['user', 'settings', 'me'],
+      });
+    },
+  });
+}
+
+export function useGetMyLoginHistory() {
+  const authed = isAuthed();
+  return useQuery({
+    queryKey: ['user', 'security', 'login-history'],
+    queryFn: async () => {
+      return await http.get<GetUserLoginHistoryApiResponse>(
+        '/user/security/login-history'
+      );
+    },
+    enabled: authed,
+  });
+}
+
+export function useChangeMyPassword() {
+  return useMutation({
+    mutationFn: async (payload: ChangePasswordRequest) => {
+      return await http.put<ChangePasswordApiResponse>(
+        '/user/changePassword/me',
+        payload
+      );
     },
   });
 }

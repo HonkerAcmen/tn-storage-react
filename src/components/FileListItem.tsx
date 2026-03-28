@@ -1,7 +1,7 @@
 import { Typography, Space, Tag, Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { AiFillFolder, AiOutlineEllipsis } from 'react-icons/ai';
-import { getFileIcon, ICON_SIZE_MEDIUM } from './files/FileIcon';
+import { getFileIcon, ICON_SIZE_MEDIUM } from './FilesHandle/FileIcon';
 import { formatFileSize } from '@/utils/format/formatters';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 
@@ -42,7 +42,15 @@ export default function FileListItem({
         {file.type === 'folder' ? (
           <AiFillFolder className={`${ICON_SIZE_MEDIUM} text-amber-400`} />
         ) : (
-          <div className="text-gray-400">{getFileIcon(file.ext, 'small')}</div>
+          <div className="text-gray-400">
+            {getFileIcon(
+              file.filename
+                .split('.')
+                [file.filename.split('.').length - 1].toLocaleLowerCase()
+                .trim(),
+              'small'
+            )}
+          </div>
         )}
         <div className="flex flex-col">
           <Space>

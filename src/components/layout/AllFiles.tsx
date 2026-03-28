@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { Empty, Button, message, Dropdown } from 'antd';
+import { Empty, Button, message, Dropdown, Modal } from 'antd';
 import type { MenuProps } from 'antd';
+
 import {
   AiOutlineAppstore,
   AiOutlineCaretDown,
@@ -21,9 +22,14 @@ import FileListItem from '@/components/FileListItem';
 import { useFileActions, useFileMenu } from '@/features/files/hooks';
 import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
-import { getFileIcon, ICON_SIZE_LARGE } from '@/components/files/FileIcon';
+import {
+  getFileIcon,
+  ICON_SIZE_LARGE,
+} from '@/components/FilesHandle/FileIcon';
 import { Breadcrumb } from 'antd';
 import FileDetailsModal from '../FilesHandle/FileDetailsModal';
+import { useCreateFolder } from '@/network/hooks/file';
+import { queryClient } from '@/network/queryClient';
 
 interface MenuItemNameProps {
   key: number;
@@ -36,10 +42,10 @@ type SortType = 'latest' | 'oldest' | 'name' | 'type';
 export default function AllFiles() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
-  const { fileTree, updateFile, fileMap } = useFileData();
+  const { fileTree, updateFile, fileMap, openPreviewDialog } = useFileData();
 
   // 获取当前文件夹ID，如果没有则在根路径下显示根目录的直接子节点
-  const currentFolderId = router.query.folderId as string | undefined;
+  const currentFolderId = router.query.folderId as string | '1';
 
   // 0: 列表模式, 1: 网格模式
   const [seleRadioItem, setSeleRadioItem] = useState(1);
@@ -83,6 +89,23 @@ export default function AllFiles() {
     null
   );
   const [showDetails, setShowDetails] = useState(false);
+
+  const [showActionMenu, setShowActionMenu] = useState(false);
+  const [actionMenuPos, setActionMenuPos] = useState({
+    x: 0,
+    y: 0,
+  });
+
+  const activeMenuRef = useRef<HTMLDivElement>(null);
+
+  const [showFolderNameInputElem, setShowFolderNameInputElem] = useState(false);
+
+  const folderInputRef = useRef<HTMLInputElement>(null);
+
+  const createFolder = useCreateFolder();
+
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  // *************************函数定义区***************************** //
 
   // 获取当前要显示的文件列表
   const currentFiles = useMemo(() => {
@@ -181,10 +204,91 @@ export default function AllFiles() {
     }
   };
 
+  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setActionMenuPos({
+      x: event.clientX,
+      y: event.clientY,
+    });
+    setShowActionMenu(true);
+  };
+
+  const handleClick = (event: MouseEvent) => {
+    if (
+      activeMenuRef &&
+      !activeMenuRef.current?.contains(event.target as Node)
+    ) {
+      setShowActionMenu(false); // 点击其他地方时隐藏菜单
+    }
+  };
+
+  function handleFolderInputModal() {
+    if (folderInputRef.current) {
+      setConfirmLoading(true);
+      createFolder.mutate(
+        {
+          foldername: folderInputRef.current.value,
+          parent: currentFolderId ? currentFolderId : '1',
+        },
+        {
+          onSuccess: (res) => {
+            queryClient.invalidateQueries({
+              queryKey: ['file', 'data', 'tree'],
+            });
+            queryClient.invalidateQueries({
+              queryKey: ['file', 'recent'],
+            });
+            queryClient.refetchQueries({
+              queryKey: ['file', 'data', 'tree'],
+              type: 'active',
+            });
+            queryClient.refetchQueries({
+              queryKey: ['file', 'recent'],
+              type: 'active',
+            });
+            messageApi.success(res.message);
+            // 关闭加载状态
+            setConfirmLoading(false);
+
+            // 关闭文件夹模态框
+            setShowFolderNameInputElem(false);
+
+            // 清空输入栏数据
+            if (folderInputRef.current) {
+              folderInputRef.current.value = '';
+            }
+          },
+          onError: (err) => {
+            setConfirmLoading(false);
+            // 判断err.message为一个object
+            if (
+              Object.prototype.toString.call(err.message) === '[object Object]'
+            ) {
+              messageApi.error('未知错误, 请稍后重试');
+            } else {
+              // 如果不是就是普通的字符串message
+              messageApi.error(err.message);
+            }
+          },
+        }
+      );
+    }
+  }
+
+  useEffect(() => {
+    // 添加事件监听
+    document.addEventListener('click', handleClick);
+
+    // 清除事件监听
+    return () => {
+      document.removeEventListener('click', handleClick);
+    };
+  }, []);
+
   return (
     <>
       {contextHolder}
-      <div className="ml-4">
+      <div className="relative ml-4 h-screen" onContextMenu={handleContextMenu}>
         {/* 头部 Header */}
         <div className="mt-4 mb-6 flex flex-row items-center justify-between">
           <div className="mb-4 flex flex-col">
@@ -312,7 +416,7 @@ export default function AllFiles() {
                       <Button
                         type="text"
                         icon={
-                          isFavorite(item.id) ? (
+                          isFavorite(item.UUID) ? (
                             <AiFillStar className="h-5 w-5 text-amber-400" />
                           ) : (
                             <AiOutlineStar className="h-5 w-5 text-gray-400" />
@@ -335,8 +439,7 @@ export default function AllFiles() {
                       if (item.type === 'folder') {
                         handleFolderClick(item.id);
                       } else {
-                        setSelectedFile(item);
-                        setShowDetails(true);
+                        openPreviewDialog(item);
                       }
                     }}
                   />
@@ -367,9 +470,7 @@ export default function AllFiles() {
                   if (item.type === 'folder') {
                     handleFolderClick(item.id);
                   } else {
-                    // 打开文件详情
-                    setSelectedFile(item);
-                    setShowDetails(true);
+                    openPreviewDialog(item);
                   }
                 }}
               >
@@ -398,7 +499,7 @@ export default function AllFiles() {
                         type="text"
                         size="small"
                         icon={
-                          isFavorite(item.id) ? (
+                          isFavorite(item.UUID) ? (
                             <AiFillStar className="h-4 w-4 text-amber-400" />
                           ) : (
                             <AiOutlineStar className="h-4 w-4 text-gray-400" />
@@ -488,6 +589,40 @@ export default function AllFiles() {
             }}
           />
         )}
+
+        {showActionMenu && (
+          <div
+            className="absolute flex h-10 w-40 cursor-pointer items-center justify-center rounded-lg border border-gray-200 text-gray-800 transition duration-200 hover:border-gray-400"
+            ref={activeMenuRef}
+            style={{
+              top: `${actionMenuPos.y - 75}px`, // 使用内联样式来设置动态位置
+              left: `${actionMenuPos.x - 245}px`, // 使用内联样式来设置动态位置
+              zIndex: 1000,
+            }}
+            onClick={() => setShowFolderNameInputElem(true)}
+          >
+            <div>新建文件夹</div>
+          </div>
+        )}
+
+        <Modal
+          title={'文件夹创建'}
+          open={showFolderNameInputElem}
+          onOk={handleFolderInputModal}
+          okText={'确认'}
+          cancelText={'取消'}
+          confirmLoading={confirmLoading}
+          onCancel={() => setShowFolderNameInputElem(false)}
+        >
+          {/* 中间 */}
+
+          <input
+            className="w-full rounded-lg border border-gray-200 p-2 text-sm tracking-wider text-gray-800"
+            type="text"
+            ref={folderInputRef}
+          />
+          {/* 足部 */}
+        </Modal>
       </div>
     </>
   );

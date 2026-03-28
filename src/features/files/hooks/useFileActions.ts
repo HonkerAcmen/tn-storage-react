@@ -6,6 +6,7 @@ import { useDeletedFiles } from './useDeletedFiles';
 import { useFileData } from '@/contexts/FileDataContext';
 import * as fileOperations from '@/features/files/services/fileOperations';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
+import { useGetMySettings } from '@/network/hooks/user';
 
 /**
  * 文件操作 Hook
@@ -16,7 +17,9 @@ export function useFileActions() {
   const router = useRouter();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addDeletedFile } = useDeletedFiles();
-  const { updateFile, deleteFile } = useFileData();
+  const { openRenameDialog, openTransferDialog } = useFileData();
+  const { data: settingsResponse } = useGetMySettings();
+  const settings = settingsResponse?.data?.data;
 
   /**
    * 处理文件操作
@@ -32,28 +35,43 @@ export function useFileActions() {
     ) => {
       switch (action) {
         case 'download':
-          fileOperations.downloadFile(item);
+          void fileOperations.downloadFile(item);
           break;
         case 'share':
-          fileOperations.shareFile(item);
+          if (!(settings?.allow_share ?? false)) {
+            messageApi.error('当前账户未开启分享权限');
+            break;
+          }
+          void fileOperations.shareFile(
+            item,
+            settings?.share_notification ?? true
+          );
           break;
         case 'rename':
-          fileOperations.renameFile(item, updateFile, messageApi);
+          openRenameDialog(item);
+          break;
+        case 'move':
+          openTransferDialog(item, 'move');
+          break;
+        case 'copy':
+          openTransferDialog(item, 'copy');
           break;
         case 'delete':
           // 先添加到已删除列表
-          addDeletedFile(item);
-          // 然后从文件树中删除
-          deleteFile(item.id);
-          messageApi.success(`已删除 ${item.filename}`);
+          addDeletedFile(item.UUID, item.type);
           break;
         case 'details':
           options?.onDetailsOpen?.(item);
           break;
         case 'favorite': {
-          const wasFavorite = isFavorite(item.id);
-          toggleFavorite(item.id);
-          messageApi.success(wasFavorite ? '已取消收藏' : '已添加到收藏');
+          const wasFavorite = isFavorite(item.UUID);
+          void toggleFavorite(item.UUID)
+            .then((isNowFavorite) => {
+              messageApi.success(isNowFavorite ? '已添加到收藏' : '已取消收藏');
+            })
+            .catch(() => {
+              messageApi.error(wasFavorite ? '取消收藏失败' : '收藏失败');
+            });
           break;
         }
         case 'openFolder':
@@ -66,11 +84,12 @@ export function useFileActions() {
       }
     },
     [
-      updateFile,
+      openRenameDialog,
+      openTransferDialog,
       messageApi,
       addDeletedFile,
-      deleteFile,
       isFavorite,
+      settings,
       toggleFavorite,
     ]
   );

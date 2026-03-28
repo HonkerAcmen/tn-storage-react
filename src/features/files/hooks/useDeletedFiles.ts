@@ -1,109 +1,151 @@
-import { useState, useCallback } from 'react';
-import { getFromStorage, saveToStorage } from '@/utils/storage';
-import { FileSystemTreeNode } from '@/network/types/Response/file';
-
-const DELETED_FILES_STORAGE_KEY = 'deletedFiles';
-
-/**
- * 已删除文件的数据结构
- */
-export interface DeletedFileItem {
-  file: FileSystemTreeNode;
-  deletedAt: Date;
-}
-
-/**
- * 从存储中读取的原始格式（日期为字符串）
- */
-interface DeletedFileItemRaw {
-  file: FileSystemTreeNode & {
-    createdAt: string | Date;
-    updatedAt: string | Date;
-  };
-  deletedAt: string | Date;
-}
-
-/**
- * 从 localStorage 获取已删除文件列表
- */
-function getDeletedFilesFromStorage(): DeletedFileItem[] {
-  const stored = getFromStorage<DeletedFileItemRaw[]>(
-    DELETED_FILES_STORAGE_KEY
-  );
-  if (!stored) return [];
-
-  // 将日期字符串转换回 Date 对象
-  return stored.map((item) => ({
-    file: {
-      ...item.file,
-      createdAt: item.file.createdAt,
-      updatedAt: item.file.updatedAt,
-    },
-    deletedAt: new Date(item.deletedAt),
-  }));
-}
-
-/**
- * 初始化默认已删除文件数据
- * 只在 Mock 模式下初始化，真实环境下返回空数组
- */
-function initializeDefaultDeletedFiles(): DeletedFileItem[] {
-  return [];
-}
-
-/**
- * 保存已删除文件列表到 localStorage
- */
-function saveDeletedFilesToStorage(deletedFiles: DeletedFileItem[]): void {
-  saveToStorage(DELETED_FILES_STORAGE_KEY, deletedFiles);
-}
+import { useCallback, useMemo } from 'react';
+import {
+  useDeleteAllTrash,
+  useDeleteFile,
+  useGetDelListInTrash,
+  usePushFileDataTrash,
+  useReStore,
+} from '@/network/hooks/file';
+import { message } from 'antd';
+import { useQueryClient } from '@tanstack/react-query';
+import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
 
 /**
  * 已删除文件管理 Hook
  */
 export function useDeletedFiles() {
-  const [deletedFiles, setDeletedFiles] = useState<DeletedFileItem[]>(() => {
-    const stored = getDeletedFilesFromStorage();
-    if (stored.length === 0) {
-      return initializeDefaultDeletedFiles();
-    }
-    return stored;
-  });
+  const { data: delListData } = useGetDelListInTrash();
+  const pushFileDataTrash = usePushFileDataTrash();
+  const deleteAllTrash = useDeleteAllTrash();
+  const deleteFile = useDeleteFile();
+  const restore = useReStore();
 
-  const addDeletedFile = useCallback((file: FileSystemTreeNode): void => {
-    setDeletedFiles((prev) => {
-      // 检查文件是否已经在已删除列表中
-      const exists = prev.some((item) => item.file.id === file.id);
-      if (exists) {
-        // 如果已存在，不重复添加
-        return prev;
-      }
+  const queryClient = useQueryClient();
+  const messageApi = message;
 
-      const deletedItem: DeletedFileItem = {
-        file,
-        deletedAt: new Date(),
-      };
-      const newDeletedFiles = [...prev, deletedItem];
-      saveDeletedFilesToStorage(newDeletedFiles);
-      return newDeletedFiles;
+  const delList = useMemo(() => {
+    return Array.from(delListData?.data.data ?? []);
+  }, [delListData]);
+
+  const addDeletedFile = useCallback(
+    (UUID: string, type: string) => {
+      return new Promise<void>((resolve, reject) =>
+        pushFileDataTrash.mutate(
+          {
+            srcBucket: DEFAULT_BUCKET,
+            UUID,
+            type,
+          },
+          {
+            onSuccess: () => {
+              messageApi.success('已移入回收站');
+              // 使得查询失效，触发重新获取
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'data', 'tree'],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'data', 'trash'],
+              });
+              resolve();
+            },
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onError: (error: any) => {
+              const errorMsg = error?.message || '未知错误';
+              messageApi.error(`删除失败: ${errorMsg}`);
+              reject(error);
+            },
+          }
+        )
+      );
+    },
+    [pushFileDataTrash, queryClient, messageApi]
+  );
+
+  const restoreFn = useCallback(
+    (UUID: string, type: string): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        restore.mutate(
+          { UUID, type },
+          {
+            onSuccess: () => {
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'data', 'tree'],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'data', 'trash'],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'favorite'],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'recent'],
+              });
+
+              resolve('文件已恢复');
+            },
+            onError: (err) => {
+              reject(err.message);
+            },
+          }
+        );
+      });
+    },
+    [queryClient, restore]
+  );
+
+  const removeDeletedFile = useCallback(
+    (UUID: string, type: string): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        deleteFile.mutate(
+          {
+            bucket: 'trash',
+            UUID,
+            type,
+          },
+          {
+            onSuccess: () => {
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'data', 'trash'],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'favorite'],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'recent'],
+              });
+              resolve('已永久删除');
+            },
+            onError: (err) => {
+              reject(err.message);
+            },
+          }
+        );
+      });
+    },
+    [deleteFile, queryClient]
+  );
+
+  /**
+   * 清空回收站
+   * 由调用方负责展示 message 提示
+   */
+  const clearDeletedFiles = useCallback(async (): Promise<void> => {
+    await deleteAllTrash.mutateAsync('trash');
+    queryClient.invalidateQueries({
+      queryKey: ['file', 'data', 'trash'],
     });
-  }, []);
-
-  const removeDeletedFile = useCallback((fileId: string): void => {
-    setDeletedFiles((prev) => {
-      const newDeletedFiles = prev.filter((item) => item.file.id !== fileId);
-      saveDeletedFilesToStorage(newDeletedFiles);
-      return newDeletedFiles;
+    queryClient.invalidateQueries({
+      queryKey: ['file', 'favorite'],
     });
-  }, []);
-
-  const clearDeletedFiles = useCallback((): void => {
-    setDeletedFiles([]);
-    saveDeletedFilesToStorage([]);
-  }, []);
+    queryClient.invalidateQueries({
+      queryKey: ['file', 'recent'],
+    });
+  }, [deleteAllTrash, queryClient]);
 
   return {
-    deletedFiles,
+    deletedFiles: delList,
+    restoreFn,
     addDeletedFile,
     removeDeletedFile,
     clearDeletedFiles,

@@ -3,10 +3,85 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --panel-bg: #ffffff;
+  --panel-muted: #f9fafb;
+  --panel-soft: #f3f4f6;
+  --border-color: #e5e7eb;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+:root[data-theme='dark'] {
+  --background: #0f172a;
+  --foreground: #e5e7eb;
+  --panel-bg: #111827;
+  --panel-muted: #1f2937;
+  --panel-soft: #374151;
+  --border-color: #334155;
+}
+
+:root[data-theme='dark'] body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+:root[data-theme='dark'] .bg-white {
+  background-color: var(--panel-bg) !important;
+}
+
+:root[data-theme='dark'] .bg-gray-50,
+:root[data-theme='dark'] .bg-gray-50\/50 {
+  background-color: var(--panel-muted) !important;
+}
+
+:root[data-theme='dark'] .bg-gray-100 {
+  background-color: var(--panel-soft) !important;
+}
+
+:root[data-theme='dark'] .border-gray-200,
+:root[data-theme='dark'] .border-gray-100 {
+  border-color: var(--border-color) !important;
+}
+
+:root[data-theme='dark'] .text-gray-800,
+:root[data-theme='dark'] .text-\[\#2e2c34\] {
+  color: #f3f4f6 !important;
+}
+
+:root[data-theme='dark'] .text-gray-700,
+:root[data-theme='dark'] .text-gray-600 {
+  color: #d1d5db !important;
+}
+
+:root[data-theme='dark'] .text-gray-500,
+:root[data-theme='dark'] .text-gray-400 {
+  color: #9ca3af !important;
+}
+
+:root[data-theme='dark'] .ant-modal-content,
+:root[data-theme='dark'] .ant-modal-header,
+:root[data-theme='dark'] .ant-modal-footer,
+:root[data-theme='dark'] .ant-dropdown,
+:root[data-theme='dark'] .ant-dropdown-menu,
+:root[data-theme='dark'] .ant-descriptions-view,
+:root[data-theme='dark'] .ant-input,
+:root[data-theme='dark'] .ant-input-affix-wrapper,
+:root[data-theme='dark'] .ant-select-selector {
+  background: var(--panel-bg) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border-color) !important;
+}
+
+:root[data-theme='dark'] .ant-descriptions-item-label,
+:root[data-theme='dark'] .ant-descriptions-item-content,
+:root[data-theme='dark'] .ant-modal-title,
+:root[data-theme='dark'] .ant-dropdown-menu-title-content {
+  color: var(--foreground) !important;
 }

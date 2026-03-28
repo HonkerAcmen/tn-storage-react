@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Modal,
   Descriptions,
@@ -12,18 +12,22 @@ import {
 } from 'antd';
 import {
   AiFillFolder,
+  AiOutlineCopy,
+  AiOutlineEye,
   AiOutlineDownload,
   AiOutlineShareAlt,
   AiOutlineEdit,
   AiOutlineCheck,
-  AiOutlineClose,
+  AiOutlineFolderOpen,
 } from 'react-icons/ai';
 
-import { getFileIcon } from '@/components/files/FileIcon';
+import { getFileIcon } from '@/components/FilesHandle/FileIcon';
 import { formatFileSize, formatDateTime } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { findPathToNode } from '@/utils/fileSystem/fileSystemUtils';
+import * as fileOperations from '@/features/files/services/fileOperations';
+import { useGetMySettings } from '@/network/hooks/user';
 
 interface FileDetailsModalProps {
   open: boolean;
@@ -42,49 +46,51 @@ export default function FileDetailsModal({
   onUpdate,
 }: FileDetailsModalProps) {
   const [messageApi, contextHolder] = message.useMessage();
-  const { fileTree } = useFileData();
+  const { fileTree, openPreviewDialog, openTransferDialog } = useFileData();
+  const { data: settingsResponse } = useGetMySettings();
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
+  const settings = settingsResponse?.data?.data;
 
-  // 获取文件路径
-  const getFilePath = (nodeId: string): string => {
-    const path = findPathToNode(fileTree, nodeId);
+  // 1. 提取文件名和后缀的解析逻辑 (useMemo 避免重复计算)
+  const fileInfo = useMemo(() => {
+    if (!file || file.type === 'folder')
+      return { name: file?.filename || '', ext: '' };
+
+    const lastDotIndex = file.filename.lastIndexOf('.');
+    // 处理无后缀或以点开头的隐藏文件
+    if (lastDotIndex <= 0) return { name: file.filename, ext: '' };
+
+    return {
+      name: file.filename.substring(0, lastDotIndex),
+      ext: file.filename.substring(lastDotIndex + 1).toLowerCase(),
+    };
+  }, [file]);
+
+  // 2. 获取文件全路径
+  const filePath = useMemo(() => {
+    if (!file || !open) return '';
+    const path = findPathToNode(fileTree, file.id);
     return path
       .map((node) => (node.filename === 'root' ? '根目录' : node.filename))
       .join(' / ');
-  };
-  const [isEditing, setIsEditing] = useState(false);
-  const [form] = Form.useForm();
-  const previousFileIdRef = useRef<string | null>(null);
+  }, [file, fileTree, open]);
 
+  // 3. 当文件切换或 Modal 打开时，重置表单和编辑状态
   useEffect(() => {
-    if (file && open) {
-      const fileId = file.id;
-      const isNewFile = previousFileIdRef.current !== fileId;
-
-      if (isNewFile) {
-        // 分离文件名和扩展名
-        if (file.type === 'file' && file.ext) {
-          const nameWithoutExt = file.filename.replace(`.${file.ext}`, '');
-          form.setFieldsValue({
-            name: nameWithoutExt,
-            ext: file.ext,
-          });
-        } else {
-          form.setFieldsValue({
-            name: file.filename,
-          });
-        }
-        previousFileIdRef.current = fileId;
-        // 使用 setTimeout 来避免在 effect 中同步调用 setState
-        setTimeout(() => setIsEditing(false), 0);
-      }
+    if (open && file) {
+      form.setFieldsValue({
+        name: fileInfo.name,
+        ext: fileInfo.ext,
+      });
+      setIsEditing(false);
     }
-  }, [file, form, open]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file?.id, open, fileInfo, form]);
 
   if (!file) return null;
 
-  const filePath = getFilePath(file.id);
-
-  // 处理保存编辑
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
@@ -93,32 +99,37 @@ export default function FileDetailsModal({
           ? `${values.name}.${values.ext}`
           : values.name;
 
-      // 调用更新回调
+      setLoading(true);
       if (onUpdate) {
         await onUpdate(file.id, {
           filename: newName,
-          updatedAt: new Date().toLocaleString(),
+          updatedAt: new Date().toISOString(),
         });
       }
-
-      messageApi.success('保存成功！');
+      messageApi.success('更新成功');
       setIsEditing(false);
     } catch (error) {
-      console.error('Validation failed:', error);
+      console.error('Save failed:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // 取消编辑
-  const handleCancel = () => {
-    form.resetFields();
-    setIsEditing(false);
-  };
-
-  // 处理 Modal 关闭
   const handleClose = () => {
     setIsEditing(false);
-    form.resetFields();
     onClose();
+  };
+
+  // 渲染图标逻辑
+  const renderIcon = (size: 'small' | 'large') => {
+    if (file.type === 'folder') {
+      return (
+        <AiFillFolder
+          className={`${size === 'large' ? 'h-24 w-24' : 'h-8 w-8'} text-amber-400`}
+        />
+      );
+    }
+    return getFileIcon(fileInfo.ext, size);
   };
 
   return (
@@ -128,154 +139,143 @@ export default function FileDetailsModal({
       footer={null}
       width={600}
       title={
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            {file.type === 'folder' ? (
-              <AiFillFolder className="h-8 w-8 text-amber-400" />
-            ) : (
-              <div className="text-gray-400">
-                {getFileIcon(file.ext, 'small')}
-              </div>
-            )}
-            <span className="text-lg font-semibold">文件详情</span>
+        <div className="flex items-center space-x-3">
+          <div className={file.type === 'folder' ? '' : 'text-gray-400'}>
+            {renderIcon('small')}
           </div>
+          <span className="text-lg font-semibold">文件详情</span>
         </div>
       }
-      className="file-details-modal"
     >
       {contextHolder}
       <Form form={form} layout="vertical" onFinish={handleSave}>
         <div className="space-y-6">
-          {/* 文件图标和名称 */}
-          <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-gray-50 p-6">
-            <div className="mb-4">
-              {file.type === 'folder' ? (
-                <AiFillFolder className="h-24 w-24 text-amber-400" />
-              ) : (
-                <div className="text-gray-400">
-                  {getFileIcon(file.ext, 'large')}
-                </div>
+          {/* 文件预览区 */}
+          <div className="flex flex-col items-center justify-center rounded-lg border border-gray-100 bg-gray-50/50 p-8">
+            <div className="mb-4">{renderIcon('large')}</div>
+            <h3 className="mb-2 text-center text-xl font-semibold break-all text-gray-800">
+              {file.filename}
+            </h3>
+            <Space>
+              <Tag color={file.type === 'file' ? 'blue' : 'orange'}>
+                {file.type === 'file' ? '文件' : '文件夹'}
+              </Tag>
+              {fileInfo.ext && (
+                <Tag color="green">{fileInfo.ext.toUpperCase()}</Tag>
               )}
-            </div>
-            {
-              <>
-                <h3 className="mb-2 text-xl font-semibold text-gray-800">
-                  {file.filename}
-                </h3>
-                <Space>
-                  {file.type === 'file' ? (
-                    <Tag color="blue">文件</Tag>
-                  ) : (
-                    <Tag color="orange">文件夹</Tag>
-                  )}
-                  {file.type === 'file' && file.ext && (
-                    <Tag color="green">{file.ext.toUpperCase()}</Tag>
-                  )}
-                </Space>
-              </>
-            }
+            </Space>
           </div>
 
           <Divider />
 
-          {/* 详细信息 */}
-          <Descriptions column={1} bordered>
+          {/* 详细信息列表 */}
+          <Descriptions
+            column={1}
+            bordered
+            size="small"
+            labelStyle={{ width: '120px', fontWeight: 500 }}
+          >
             <Descriptions.Item label="名称">
               {isEditing ? (
                 <Form.Item
                   name="name"
-                  rules={[
-                    { required: true, message: '请输入名称' },
-                    { min: 1, message: '名称至少1个字符' },
-                    { max: 255, message: '名称最多255个字符' },
-                  ]}
+                  rules={[{ required: true, message: '请输入名称' }]}
                   className="mb-0"
                 >
-                  <Input placeholder="请输入名称" />
+                  <Input
+                    placeholder="文件名"
+                    suffix={fileInfo.ext ? `.${fileInfo.ext}` : null}
+                  />
                 </Form.Item>
               ) : (
-                <span>{file.filename}</span>
-              )}
-            </Descriptions.Item>
-
-            <Descriptions.Item label="类型">
-              {file.type === 'file' ? (
-                <Space>
-                  <Tag color="blue">文件</Tag>
-                  {file.ext && (
-                    <Tag color="green">{file.ext.toUpperCase()}</Tag>
-                  )}
-                </Space>
-              ) : (
-                <Tag color="orange">文件夹</Tag>
+                <span className="break-all">{file.filename}</span>
               )}
             </Descriptions.Item>
 
             {file.type === 'file' && (
               <Descriptions.Item label="大小">
-                {formatFileSize(parseInt(file.size))}
+                {formatFileSize(Number(file.size))}
               </Descriptions.Item>
             )}
 
-            <Descriptions.Item label="位置">
+            <Descriptions.Item label="存储位置">
               <span className="text-gray-600">{filePath}</span>
-            </Descriptions.Item>
-
-            <Descriptions.Item label="创建时间">
-              {formatDateTime(new Date(file.createdAt))}
             </Descriptions.Item>
 
             <Descriptions.Item label="修改时间">
               {formatDateTime(new Date(file.updatedAt))}
             </Descriptions.Item>
 
-            <Descriptions.Item label="文件ID">
-              <span className="font-mono text-xs text-gray-500">{file.id}</span>
+            <Descriptions.Item label="文件 ID">
+              <span className="font-mono text-xs text-gray-400">{file.id}</span>
             </Descriptions.Item>
           </Descriptions>
         </div>
 
-        {/* 操作按钮 */}
-        <div className="flex items-center justify-end space-x-3 border-t border-gray-200 pt-4">
+        {/* 底部操作栏 */}
+        <div className="mt-8 flex items-center justify-end space-x-3 pt-4">
           {isEditing ? (
             <>
-              <Button icon={<AiOutlineClose />} onClick={handleCancel}>
-                取消
-              </Button>
+              <Button onClick={() => setIsEditing(false)}>取消</Button>
               <Button
                 type="primary"
+                loading={loading}
                 icon={<AiOutlineCheck />}
                 onClick={handleSave}
-                className="bg-[#5542f6] hover:bg-[#4532e6]"
+                className="bg-indigo-600"
               >
-                保存
+                保存修改
               </Button>
             </>
           ) : (
             <>
               <Button
+                icon={<AiOutlineEye />}
+                disabled={file.type === 'folder' ? false : !(settings?.allow_file_download ?? true)}
+                onClick={() => openPreviewDialog(file)}
+              >
+                预览
+              </Button>
+              <Button
                 icon={<AiOutlineDownload />}
-                onClick={() => {
-                  messageApi.info(`正在下载 ${file.filename}...`);
-                }}
+                disabled={file.type === 'folder' || !(settings?.allow_file_download ?? true)}
+                onClick={() => void fileOperations.downloadFile(file)}
               >
                 下载
               </Button>
               <Button
                 icon={<AiOutlineShareAlt />}
-                onClick={() => {
-                  messageApi.info(`正在分享 ${file.filename}...`);
-                }}
+                disabled={!(settings?.allow_share ?? false)}
+                onClick={() =>
+                  void fileOperations.shareFile(
+                    file,
+                    settings?.share_notification ?? true
+                  )
+                }
               >
                 分享
+              </Button>
+              <Button
+                icon={<AiOutlineFolderOpen />}
+                disabled={!(settings?.allow_file_upload ?? true)}
+                onClick={() => openTransferDialog(file, 'move')}
+              >
+                移动
+              </Button>
+              <Button
+                icon={<AiOutlineCopy />}
+                disabled={!(settings?.allow_file_upload ?? true)}
+                onClick={() => openTransferDialog(file, 'copy')}
+              >
+                复制
               </Button>
               <Button
                 type="primary"
                 icon={<AiOutlineEdit />}
                 onClick={() => setIsEditing(true)}
-                className="bg-[#5542f6] hover:bg-[#4532e6]"
+                className="bg-indigo-600"
               >
-                编辑
+                重命名
               </Button>
             </>
           )}

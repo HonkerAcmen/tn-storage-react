@@ -42,7 +42,7 @@ function formatDeletedTime(date: Date): string {
 export default function DeletedFiles() {
   const [messageApi, messageContextHolder] = message.useMessage();
   const [modal, modalContextHolder] = Modal.useModal();
-  const { deletedFiles, removeDeletedFile, clearDeletedFiles } =
+  const { deletedFiles, removeDeletedFile, clearDeletedFiles, restoreFn } =
     useDeletedFiles();
   const { updateFile } = useFileData();
 
@@ -55,7 +55,8 @@ export default function DeletedFiles() {
   // 按删除时间排序（最新的在前）
   const sortedDeletedFiles = useMemo(() => {
     return [...deletedFiles].sort(
-      (a, b) => b.deletedAt.getTime() - a.deletedAt.getTime()
+      (a, b) =>
+        new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime()
     );
   }, [deletedFiles]);
 
@@ -73,13 +74,22 @@ export default function DeletedFiles() {
   };
 
   // 恢复文件
-  const handleRestore = (fileId: string) => {
-    removeDeletedFile(fileId);
-    messageApi.success('文件已恢复');
+  const handleRestore = (UUID: string, type: string) => {
+    restoreFn(UUID, type)
+      .then((msg) => {
+        messageApi.success(msg);
+      })
+      .catch((err) => {
+        messageApi.error(err);
+      });
   };
 
   // 永久删除文件
-  const handlePermanentDelete = (fileId: string, fileName: string) => {
+  const handlePermanentDelete = (
+    UUID: string,
+    fileName: string,
+    type: string
+  ) => {
     modal.confirm({
       title: '确认永久删除',
       content: `确定要永久删除 "${fileName}" 吗？此操作无法撤销。`,
@@ -87,8 +97,13 @@ export default function DeletedFiles() {
       okType: 'danger',
       cancelText: '取消',
       onOk() {
-        removeDeletedFile(fileId);
-        messageApi.success('文件已永久删除');
+        removeDeletedFile(UUID, type)
+          .then((msg) => {
+            messageApi.success(msg);
+          })
+          .catch((err) => {
+            messageApi.error(err);
+          });
       },
     });
   };
@@ -101,9 +116,14 @@ export default function DeletedFiles() {
       okText: '确认清空',
       okType: 'danger',
       cancelText: '取消',
-      onOk() {
-        clearDeletedFiles();
-        messageApi.success('回收站已清空');
+      async onOk() {
+        try {
+          await clearDeletedFiles();
+          messageApi.success('回收站已清空');
+        } catch (err) {
+          const msg = (err as Error)?.message || '清空回收站失败，请稍后重试';
+          messageApi.error(msg);
+        }
       },
     });
   };
@@ -112,10 +132,10 @@ export default function DeletedFiles() {
   const handleFileAction = (action: string, item: FileSystemTreeNode) => {
     switch (action) {
       case 'restore':
-        handleRestore(item.id);
+        handleRestore(item.UUID, item.type);
         break;
       case 'permanentDelete':
-        handlePermanentDelete(item.id, item.filename);
+        handlePermanentDelete(item.UUID, item.filename, item.type);
         break;
       case 'details':
         setSelectedFile(item);
@@ -204,9 +224,9 @@ export default function DeletedFiles() {
       ) : (
         <ul className="mr-8 flex flex-col space-y-2">
           {sortedDeletedFiles.map((deletedItem, index) => {
-            const item = deletedItem.file;
+            const item = deletedItem;
             // 使用组合 key 确保唯一性：文件 ID + 删除时间戳 + 索引
-            const uniqueKey = `${item.id}-${deletedItem.deletedAt.getTime()}-${index}`;
+            const uniqueKey = `${item.id}-${new Date(deletedItem.deletedAt).getTime()}-${index}`;
             return (
               <FileListItem
                 key={uniqueKey}
@@ -218,8 +238,8 @@ export default function DeletedFiles() {
                 timeValue={
                   <>
                     <AiOutlineClockCircle className="mr-1 inline" />
-                    {formatDeletedTime(deletedItem.deletedAt)} • 创建于{' '}
-                    {formatDate(new Date(item.createdAt))}
+                    {formatDeletedTime(new Date(deletedItem.deletedAt))} •
+                    创建于 {formatDate(new Date(item.createdAt))}
                   </>
                 }
                 actions={
@@ -228,7 +248,7 @@ export default function DeletedFiles() {
                     icon={<AiOutlineRest className="h-5 w-5 text-blue-500" />}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleRestore(item.id);
+                      handleRestore(item.UUID, item.type);
                     }}
                     className="flex items-center justify-center"
                   >
@@ -261,4 +281,4 @@ export default function DeletedFiles() {
 }
 
 // 导出删除文件相关的工具函数，供其他组件使用
-export { useDeletedFiles, type DeletedFileItem } from '@/features/files/hooks';
+export { useDeletedFiles } from '@/features/files/hooks';

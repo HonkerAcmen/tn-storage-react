@@ -4,9 +4,11 @@ import {
   useCallback,
   ReactNode,
   useMemo,
+  useState,
 } from 'react';
-import { message } from 'antd';
+import { Input, Modal, message } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
+import http from '@/network/http';
 
 import {
   useGetFileSystemTree,
@@ -15,6 +17,8 @@ import {
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
 import { mapToList } from '@/utils/fileSystem/fileSystemUtils';
+import FilePreviewModal from '@/components/FilesHandle/FilePreviewModal';
+import FolderItem from '@/components/FilesHandle/FolderItem';
 
 // --- 类型定义 ---
 
@@ -42,7 +46,13 @@ interface FileDataContextType {
     fileId: string,
     updates: Partial<FileSystemTreeNode>
   ) => Promise<void>;
-  deleteFile: (fileId: string) => Promise<void>;
+  openRenameDialog: (file: FileSystemTreeNode) => void;
+  openPreviewDialog: (file: FileSystemTreeNode) => void;
+  openTransferDialog: (
+    file: FileSystemTreeNode,
+    mode: 'move' | 'copy'
+  ) => void;
+  deleteFile: (UUID: string, type: string) => Promise<void>;
   refreshFiles: () => void;
 }
 
@@ -61,6 +71,13 @@ const EMPTY_ROOT: FileSystemTreeNode = {
   updatedAt: new Date('2024-01-01').toISOString(),
   children: [],
 };
+
+function cloneEmptyRoot(): FileSystemTreeNode {
+  return {
+    ...EMPTY_ROOT,
+    children: [],
+  };
+}
 
 /**
  * 转换后端数据格式到前端格式（纯函数）
@@ -82,6 +99,34 @@ const transformTreeNode = (node: BackendTreeNode): FileSystemTreeNode => {
   };
 };
 
+function normalizeFileTreeData(
+  rawData: FileSystemTreeNode | BackendTreeNode | Array<FileSystemTreeNode | BackendTreeNode>
+): FileSystemTreeNode {
+  if (!rawData) {
+    return cloneEmptyRoot();
+  }
+
+  if (Array.isArray(rawData)) {
+    const root = cloneEmptyRoot();
+    root.children = rawData.map((node) => transformTreeNode(node as BackendTreeNode));
+    return root;
+  }
+
+  const normalizedNode = transformTreeNode(rawData as BackendTreeNode);
+
+  if (
+    normalizedNode.type === 'folder' &&
+    normalizedNode.parent_id === 0 &&
+    normalizedNode.filename === 'root'
+  ) {
+    return normalizedNode;
+  }
+
+  const root = cloneEmptyRoot();
+  root.children = [normalizedNode];
+  return root;
+}
+
 /**
  * 构造缓存表
  * @param root 整个文件结构的根结点
@@ -93,6 +138,7 @@ function buildFileMap(
   const map = new Map<string, FileSystemTreeNode>();
 
   function transformation(root: FileSystemTreeNode) {
+    if (!root) return;
     map.set(root.id, root);
 
     if ('children' in root && root.children) {
@@ -115,6 +161,20 @@ const FileDataContext = createContext<FileDataContextType | undefined>(
 export function FileDataProvider({ children }: { children: ReactNode }) {
   const [messageApi, contextHolder] = message.useMessage();
   const queryClient = useQueryClient();
+  const [renameTarget, setRenameTarget] = useState<FileSystemTreeNode | null>(
+    null
+  );
+  const [renameValue, setRenameValue] = useState('');
+  const [renameLoading, setRenameLoading] = useState(false);
+  const [previewTarget, setPreviewTarget] = useState<FileSystemTreeNode | null>(
+    null
+  );
+  const [transferTarget, setTransferTarget] =
+    useState<FileSystemTreeNode | null>(null);
+  const [transferMode, setTransferMode] = useState<'move' | 'copy'>('move');
+  const [transferTargetId, setTransferTargetId] = useState('1');
+  const [transferTargetKey, setTransferTargetKey] = useState('');
+  const [transferLoading, setTransferLoading] = useState(false);
 
   // 1. 获取数据
   const {
@@ -128,16 +188,15 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   const fileTree = useMemo(() => {
     const fstData = fileSystemTreeData?.data?.data;
 
-    if (!fstData) {
+    if (!fstData || (Array.isArray(fstData) && fstData.length <= 0)) {
       return EMPTY_ROOT;
     }
 
-    // // 兼容后端可能返回数组或单个对象的情况
-    return Array.isArray(fstData) ? fstData[0] : fstData;
+    return normalizeFileTreeData(fstData);
   }, [fileSystemTreeData]);
 
   // 初始化为文件映射表
-  const fileMap = buildFileMap(fileTree);
+  const fileMap = useMemo(() => buildFileMap(fileTree), [fileTree]);
 
   // 3. 计算 allFiles (Memoized)
   // 这里修正为 扁平化所有文件
@@ -152,21 +211,58 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   // 4. 操作方法
   const updateFile = useCallback(
     async (fileId: string, updates: Partial<FileSystemTreeNode>) => {
-      // TODO: 实现 update 逻辑
-      // 建议：使用 queryClient.setQueryData 进行乐观更新 (Optimistic Update)
-      console.log('Update file placeholder', fileId, updates);
-      return Promise.resolve();
+      const target = fileMap.get(fileId);
+      if (!target) {
+        throw new Error('文件未找到');
+      }
+
+      if (updates.filename !== undefined) {
+        const filename = updates.filename.trim();
+        if (!filename) {
+          throw new Error('文件名不能为空');
+        }
+
+        await http.put(`/file/rename/${target.UUID}`, {
+          filename,
+        });
+
+        await queryClient.invalidateQueries({
+          queryKey: ['file', 'data', 'tree'],
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ['file', 'recent'],
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ['file', 'favorite'],
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['file', 'data', 'tree'],
+          type: 'active',
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['file', 'recent'],
+          type: 'active',
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['file', 'favorite'],
+          type: 'active',
+        });
+        return;
+      }
+
+      throw new Error('当前仅支持重命名操作');
     },
-    []
+    [fileMap, queryClient]
   );
 
   const deleteFile = useCallback(
-    async (fileId: string) =>
+    async (UUID: string, type: string) =>
       new Promise<void>((resolve, reject) =>
         pushFileDataTrash.mutate(
           {
             srcBucket: DEFAULT_BUCKET,
-            UUID: fileId,
+            UUID,
+            type,
           },
           {
             onSuccess: () => {
@@ -174,6 +270,12 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
               // 使得查询失效，触发重新获取
               queryClient.invalidateQueries({
                 queryKey: ['file', 'data', 'tree'],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'favorite'],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ['file', 'recent'],
               });
               resolve();
             },
@@ -189,6 +291,122 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
     [pushFileDataTrash, messageApi, queryClient]
   );
 
+  const openRenameDialog = useCallback((file: FileSystemTreeNode) => {
+    setRenameTarget(file);
+    setRenameValue(file.filename);
+  }, []);
+
+  const openPreviewDialog = useCallback((file: FileSystemTreeNode) => {
+    setPreviewTarget(file);
+  }, []);
+
+  const openTransferDialog = useCallback(
+    (file: FileSystemTreeNode, mode: 'move' | 'copy') => {
+      setTransferTarget(file);
+      setTransferMode(mode);
+      setTransferTargetId('1');
+      setTransferTargetKey(fileTree.UUID);
+    },
+    [fileTree.UUID]
+  );
+
+  const handleRenameConfirm = useCallback(async () => {
+    if (!renameTarget) {
+      return;
+    }
+
+    const nextName = renameValue.trim();
+    if (!nextName) {
+      messageApi.error('文件名不能为空');
+      return;
+    }
+
+    if (nextName === renameTarget.filename) {
+      setRenameTarget(null);
+      setRenameValue('');
+      return;
+    }
+
+    try {
+      setRenameLoading(true);
+      await updateFile(renameTarget.id, { filename: nextName });
+      messageApi.success('重命名成功');
+      setRenameTarget(null);
+      setRenameValue('');
+    } catch (error) {
+      const err = error as { message?: string };
+      messageApi.error(err?.message || '重命名失败');
+    } finally {
+      setRenameLoading(false);
+    }
+  }, [messageApi, renameTarget, renameValue, updateFile]);
+
+  const handleRenameCancel = useCallback(() => {
+    setRenameTarget(null);
+    setRenameValue('');
+  }, []);
+
+  const handleTransferCancel = useCallback(() => {
+    setTransferTarget(null);
+    setTransferTargetId('1');
+    setTransferTargetKey(fileTree.UUID);
+  }, [fileTree.UUID]);
+
+  const handleTransferConfirm = useCallback(async () => {
+    if (!transferTarget) {
+      return;
+    }
+
+    try {
+      setTransferLoading(true);
+      await http.post(
+        `/file/${transferMode}/${transferTarget.UUID}`,
+        {
+          targetParentId: Number(transferTargetId),
+        }
+      );
+
+      await queryClient.invalidateQueries({
+        queryKey: ['file', 'data', 'tree'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['file', 'recent'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['file', 'favorite'],
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['file', 'data', 'tree'],
+        type: 'active',
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['file', 'recent'],
+        type: 'active',
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['file', 'favorite'],
+        type: 'active',
+      });
+
+      messageApi.success(transferMode === 'move' ? '移动成功' : '复制成功');
+      handleTransferCancel();
+    } catch (error) {
+      const err = error as { message?: string };
+      messageApi.error(
+        err?.message || (transferMode === 'move' ? '移动失败' : '复制失败')
+      );
+    } finally {
+      setTransferLoading(false);
+    }
+  }, [
+    handleTransferCancel,
+    messageApi,
+    queryClient,
+    transferMode,
+    transferTarget,
+    transferTargetId,
+  ]);
+
   const refreshFiles = useCallback(() => {
     refetch();
   }, [refetch]);
@@ -202,6 +420,9 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
       allFiles,
       loading: isLoading,
       updateFile,
+      openRenameDialog,
+      openPreviewDialog,
+      openTransferDialog,
       deleteFile,
       refreshFiles,
     }),
@@ -211,6 +432,9 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
       allFiles,
       isLoading,
       updateFile,
+      openRenameDialog,
+      openPreviewDialog,
+      openTransferDialog,
       deleteFile,
       refreshFiles,
     ]
@@ -220,6 +444,64 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
     <FileDataContext.Provider value={contextValue}>
       {contextHolder}
       {children}
+      <Modal
+        open={Boolean(renameTarget)}
+        title="重命名"
+        okText="保存"
+        cancelText="取消"
+        onOk={() => void handleRenameConfirm()}
+        onCancel={handleRenameCancel}
+        confirmLoading={renameLoading}
+        destroyOnClose
+      >
+        <div className="space-y-4 pt-2">
+          <p className="text-sm text-gray-500">
+            为 {renameTarget?.type === 'folder' ? '文件夹' : '文件'} 设置新的名称。
+          </p>
+          <Input
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            placeholder="请输入新的名称"
+            autoFocus
+            maxLength={255}
+            onPressEnter={() => void handleRenameConfirm()}
+          />
+        </div>
+      </Modal>
+      <FilePreviewModal
+        open={Boolean(previewTarget)}
+        file={previewTarget}
+        onClose={() => setPreviewTarget(null)}
+      />
+      <Modal
+        open={Boolean(transferTarget)}
+        title={transferMode === 'move' ? '移动到文件夹' : '复制到文件夹'}
+        okText={transferMode === 'move' ? '移动' : '复制'}
+        cancelText="取消"
+        onOk={() => void handleTransferConfirm()}
+        onCancel={handleTransferCancel}
+        confirmLoading={transferLoading}
+        destroyOnClose
+        width={700}
+      >
+        <div className="space-y-4 pt-2">
+          <p className="text-sm text-gray-500">
+            {transferMode === 'move' ? '选择要移动到的目标文件夹。' : '选择要复制到的目标文件夹。'}
+          </p>
+          <div className="max-h-96 overflow-y-auto rounded-lg border border-gray-200 p-3">
+            <ul>
+              <FolderItem
+                key={fileTree.UUID}
+                item={fileTree}
+                selectId={transferTargetId}
+                selectKey={transferTargetKey}
+                onSelect={(key: string) => setTransferTargetKey(key)}
+                onSelectId={(id: string) => setTransferTargetId(id)}
+              />
+            </ul>
+          </div>
+        </div>
+      </Modal>
     </FileDataContext.Provider>
   );
 }

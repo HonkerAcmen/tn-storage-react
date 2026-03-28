@@ -28,7 +28,7 @@ export default function SearchResults({
   onSearchChange,
 }: SearchResultsProps) {
   const [messageApi, contextHolder] = message.useMessage();
-  const { updateFile, fileMap } = useFileData();
+  const { updateFile, fileMap, openPreviewDialog } = useFileData();
   const [selectedFile, setSelectedFile] = useState<FileSystemTreeNode | null>(
     null
   );
@@ -92,8 +92,12 @@ export default function SearchResults({
 
   // 处理文件点击
   const handleFileClick = (file: FileSystemTreeNode) => {
-    setSelectedFile(file);
-    setShowDetails(true);
+    if (file.type === 'folder') {
+      setSelectedFile(file);
+      setShowDetails(true);
+      return;
+    }
+    openPreviewDialog(file);
   };
 
   if (!open) return null;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Form, Input, Button, Tabs, Checkbox, message } from 'antd';
 import type { TabsProps } from 'antd';
 import {
@@ -43,7 +43,7 @@ export default function Login() {
         }, 1500);
       }
     } catch {
-      messageApi.error('登录失败，请检查用户名和密码');
+      messageApi.error('登录失败，请检查邮箱和密码');
     } finally {
       setLoading(false);
     }
@@ -95,6 +95,17 @@ export default function Login() {
 
   const [activeTab, setActiveTab] = useState('login');
 
+  useEffect(() => {
+    if (!router.isReady) {
+      return;
+    }
+
+    const nextTab = router.query.tab;
+    if (nextTab === 'register' || nextTab === 'login') {
+      setActiveTab(nextTab);
+    }
+  }, [router.isReady, router.query.tab]);
+
   const tabItems: TabsProps['items'] = [
     {
       key: 'login',
@@ -108,15 +119,15 @@ export default function Login() {
           className="mt-6"
         >
           <Form.Item
-            name="username"
+            name="email"
             rules={[
-              { required: true, message: '请输入用户名或邮箱' },
-              { min: 3, message: '用户名至少3个字符' },
+              { required: true, message: '请输入邮箱' },
+              { type: 'email', message: '请输入有效的邮箱地址' },
             ]}
           >
             <Input
-              prefix={<AiOutlineUser className="text-gray-400" />}
-              placeholder="用户名或邮箱"
+              prefix={<AiOutlineMail className="text-gray-400" />}
+              placeholder="邮箱"
             />
           </Form.Item>
 

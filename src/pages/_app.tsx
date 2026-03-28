@@ -3,13 +3,34 @@ import type { AppProps } from 'next/app';
 import { FileDataProvider } from '@/contexts/FileDataContext';
 import { ConfigProvider, App as AntApp, message } from 'antd';
 import { useEffect } from 'react';
-import { isAuthed } from '@/utils/auth';
+import { useAuthed } from '@/utils/auth';
 import { useRouter } from 'next/router';
 import { QueryProvider } from '@/providers/QueryProvider';
+import { useGetMySettings } from '@/network/hooks/user';
+
+function UserPreferenceBridge({ enabled }: { enabled: boolean }) {
+  const { data } = useGetMySettings();
+  const settings = enabled ? data?.data?.data : undefined;
+
+  useEffect(() => {
+    if (!enabled || !settings) {
+      document.documentElement.removeAttribute('lang');
+      document.documentElement.removeAttribute('data-theme');
+      return;
+    }
+
+    document.documentElement.lang = settings.language || 'zh-CN';
+    document.documentElement.dataset.theme = settings.theme || 'system';
+  }, [enabled, settings]);
+
+  return null;
+}
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const isLoginPage = router.pathname === '/login';
+  const isVisitorPage = router.pathname === '/visitor';
+  const authed = useAuthed();
 
   // 配置 message
   useEffect(() => {
@@ -23,13 +44,13 @@ export default function App({ Component, pageProps }: AppProps) {
 
   // 路由守卫
   useEffect(() => {
-    if (!isLoginPage && !isAuthed()) {
-      router.push('/login');
-    }
-    if (isLoginPage && isAuthed()) {
+    if (isLoginPage && authed) {
       router.push('/');
     }
-  }, [router, isLoginPage]);
+    if (isVisitorPage && authed) {
+      router.push('/');
+    }
+  }, [router, isLoginPage, isVisitorPage, authed]);
 
   return (
     <QueryProvider>
@@ -59,6 +80,7 @@ export default function App({ Component, pageProps }: AppProps) {
       >
         <AntApp>
           <FileDataProvider>
+            <UserPreferenceBridge enabled={!isLoginPage && !isVisitorPage && authed} />
             <Component {...pageProps} />
           </FileDataProvider>
         </AntApp>

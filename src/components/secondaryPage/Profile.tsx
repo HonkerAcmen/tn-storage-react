@@ -1,11 +1,11 @@
 import {
-  useAvatarUpload,
-  useGetAvatar,
-  useGetUserWithName,
-  useUpdateUserData,
+  useAvatarUploadMe,
+  useGetMyAvatar,
+  useGetMyProfile,
+  useGetMyStorage,
+  useUpdateMyUserData,
 } from '@/network/hooks/user';
-import { GetUserWithNameApiResponse } from '@/network/types/Response/user';
-import { GetUserNameWithLocalsStroger } from '@/utils/auth/user';
+import { useGetRecents } from '@/network/hooks/file';
 import { message } from 'antd';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
@@ -20,6 +20,10 @@ import {
   AiOutlinePhone,
   AiOutlineCheck,
 } from 'react-icons/ai';
+import { formatFileSize } from '@/utils/format/formatters';
+import { useFileData } from '@/contexts/FileDataContext';
+import { useFavorites } from '@/features/files/hooks';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 interface ProfileProps {
   onClose: () => void;
@@ -96,16 +100,18 @@ interface UserProfile {
 // 概览标签页
 function OverviewTab() {
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [messageApi, contextHolder] = message.useMessage();
-  const [username, setUsername] = useState(
-    () => GetUserNameWithLocalsStroger() || ''
-  );
-
-  const { data: avatarResponse } = useGetAvatar(username);
-  const { data: userdata } = useGetUserWithName(username);
-  const updateUserData = useUpdateUserData();
-  const avatarUpload = useAvatarUpload();
+  const previewUrlRef = useRef<string | null>(null);
+  const { data: avatarResponse } = useGetMyAvatar();
+  const { data: userdata } = useGetMyProfile();
+  const { data: storageResponse } = useGetMyStorage();
+  const { data: recentsResponse } = useGetRecents();
+  const { allFiles } = useFileData();
+  const { favoriteUUIDs } = useFavorites();
+  const updateUserData = useUpdateMyUserData();
+  const avatarUpload = useAvatarUploadMe();
   // 将 Buffer 数据转换为图片 URL
   const avatarUrl = useMemo(() => {
     if (!avatarResponse?.data?.data?.buffer?.data) {
@@ -131,97 +137,141 @@ function OverviewTab() {
     }
   }, [avatarResponse]);
 
-  const userinfo = useMemo((): GetUserWithNameApiResponse | undefined => {
-    return userdata?.data;
-  }, [userdata]);
+  const userinfo = useMemo(() => userdata?.data, [userdata]);
+  const storage = storageResponse?.data?.data;
+  const baseProfile = useMemo<UserProfile>(
+    () => ({
+      nickname: userinfo?.data.username || '',
+      email: userinfo?.data.email || '',
+      phone: userinfo?.data.phone || '',
+      bio: userinfo?.data.desc || '',
+      avatar: avatarUrl || null,
+    }),
+    [avatarUrl, userinfo]
+  );
+  const recentActivities = useMemo(() => {
+    const recentItems = recentsResponse?.data?.data?.recent ?? [];
+    const fileMap = new Map(allFiles.map((file) => [file.UUID, file]));
 
-  const [profile, setProfile] = useState<UserProfile>({
+    return recentItems
+      .slice(0, 5)
+      .map((item) => {
+        const file = fileMap.get(item.UUID);
+        return file ? { file, time: item.time } : null;
+      })
+      .filter((item): item is { file: FileSystemTreeNode; time: string | null } => Boolean(item))
+      .map(({ file, time }) => ({
+        action: file.type === 'folder' ? '访问了文件夹' : '访问了文件',
+        file: file.filename,
+        time: new Date(time || file.updatedAt).toLocaleString('zh-CN'),
+      }));
+  }, [allFiles, recentsResponse]);
+  const [editForm, setEditForm] = useState<UserProfile>({
     nickname: '',
     email: '',
     phone: '',
     avatar: null,
     bio: '',
   });
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const displayAvatar = isEditing ? editForm.avatar : baseProfile.avatar;
 
-  const [editForm, setEditForm] = useState<UserProfile>(profile);
-
-  // 当头像数据加载成功后，更新 profile
   useEffect(() => {
-    // 只在数据真正改变时才更新，避免无限循环
-    if (!username) {
-      return;
+    if (!isEditing && avatarUrl && previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
     }
+  }, [avatarUrl, isEditing]);
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setProfile((prev) => ({
-      nickname: userinfo?.data.username || username || '',
-      email: userinfo?.data.email || prev.email || '',
-      phone: userinfo?.data.phone || prev.phone || '',
-      bio: userinfo?.data.desc || prev.bio || '',
-      avatar: avatarUrl || prev.avatar || null,
-    }));
-  }, [username, avatarUrl, userinfo]);
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (avatarUrl) {
+        URL.revokeObjectURL(avatarUrl);
+      }
+    };
+  }, [avatarUrl]);
 
   // 开始编辑
   const handleEdit = () => {
-    setEditForm({ ...profile });
+    setEditForm({ ...baseProfile });
+    setPendingAvatarFile(null);
     setIsEditing(true);
   };
 
   // 取消编辑
   const handleCancel = () => {
-    setEditForm({ ...profile });
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+    setEditForm({ ...baseProfile });
+    setPendingAvatarFile(null);
     setIsEditing(false);
   };
 
   // 保存编辑
-  const handleSave = () => {
-    setProfile({ ...editForm });
-    setIsEditing(false);
-    // 这里可以添加保存到后端的逻辑
-    console.log('保存用户资料:', editForm);
-
-    const userdata = {
-      username: editForm.nickname,
-      email: editForm.email,
-      phone: editForm.phone,
-      desc: editForm.bio,
+  const handleSave = async () => {
+    const normalizedForm = {
+      nickname: editForm.nickname.trim(),
+      email: editForm.email.trim(),
+      phone: editForm.phone.trim(),
+      bio: editForm.bio.trim(),
     };
 
-    updateUserData.mutateAsync(userdata);
+    if (!normalizedForm.nickname) {
+      messageApi.error('昵称不能为空');
+      return;
+    }
 
-    if (editForm.avatar) {
-      // 如果是浏览器缓存则退出上传
-      if (editForm.avatar.includes('blob:')) {
-        return;
-      } else if (editForm.avatar.includes('data:image')) {
-        // 将 base64 数据 URL 转换为 File 对象
-        const dataUrl = editForm.avatar;
-        const arr = dataUrl.split(',');
-        const mimeMatch = arr[0].match(/:(.*?);/);
-        const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
-        const bstr = atob(arr[1]);
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        while (n--) {
-          u8arr[n] = bstr.charCodeAt(n);
-        }
-        const file = new File(
-          [u8arr],
-          `avatar-${Date.now()}.${mimeType.split('/')[1]}`, // 文件名称
-          {
-            type: mimeType,
-          }
-        );
+    if (!normalizedForm.email) {
+      messageApi.error('邮箱不能为空');
+      return;
+    }
 
-        avatarUpload.mutateAsync({
-          username: editForm.nickname,
-          file: file,
-        });
-      } else {
-        messageApi.error('未知文件!');
-        return;
+    if (!normalizedForm.phone) {
+      messageApi.error('手机号不能为空');
+      return;
+    }
+
+    const userdata = {
+      username: normalizedForm.nickname,
+      email: normalizedForm.email,
+      phone: normalizedForm.phone,
+      desc: normalizedForm.bio,
+    };
+
+    setIsSaving(true);
+    try {
+      await updateUserData.mutateAsync(userdata);
+    } catch {
+      setIsSaving(false);
+      messageApi.error('资料保存失败，请重试');
+      return;
+    }
+
+    try {
+      if (pendingAvatarFile) {
+        await avatarUpload.mutateAsync({ file: pendingAvatarFile });
       }
+
+      setPendingAvatarFile(null);
+      setIsEditing(false);
+      messageApi.success('资料已更新');
+    } catch (error) {
+      const messageText =
+        (error as { message?: string })?.message ||
+        '资料已保存，但头像上传失败，请重试头像上传';
+      messageApi.warning(messageText);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -251,27 +301,24 @@ function OverviewTab() {
       return;
     }
 
-    // 安全地重命名文件：创建新的 File 对象
-    // 保留原始文件的扩展名
     const fileExtension = file.name.split('.').pop() || 'jpg';
     const newFileName = `${crypto.randomUUID()}.${fileExtension}`;
-
-    // 创建新的 File 对象，使用新的文件名
     const renamedFile = new File([file], newFileName, {
       type: file.type,
       lastModified: file.lastModified,
     });
 
-    // 验证通过后，创建预览URL（使用重命名后的文件）
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setEditForm({ ...editForm, avatar: reader.result as string });
-    };
-    reader.onerror = () => {
-      messageApi.error('文件读取失败，请重试');
-      e.target.value = '';
-    };
-    reader.readAsDataURL(renamedFile);
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
+    const previewUrl = URL.createObjectURL(renamedFile);
+    previewUrlRef.current = previewUrl;
+    setPendingAvatarFile(renamedFile);
+
+    // 传入表单数据对象中，当点击上传按钮后自动上传图片数据
+    setEditForm((prev) => ({ ...prev, avatar: previewUrl }));
+
+    e.target.value = '';
   };
 
   // 触发文件选择
@@ -282,7 +329,7 @@ function OverviewTab() {
   // 邮箱验证状态
   const isEmailVerified = true;
   // 手机号绑定状态
-  const isPhoneBound = profile.phone.length > 0;
+  const isPhoneBound = baseProfile.phone.length > 0;
 
   return (
     <div className="space-y-6">
@@ -297,29 +344,29 @@ function OverviewTab() {
                 <div
                   className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-white/20 backdrop-blur-sm"
                   style={{
-                    backgroundImage: profile.avatar
-                      ? `url(${profile.avatar})`
+                    backgroundImage: displayAvatar
+                      ? `url(${displayAvatar})`
                       : 'none',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }}
                 >
-                  {!profile.avatar && (
+                  {!displayAvatar && (
                     <span className="text-3xl font-bold">
-                      {profile.nickname.charAt(0)}
+                      {baseProfile.nickname.charAt(0)}
                     </span>
                   )}
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold">{profile.nickname}</h3>
-                <p className="mt-1 text-sm text-white/80">{profile.email}</p>
-                {profile.phone && (
-                  <p className="mt-1 text-sm text-white/80">{profile.phone}</p>
+                <h3 className="text-2xl font-bold">{baseProfile.nickname}</h3>
+                <p className="mt-1 text-sm text-white/80">{baseProfile.email}</p>
+                {baseProfile.phone && (
+                  <p className="mt-1 text-sm text-white/80">{baseProfile.phone}</p>
                 )}
-                {profile.bio && (
+                {baseProfile.bio && (
                   <p className="mt-2 line-clamp-2 text-sm text-white/70">
-                    {profile.bio}
+                    {baseProfile.bio}
                   </p>
                 )}
                 <div className="mt-2 flex items-center space-x-4 text-sm">
@@ -442,16 +489,18 @@ function OverviewTab() {
             <div className="flex items-center justify-end space-x-3 pt-2">
               <button
                 onClick={handleCancel}
+                disabled={isSaving}
                 className="rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-sm text-white backdrop-blur-sm transition hover:bg-white/20"
               >
                 取消
               </button>
               <button
-                onClick={handleSave}
-                className="flex items-center space-x-2 rounded-lg bg-white px-4 py-2 text-sm text-[#5542f6] transition hover:bg-gray-100"
+                onClick={() => void handleSave()}
+                disabled={isSaving}
+                className="flex items-center space-x-2 rounded-lg bg-white px-4 py-2 text-sm text-[#5542f6] transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <AiOutlineCheck className="h-4 w-4" />
-                <span>保存</span>
+                <span>{isSaving ? '保存中...' : '保存'}</span>
               </button>
             </div>
           </div>
@@ -464,7 +513,9 @@ function OverviewTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">总文件数</p>
-              <p className="mt-1 text-2xl font-bold text-gray-800">1,234</p>
+              <p className="mt-1 text-2xl font-bold text-gray-800">
+                {storage?.totalFiles ?? 0}
+              </p>
             </div>
             <div className="rounded-lg bg-blue-100 p-3">
               <AiFillFileText className="h-6 w-6 text-blue-600" />
@@ -476,7 +527,9 @@ function OverviewTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">存储使用</p>
-              <p className="mt-1 text-2xl font-bold text-gray-800">10.5 GB</p>
+              <p className="mt-1 text-2xl font-bold text-gray-800">
+                {formatFileSize(storage?.usedBytes ?? 0)}
+              </p>
             </div>
             <div className="rounded-lg bg-purple-100 p-3">
               <AiFillCloud className="h-6 w-6 text-purple-600" />
@@ -488,7 +541,9 @@ function OverviewTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">收藏数</p>
-              <p className="mt-1 text-2xl font-bold text-gray-800">89</p>
+              <p className="mt-1 text-2xl font-bold text-gray-800">
+                {favoriteUUIDs.length || storage?.favoriteCount || 0}
+              </p>
             </div>
             <div className="rounded-lg bg-amber-100 p-3">
               <AiFillStar className="h-6 w-6 text-amber-600" />
@@ -501,12 +556,16 @@ function OverviewTab() {
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <h4 className="mb-4 text-lg font-semibold text-gray-800">最近活动</h4>
         <div className="space-y-3">
-          {[
-            { action: '上传了文件', file: '项目文档.pdf', time: '2小时前' },
-            { action: '创建了文件夹', file: '设计资源', time: '1天前' },
-            { action: '收藏了文件', file: '重要资料.docx', time: '3天前' },
-            { action: '分享了文件', file: '团队协作.xlsx', time: '5天前' },
-          ].map((activity, index) => (
+          {(recentActivities.length > 0
+            ? recentActivities
+            : [
+                {
+                  action: '暂无最近活动',
+                  file: '开始上传或访问文件后会出现在这里',
+                  time: '刚刚',
+                },
+              ]
+          ).map((activity, index) => (
             <div
               key={index}
               className="flex items-center justify-between rounded-lg border border-gray-100 p-3 transition hover:bg-gray-50"
@@ -533,11 +592,72 @@ function OverviewTab() {
 
 // 我的文件标签页
 function FilesTab() {
+  const { allFiles, openPreviewDialog } = useFileData();
+  const files = useMemo(
+    () =>
+      allFiles
+        .filter((item) => item.id !== '1')
+        .sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        ),
+    [allFiles]
+  );
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-gray-800">我的文件</h3>
       <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <p className="text-center text-gray-500">文件列表功能待实现</p>
+        <div className="mb-4 grid grid-cols-3 gap-4">
+          <SummaryCard
+            title="文件总数"
+            value={String(files.filter((item) => item.type === 'file').length)}
+          />
+          <SummaryCard
+            title="文件夹总数"
+            value={String(
+              files.filter((item) => item.type === 'folder').length
+            )}
+          />
+          <SummaryCard
+            title="最近更新"
+            value={
+              files[0]
+                ? new Date(files[0].updatedAt).toLocaleDateString('zh-CN')
+                : '暂无'
+            }
+          />
+        </div>
+        <div className="space-y-3">
+          {files.length === 0 ? (
+            <p className="py-8 text-center text-gray-500">当前还没有文件</p>
+          ) : (
+            files.slice(0, 10).map((file) => (
+              <div
+                key={file.UUID}
+                className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-3 transition hover:bg-gray-50"
+                onClick={() => {
+                  if (file.type === 'file') {
+                    openPreviewDialog(file);
+                  }
+                }}
+              >
+                <div>
+                  <p className="font-medium text-gray-800">{file.filename}</p>
+                  <p className="text-sm text-gray-500">
+                    {file.type === 'folder' ? '文件夹' : file.ext || '文件'} ·
+                    更新时间 {new Date(file.updatedAt).toLocaleString('zh-CN')}
+                  </p>
+                </div>
+                <span className="text-sm text-gray-500">
+                  {file.type === 'folder'
+                    ? '--'
+                    : formatFileSize(Number(file.size))}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
@@ -545,6 +665,15 @@ function FilesTab() {
 
 // 存储空间标签页
 function StorageTab() {
+  const { data: storageResponse } = useGetMyStorage();
+  const storage = storageResponse?.data?.data;
+  const usedBytes = storage?.usedBytes ?? 0;
+  const totalBytes = storage?.totalBytes ?? 100 * 1024 * 1024 * 1024;
+  const usedPercent =
+    totalBytes === 0
+      ? 0
+      : Math.min(100, Math.round((usedBytes / totalBytes) * 100));
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-gray-800">存储空间</h3>
@@ -552,28 +681,44 @@ function StorageTab() {
         <div className="mb-4">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">已使用</span>
-            <span className="text-sm text-gray-500">10.5 GB / 100 GB</span>
+            <span className="text-sm text-gray-500">
+              {formatFileSize(usedBytes)} / {formatFileSize(totalBytes)}
+            </span>
           </div>
           <div className="h-3 w-full rounded-full bg-gray-200">
-            <div className="h-3 w-[10.5%] rounded-full bg-linear-to-r from-[#5542f6] to-[#7c6cf5]"></div>
+            <div
+              className="h-3 rounded-full bg-linear-to-r from-[#5542f6] to-[#7c6cf5]"
+              style={{ width: `${usedPercent}%` }}
+            ></div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-sm text-gray-500">文档</p>
-            <p className="mt-1 text-lg font-semibold text-gray-800">2.3 GB</p>
+            <p className="mt-1 text-lg font-semibold text-gray-800">
+              {formatFileSize(storage?.categories.document ?? 0)}
+            </p>
           </div>
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-sm text-gray-500">图片</p>
-            <p className="mt-1 text-lg font-semibold text-gray-800">5.1 GB</p>
+            <p className="mt-1 text-lg font-semibold text-gray-800">
+              {formatFileSize(storage?.categories.image ?? 0)}
+            </p>
           </div>
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-sm text-gray-500">视频</p>
-            <p className="mt-1 text-lg font-semibold text-gray-800">2.8 GB</p>
+            <p className="mt-1 text-lg font-semibold text-gray-800">
+              {formatFileSize(storage?.categories.video ?? 0)}
+            </p>
           </div>
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-sm text-gray-500">其他</p>
-            <p className="mt-1 text-lg font-semibold text-gray-800">0.3 GB</p>
+            <p className="mt-1 text-lg font-semibold text-gray-800">
+              {formatFileSize(
+                (storage?.categories.audio ?? 0) +
+                  (storage?.categories.other ?? 0)
+              )}
+            </p>
           </div>
         </div>
       </div>
@@ -583,12 +728,60 @@ function StorageTab() {
 
 // 收藏标签页
 function FavoritesTab() {
+  const { favoriteUUIDs } = useFavorites();
+  const { allFiles, openPreviewDialog } = useFileData();
+  const favorites = useMemo(() => {
+    const favoriteSet = new Set(favoriteUUIDs);
+    return allFiles.filter((file) => favoriteSet.has(file.UUID));
+  }, [allFiles, favoriteUUIDs]);
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-gray-800">我的收藏</h3>
       <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <p className="text-center text-gray-500">收藏列表功能待实现</p>
+        <div className="mb-4 grid grid-cols-2 gap-4">
+          <SummaryCard title="收藏数量" value={String(favorites.length)} />
+          <SummaryCard
+            title="最近收藏项"
+            value={favorites[0]?.filename ?? '暂无'}
+          />
+        </div>
+        <div className="space-y-3">
+          {favorites.length === 0 ? (
+            <p className="py-8 text-center text-gray-500">当前还没有收藏项</p>
+          ) : (
+            favorites.map((file) => (
+              <div
+                key={file.UUID}
+                className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-100 px-4 py-3 transition hover:bg-gray-50"
+                onClick={() => {
+                  if (file.type === 'file') {
+                    openPreviewDialog(file);
+                  }
+                }}
+              >
+                <div>
+                  <p className="font-medium text-gray-800">{file.filename}</p>
+                  <p className="text-sm text-gray-500">
+                    {file.type === 'folder' ? '文件夹' : file.ext || '文件'} ·
+                    创建于 {new Date(file.createdAt).toLocaleString('zh-CN')}
+                  </p>
+                </div>
+                <AiFillStar className="h-5 w-5 text-amber-400" />
+              </div>
+            ))
+          )}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function SummaryCard({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
+      <p className="text-sm text-gray-500">{title}</p>
+      <p className="mt-2 text-lg font-semibold text-gray-800">{value}</p>
     </div>
   );
 }
