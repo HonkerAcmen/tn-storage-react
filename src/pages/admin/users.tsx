@@ -21,6 +21,7 @@ import {
   MdSecurity,
   MdBlock,
   MdCheckCircle,
+  MdHistory,
 } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { adminCardProps } from '@/components/admin/AdminPanel';
@@ -32,10 +33,12 @@ import {
   useAdminUpdateUser,
   useAdminUpdateUserPermissions,
   useAdminUpdateUserStatus,
+  useAdminUserLoginLogs,
   useAdminUsers,
 } from '@/network/hooks/admin';
 import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { AdminUserRoleResponse } from '@/network/types/Response/user';
+import { formatDateTime } from '@/utils/format/formatters';
 
 const roleLabels: Record<AdminUserRoleResponse['role'], string> = {
   admin: '管理员',
@@ -115,6 +118,11 @@ export default function AdminUsersPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [resetUserId, setResetUserId] = useState<number | null>(null);
   const [permUser, setPermUser] = useState<AdminUserRoleResponse | null>(null);
+  const [loginLogUser, setLoginLogUser] = useState<AdminUserRoleResponse | null>(
+    null,
+  );
+  const [loginLogPage, setLoginLogPage] = useState(1);
+  const loginLogLimit = 10;
   const [form] = Form.useForm<UserFormValues>();
   const [resetForm] = Form.useForm<{ password: string }>();
   const [permForm] = Form.useForm<PermissionFormValues>();
@@ -122,6 +130,14 @@ export default function AdminUsersPage() {
   const result = data?.data?.data;
   const users = result?.items ?? [];
   const total = result?.pagination.total ?? 0;
+
+  const { data: loginLogsRes, isLoading: loginLogsLoading } =
+    useAdminUserLoginLogs(loginLogUser?.id ?? null, {
+      page: loginLogPage,
+      limit: loginLogLimit,
+    });
+  const loginLogs = loginLogsRes?.data?.data?.items ?? [];
+  const loginLogsTotal = loginLogsRes?.data?.data?.pagination.total ?? 0;
 
   const openCreate = () => {
     setEditingId(null);
@@ -333,18 +349,29 @@ export default function AdminUsersPage() {
             {
               title: '操作',
               key: 'actions',
-              width: 320,
+              width: 420,
               fixed: 'right',
-              render: (_, record) =>
-                canWrite ? (
-                  <Space wrap>
-                    <Button
-                      size="small"
-                      icon={<MdEdit />}
-                      onClick={() => openEdit(record)}
-                    >
-                      编辑
-                    </Button>
+              render: (_, record) => (
+                <Space wrap>
+                  <Button
+                    size="small"
+                    icon={<MdHistory />}
+                    onClick={() => {
+                      setLoginLogUser(record);
+                      setLoginLogPage(1);
+                    }}
+                  >
+                    登录历史
+                  </Button>
+                  {canWrite ? (
+                    <>
+                      <Button
+                        size="small"
+                        icon={<MdEdit />}
+                        onClick={() => openEdit(record)}
+                      >
+                        编辑
+                      </Button>
                     <Button
                       size="small"
                       icon={<MdSecurity />}
@@ -400,10 +427,10 @@ export default function AdminUsersPage() {
                         删除
                       </Button>
                     </Popconfirm>
-                  </Space>
-                ) : (
-                  '-'
-                ),
+                    </>
+                  ) : null}
+                </Space>
+              ),
             },
           ]}
         />
@@ -526,6 +553,48 @@ export default function AdminUsersPage() {
             </Form.Item>
           ))}
         </Form>
+      </Drawer>
+
+      <Drawer
+        title={
+          loginLogUser
+            ? `登录历史 · ${loginLogUser.username}`
+            : '登录历史'
+        }
+        open={!!loginLogUser}
+        onClose={() => setLoginLogUser(null)}
+        width={560}
+      >
+        <Table
+          rowKey="id"
+          loading={loginLogsLoading}
+          dataSource={loginLogs}
+          pagination={{
+            current: loginLogPage,
+            pageSize: loginLogLimit,
+            total: loginLogsTotal,
+            showSizeChanger: false,
+            onChange: (p) => setLoginLogPage(p),
+          }}
+          columns={[
+            {
+              title: '时间',
+              dataIndex: 'login_at',
+              render: (v: string) => formatDateTime(new Date(v)),
+            },
+            {
+              title: 'IP',
+              dataIndex: 'ip',
+              render: (v: string | null) => v || '-',
+            },
+            {
+              title: 'User-Agent',
+              dataIndex: 'user_agent',
+              ellipsis: true,
+              render: (v: string | null) => v || '-',
+            },
+          ]}
+        />
       </Drawer>
     </AdminLayout>
   );

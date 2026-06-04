@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Button, Card, Input, Popconfirm, Table } from 'antd';
+import { Button, Card, Input, Popconfirm, Select, Space, Table } from 'antd';
 import { MdDelete } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
-import { useAdminPurgeTrash, useAdminTrash } from '@/network/hooks/admin';
+import { useAdminPurgeTrash, useAdminTrash, useAdminUsers } from '@/network/hooks/admin';
 import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { formatDateTime, formatFileSize } from '@/utils/format/formatters';
 
@@ -12,15 +12,23 @@ export default function AdminTrashPage() {
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState('');
   const [search, setSearch] = useState('');
+  const [userIdFilter, setUserIdFilter] = useState<number | undefined>();
   const limit = 15;
   const feedback = useAdminFeedback();
   const canWrite = useAdminCanWrite();
   const purgeTrash = useAdminPurgeTrash();
 
+  const { data: usersRes } = useAdminUsers({ page: 1, limit: 200 });
+  const userOptions = (usersRes?.data?.data?.items ?? []).map((u) => ({
+    value: u.id,
+    label: `${u.username} (${u.email})`,
+  }));
+
   const { data, isLoading } = useAdminTrash({
     page,
     limit,
     keyword: search || undefined,
+    userId: userIdFilter,
   });
 
   const result = data?.data?.data;
@@ -30,22 +38,37 @@ export default function AdminTrashPage() {
   return (
     <AdminLayout title="回收站">
       <Card {...adminCardProps}>
-        <Input.Search
-          placeholder="搜索文件名 / UUID"
-          className="mb-4 w-64"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          onSearch={(v) => {
-            setSearch(v.trim());
-            setPage(1);
-          }}
-          allowClear
-          onClear={() => {
-            setKeyword('');
-            setSearch('');
-            setPage(1);
-          }}
-        />
+        <Space wrap className="mb-4">
+          <Input.Search
+            placeholder="搜索文件名 / UUID"
+            className="w-64"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onSearch={(v) => {
+              setSearch(v.trim());
+              setPage(1);
+            }}
+            allowClear
+            onClear={() => {
+              setKeyword('');
+              setSearch('');
+              setPage(1);
+            }}
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="所属用户"
+            className="w-56"
+            value={userIdFilter}
+            onChange={(v) => {
+              setUserIdFilter(v);
+              setPage(1);
+            }}
+            options={userOptions}
+          />
+        </Space>
         <Table
           rowKey="id"
           loading={isLoading}

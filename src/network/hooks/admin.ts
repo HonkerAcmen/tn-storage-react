@@ -8,6 +8,7 @@ import {
   GetAdminFilesApiResponse,
   GetAdminSharesApiResponse,
   GetAdminTrashApiResponse,
+  GetAdminUserLoginLogsApiResponse,
   GetAdminMetricsApiResponse,
   GetAdminStorageOverviewApiResponse,
   GetAdminStorageUsersApiResponse,
@@ -315,6 +316,7 @@ export function useAdminTrash(params: {
   page: number;
   limit: number;
   keyword?: string;
+  userId?: number;
 }) {
   const authed = isAdminAuthed();
   return useQuery({
@@ -329,6 +331,7 @@ export function useAdminShares(params: {
   page: number;
   limit: number;
   keyword?: string;
+  userId?: number;
   status?: 'active' | 'revoked' | 'expired';
 }) {
   const authed = isAdminAuthed();
@@ -361,5 +364,21 @@ export function useAdminRevokeShare() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [...adminKey, 'shares'] });
     },
+  });
+}
+
+export function useAdminUserLoginLogs(
+  userId: number | null,
+  params: { page: number; limit: number },
+) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'users', userId, 'login-logs', params],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminUserLoginLogsApiResponse>(
+        `/admin/users/${userId}/login-logs`,
+        { params },
+      ),
+    enabled: authed && !!userId,
   });
 }

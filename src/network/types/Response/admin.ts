@@ -140,6 +140,18 @@ export interface AdminShareItem {
   createdAt: string | null;
 }
 
+export interface AdminUserLoginLogItem {
+  id: number;
+  user_id: number;
+  ip: string | null;
+  user_agent: string | null;
+  login_at: string;
+}
+
+export type GetAdminUserLoginLogsApiResponse = BaseResponse<
+  AdminPaginatedResponse<AdminUserLoginLogItem>
+>;
+
 export type GetAdminFilesApiResponse = BaseResponse<
   AdminPaginatedResponse<AdminFileItem>
 >;

@@ -4,7 +4,7 @@ import { MdBlock } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
-import { useAdminRevokeShare, useAdminShares } from '@/network/hooks/admin';
+import { useAdminRevokeShare, useAdminShares, useAdminUsers } from '@/network/hooks/admin';
 import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { AdminShareItem } from '@/network/types/Response/admin';
 import { formatDateTime } from '@/utils/format/formatters';
@@ -25,15 +25,23 @@ export default function AdminSharesPage() {
   const [statusFilter, setStatusFilter] = useState<
     AdminShareItem['status'] | undefined
   >();
+  const [userIdFilter, setUserIdFilter] = useState<number | undefined>();
   const limit = 15;
   const feedback = useAdminFeedback();
   const canWrite = useAdminCanWrite();
   const revokeShare = useAdminRevokeShare();
 
+  const { data: usersRes } = useAdminUsers({ page: 1, limit: 200 });
+  const userOptions = (usersRes?.data?.data?.items ?? []).map((u) => ({
+    value: u.id,
+    label: `${u.username} (${u.email})`,
+  }));
+
   const { data, isLoading } = useAdminShares({
     page,
     limit,
     keyword: search || undefined,
+    userId: userIdFilter,
     status: statusFilter,
   });
 
@@ -60,6 +68,19 @@ export default function AdminSharesPage() {
               setSearch('');
               setPage(1);
             }}
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="所属用户"
+            className="w-56"
+            value={userIdFilter}
+            onChange={(v) => {
+              setUserIdFilter(v);
+              setPage(1);
+            }}
+            options={userOptions}
           />
           <Select
             allowClear
