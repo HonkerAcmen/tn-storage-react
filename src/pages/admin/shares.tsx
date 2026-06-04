@@ -5,6 +5,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
 import { useAdminRevokeShare, useAdminShares } from '@/network/hooks/admin';
+import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { AdminShareItem } from '@/network/types/Response/admin';
 import { formatDateTime } from '@/utils/format/formatters';
 
@@ -26,6 +27,7 @@ export default function AdminSharesPage() {
   >();
   const limit = 15;
   const feedback = useAdminFeedback();
+  const canWrite = useAdminCanWrite();
   const revokeShare = useAdminRevokeShare();
 
   const { data, isLoading } = useAdminShares({
@@ -123,7 +125,7 @@ export default function AdminSharesPage() {
               key: 'actions',
               width: 100,
               render: (_, record) =>
-                record.status === 'active' ? (
+                canWrite && record.status === 'active' ? (
                   <Popconfirm
                     title="确定撤销该分享？"
                     onConfirm={async () => {

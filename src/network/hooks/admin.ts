@@ -299,6 +299,7 @@ export function useAdminFiles(params: {
   page: number;
   limit: number;
   keyword?: string;
+  userId?: number;
   type?: 'file' | 'folder';
 }) {
   const authed = isAdminAuthed();

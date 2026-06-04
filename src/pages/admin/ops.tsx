@@ -9,6 +9,7 @@ import {
   useAdminOpsMinio,
   useAdminOpsOverview,
 } from '@/network/hooks/adminOps';
+import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { formatFileSize } from '@/utils/format/formatters';
 
 function formatUptime(seconds: number) {
@@ -20,6 +21,7 @@ function formatUptime(seconds: number) {
 
 export default function AdminOpsPage() {
   const feedback = useAdminFeedback();
+  const canWrite = useAdminCanWrite();
   const { data: overviewRes, isLoading: overviewLoading } =
     useAdminOpsOverview();
   const { data: minioRes, isLoading: minioLoading } = useAdminOpsMinio();
@@ -64,17 +66,21 @@ export default function AdminOpsPage() {
               <span className="text-sm text-gray-500">
                 进程运行 {formatUptime(overview?.node.uptime ?? 0)}
               </span>
-              <Popconfirm
-                title="确认清空全部内存缓存？"
-                onConfirm={handleClearCache}
-              >
-                <Button
-                  icon={<MdCleaningServices />}
-                  loading={clearCache.isPending}
+              {canWrite ? (
+                <Popconfirm
+                  title="确认清空全部内存缓存？"
+                  onConfirm={handleClearCache}
                 >
-                  清空缓存
-                </Button>
-              </Popconfirm>
+                  <Button
+                    icon={<MdCleaningServices />}
+                    loading={clearCache.isPending}
+                  >
+                    清空缓存
+                  </Button>
+                </Popconfirm>
+              ) : (
+                <span className="text-xs text-gray-400">只读角色无写权限</span>
+              )}
             </div>
           </Card>
         </Col>

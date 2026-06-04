@@ -56,6 +56,13 @@ export function useAdminProfile(enabled = true) {
   });
 }
 
+/** operator 为只读角色，不可执行写操作 */
+export function useAdminCanWrite() {
+  const { data } = useAdminProfile();
+  const role = data?.data?.data?.role;
+  return role !== 'operator';
+}
+
 export function useAdminLogout() {
   const queryClient = useQueryClient();
   return () => {

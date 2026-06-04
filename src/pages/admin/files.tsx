@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, Input, Select, Space, Table } from 'antd';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { adminCardProps } from '@/components/admin/AdminPanel';
-import { useAdminFiles } from '@/network/hooks/admin';
+import { useAdminFiles, useAdminUsers } from '@/network/hooks/admin';
 import { formatDateTime, formatFileSize } from '@/utils/format/formatters';
 
 export default function AdminFilesPage() {
@@ -10,12 +10,20 @@ export default function AdminFilesPage() {
   const [keyword, setKeyword] = useState('');
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'file' | 'folder' | undefined>();
+  const [userIdFilter, setUserIdFilter] = useState<number | undefined>();
   const limit = 15;
+
+  const { data: usersRes } = useAdminUsers({ page: 1, limit: 200 });
+  const userOptions = (usersRes?.data?.data?.items ?? []).map((u) => ({
+    value: u.id,
+    label: `${u.username} (${u.email})`,
+  }));
 
   const { data, isLoading } = useAdminFiles({
     page,
     limit,
     keyword: search || undefined,
+    userId: userIdFilter,
     type: typeFilter,
   });
 
@@ -42,6 +50,19 @@ export default function AdminFilesPage() {
               setSearch('');
               setPage(1);
             }}
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="所属用户"
+            className="w-56"
+            value={userIdFilter}
+            onChange={(v) => {
+              setUserIdFilter(v);
+              setPage(1);
+            }}
+            options={userOptions}
           />
           <Select
             allowClear
