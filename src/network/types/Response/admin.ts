@@ -81,7 +81,9 @@ export type GetAdminStorageOverviewApiResponse =
 export type GetAdminStorageUsersApiResponse = BaseResponse<
   AdminStorageUserItem[]
 >;
-export type GetAdminUsersApiResponse = BaseResponse<AdminUserItem[]>;
+export type GetAdminUsersApiResponse = BaseResponse<
+  AdminPaginatedResponse<AdminUserItem>
+>;
 export type GetAdminBackupJobsApiResponse = BaseResponse<AdminBackupJob[]>;
 export type GetAdminBackupJobApiResponse = BaseResponse<AdminBackupJob | null>;
 export type TriggerAdminBackupApiResponse = BaseResponse<AdminBackupJob>;
@@ -108,3 +110,30 @@ export interface AdminAuthLoginData {
 
 export type AdminAuthLoginApiResponse = BaseResponse<AdminAuthLoginData>;
 export type AdminAuthMeApiResponse = BaseResponse<AdminAuthProfile>;
+
+export interface AdminLoginLogItem {
+  id: number;
+  admin_id: number;
+  admin_username: string;
+  admin_email: string;
+  ip: string | null;
+  user_agent: string | null;
+  success: boolean;
+  message: string | null;
+  login_at: string;
+}
+
+export interface AdminPaginatedResponse<T> {
+  items: T[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export type GetAdminStaffListApiResponse = BaseResponse<AdminAuthProfile[]>;
+export type GetAdminLoginLogsApiResponse = BaseResponse<
+  AdminPaginatedResponse<AdminLoginLogItem>
+>;

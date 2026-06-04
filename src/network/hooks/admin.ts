@@ -59,13 +59,21 @@ export function useAdminStorageUsers(enabled = true) {
   });
 }
 
-export function useAdminUsers(enabled = true) {
+export function useAdminUsers(params: {
+  page: number;
+  limit: number;
+  keyword?: string;
+  role?: AdminUserRoleResponse['role'];
+  status?: AdminUserRoleResponse['account_status'];
+}) {
   const authed = isAdminAuthed();
   return useQuery({
-    queryKey: [...adminKey, 'users'],
+    queryKey: [...adminKey, 'users', params],
     queryFn: async () =>
-      await adminHttp.get<GetAdminUsersApiResponse>('/admin/users'),
-    enabled: authed && enabled,
+      await adminHttp.get<GetAdminUsersApiResponse>('/admin/users', {
+        params,
+      }),
+    enabled: authed,
     staleTime: 0,
     refetchOnMount: 'always',
   });
@@ -143,6 +151,42 @@ export function useAdminUpdateUserRole() {
       id: number;
       role: AdminUserRoleResponse['role'];
     }) => await adminHttp.put(`/admin/users/${id}/role`, { role }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'users'] });
+    },
+  });
+}
+
+export function useAdminUpdateUserPermissions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...permissions
+    }: {
+      id: number;
+      allow_file_upload?: boolean;
+      allow_file_download?: boolean;
+      allow_file_delete?: boolean;
+      allow_favorite?: boolean;
+      allow_share?: boolean;
+    }) => await adminHttp.put(`/admin/users/${id}/permissions`, permissions),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'users'] });
+    },
+  });
+}
+
+export function useAdminUpdateUserStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: number;
+      status: AdminUserRoleResponse['account_status'];
+    }) => await adminHttp.put(`/admin/users/${id}/status`, { status }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [...adminKey, 'users'] });
     },

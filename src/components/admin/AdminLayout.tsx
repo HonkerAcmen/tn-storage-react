@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Avatar, Button, Layout, Menu, Typography } from 'antd';
@@ -10,10 +10,13 @@ import {
   MdMenuOpen,
   MdMenu,
   MdLogout,
+  MdAdminPanelSettings,
+  MdHistory,
 } from 'react-icons/md';
 import { HiOutlineCloud } from 'react-icons/hi';
 import AdminGuard from './AdminGuard';
 import AdminAppProvider from './AdminAppProvider';
+import ChangePasswordModal from './ChangePasswordModal';
 import { useAdminUiStore } from '@/store/adminUiStore';
 import { useAdminLogout, useAdminProfile } from '@/network/hooks/adminAuth';
 
@@ -21,9 +24,11 @@ const { Header, Sider, Content } = Layout;
 
 const menuItems = [
   { key: '/admin', label: '仪表盘', icon: <MdDashboard /> },
-  { key: '/admin/users', label: '用户管理', icon: <MdPeople /> },
+  { key: '/admin/staff', label: '管理员账号', icon: <MdAdminPanelSettings /> },
+  { key: '/admin/users', label: '云盘用户', icon: <MdPeople /> },
   { key: '/admin/storage', label: '存储分析', icon: <MdStorage /> },
   { key: '/admin/backup', label: '数据备份', icon: <MdBackup /> },
+  { key: '/admin/login-logs', label: '登录日志', icon: <MdHistory /> },
 ];
 
 export default function AdminLayout({
@@ -38,6 +43,7 @@ export default function AdminLayout({
   const toggleCollapsed = useAdminUiStore((s) => s.toggleCollapsed);
   const adminLogout = useAdminLogout();
   const { data: profileRes } = useAdminProfile();
+  const [pwdOpen, setPwdOpen] = useState(false);
   const profile = profileRes?.data?.data;
   const adminName =
     profile?.display_name || profile?.username || '管理员';
@@ -110,6 +116,9 @@ export default function AdminLayout({
                     {adminName}
                   </span>
                 </div>
+                <Button type="link" onClick={() => setPwdOpen(true)}>
+                  改密
+                </Button>
                 <Button
                   type="text"
                   icon={<MdLogout />}
@@ -129,6 +138,7 @@ export default function AdminLayout({
             <Content className="overflow-auto p-6">{children}</Content>
           </Layout>
         </Layout>
+        <ChangePasswordModal open={pwdOpen} onClose={() => setPwdOpen(false)} />
       </AdminGuard>
     </AdminAppProvider>
   );

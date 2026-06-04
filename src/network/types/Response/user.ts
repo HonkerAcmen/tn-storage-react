@@ -61,6 +61,7 @@ export interface AdminUserRoleResponse {
   phone: string;
   desc: string;
   role: 'admin' | 'user' | 'viewer';
+  account_status: 'active' | 'disabled';
   permissions: UserSettingsResponse;
 }
 
@@ -90,4 +91,6 @@ export type GetUserLoginHistoryApiResponse = BaseResponse<
   UserLoginHistoryResponse[]
 >;
 export type ChangePasswordApiResponse = BaseResponse<null>;
-export type GetAdminUsersApiResponse = BaseResponse<AdminUserRoleResponse[]>;
+export type GetCloudAdminUsersApiResponse = BaseResponse<
+  AdminUserRoleResponse[]
+>;

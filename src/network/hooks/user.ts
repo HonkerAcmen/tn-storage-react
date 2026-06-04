@@ -4,7 +4,7 @@ import {
   AvatarUploadApiResponse,
   AdminUserRoleResponse,
   ChangePasswordApiResponse,
-  GetAdminUsersApiResponse,
+  GetCloudAdminUsersApiResponse,
   GetUserAvatarApiResponse,
   GetUserLoginHistoryApiResponse,
   GetUserSettingsApiResponse,
@@ -193,7 +193,7 @@ export function useGetAdminUsers(enabled = true) {
   return useQuery({
     queryKey: ['user', 'admin', 'users'],
     queryFn: async () => {
-      return await http.get<GetAdminUsersApiResponse>('/user/admin/users');
+      return await http.get<GetCloudAdminUsersApiResponse>('/user/admin/users');
     },
     enabled,
     staleTime: 0,

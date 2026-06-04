@@ -2,16 +2,26 @@ import { useState } from 'react';
 import {
   Button,
   Card,
+  Drawer,
   Form,
   Input,
   Modal,
   Popconfirm,
   Select,
   Space,
+  Switch,
   Table,
   Tag,
 } from 'antd';
-import { MdAdd, MdEdit, MdLockReset, MdDelete } from 'react-icons/md';
+import {
+  MdAdd,
+  MdEdit,
+  MdLockReset,
+  MdDelete,
+  MdSecurity,
+  MdBlock,
+  MdCheckCircle,
+} from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
@@ -20,6 +30,8 @@ import {
   useAdminDeleteUser,
   useAdminResetPassword,
   useAdminUpdateUser,
+  useAdminUpdateUserPermissions,
+  useAdminUpdateUserStatus,
   useAdminUsers,
 } from '@/network/hooks/admin';
 import { AdminUserRoleResponse } from '@/network/types/Response/user';
@@ -36,6 +48,21 @@ const roleColors: Record<AdminUserRoleResponse['role'], string> = {
   viewer: 'default',
 };
 
+const permissionLabels: Record<
+  | 'allow_file_upload'
+  | 'allow_file_download'
+  | 'allow_file_delete'
+  | 'allow_favorite'
+  | 'allow_share',
+  string
+> = {
+  allow_file_upload: '文件上传',
+  allow_file_download: '文件下载',
+  allow_file_delete: '文件删除',
+  allow_favorite: '收藏',
+  allow_share: '分享',
+};
+
 type UserFormValues = {
   username: string;
   email: string;
@@ -45,22 +72,54 @@ type UserFormValues = {
   role: AdminUserRoleResponse['role'];
 };
 
+type PermissionFormValues = {
+  allow_file_upload: boolean;
+  allow_file_download: boolean;
+  allow_file_delete: boolean;
+  allow_favorite: boolean;
+  allow_share: boolean;
+};
+
 export default function AdminUsersPage() {
-  const { data, isLoading, refetch } = useAdminUsers();
+  const [page, setPage] = useState(1);
+  const [keyword, setKeyword] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [roleFilter, setRoleFilter] = useState<
+    AdminUserRoleResponse['role'] | undefined
+  >();
+  const [statusFilter, setStatusFilter] = useState<
+    AdminUserRoleResponse['account_status'] | undefined
+  >();
+  const limit = 10;
+
+  const { data, isLoading, refetch } = useAdminUsers({
+    page,
+    limit,
+    keyword: keyword || undefined,
+    role: roleFilter,
+    status: statusFilter,
+  });
   const createUser = useAdminCreateUser();
   const updateUser = useAdminUpdateUser();
   const deleteUser = useAdminDeleteUser();
   const resetPassword = useAdminResetPassword();
+  const updatePermissions = useAdminUpdateUserPermissions();
+  const updateStatus = useAdminUpdateUserStatus();
   const feedback = useAdminFeedback();
 
   const [formOpen, setFormOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
+  const [permOpen, setPermOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [resetUserId, setResetUserId] = useState<number | null>(null);
+  const [permUser, setPermUser] = useState<AdminUserRoleResponse | null>(null);
   const [form] = Form.useForm<UserFormValues>();
   const [resetForm] = Form.useForm<{ password: string }>();
+  const [permForm] = Form.useForm<PermissionFormValues>();
 
-  const users = data?.data?.data ?? [];
+  const result = data?.data?.data;
+  const users = result?.items ?? [];
+  const total = result?.pagination.total ?? 0;
 
   const openCreate = () => {
     setEditingId(null);
@@ -79,6 +138,18 @@ export default function AdminUsersPage() {
       role: record.role,
     });
     setFormOpen(true);
+  };
+
+  const openPermissions = (record: AdminUserRoleResponse) => {
+    setPermUser(record);
+    permForm.setFieldsValue({
+      allow_file_upload: record.permissions.allow_file_upload,
+      allow_file_download: record.permissions.allow_file_download,
+      allow_file_delete: record.permissions.allow_file_delete,
+      allow_favorite: record.permissions.allow_favorite,
+      allow_share: record.permissions.allow_share,
+    });
+    setPermOpen(true);
   };
 
   const handleSubmit = async () => {
@@ -127,8 +198,37 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleSavePermissions = async () => {
+    if (!permUser) return;
+    const values = await permForm.validateFields();
+    try {
+      await updatePermissions.mutateAsync({ id: permUser.id, ...values });
+      feedback.success('权限已更新');
+      setPermOpen(false);
+      setPermUser(null);
+    } catch (err) {
+      feedback.error(err, '权限更新失败');
+    }
+  };
+
+  const handleToggleStatus = async (record: AdminUserRoleResponse) => {
+    const nextStatus =
+      record.account_status === 'active' ? 'disabled' : 'active';
+    try {
+      await updateStatus.mutateAsync({ id: record.id, status: nextStatus });
+      feedback.success(nextStatus === 'disabled' ? '账号已禁用' : '账号已启用');
+    } catch (err) {
+      feedback.error(err, '状态更新失败');
+    }
+  };
+
+  const handleSearch = () => {
+    setKeyword(searchInput.trim());
+    setPage(1);
+  };
+
   return (
-    <AdminLayout title="用户管理">
+    <AdminLayout title="云盘用户">
       <Card
         {...adminCardProps}
         extra={
@@ -137,15 +237,68 @@ export default function AdminUsersPage() {
           </Button>
         }
       >
+        <Space wrap className="mb-4">
+          <Input.Search
+            placeholder="搜索用户名 / 邮箱 / 手机"
+            allowClear
+            className="w-64"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onSearch={handleSearch}
+            onClear={() => {
+              setSearchInput('');
+              setKeyword('');
+              setPage(1);
+            }}
+          />
+          <Select
+            allowClear
+            placeholder="角色"
+            className="w-32"
+            value={roleFilter}
+            onChange={(v) => {
+              setRoleFilter(v);
+              setPage(1);
+            }}
+            options={[
+              { value: 'admin', label: '管理员' },
+              { value: 'user', label: '普通用户' },
+              { value: 'viewer', label: '只读用户' },
+            ]}
+          />
+          <Select
+            allowClear
+            placeholder="状态"
+            className="w-32"
+            value={statusFilter}
+            onChange={(v) => {
+              setStatusFilter(v);
+              setPage(1);
+            }}
+            options={[
+              { value: 'active', label: '正常' },
+              { value: 'disabled', label: '已禁用' },
+            ]}
+          />
+        </Space>
+
         <Table
           rowKey="id"
           loading={isLoading}
           dataSource={users}
-          scroll={{ x: 900 }}
+          scroll={{ x: 1100 }}
+          pagination={{
+            current: page,
+            pageSize: limit,
+            total,
+            showSizeChanger: false,
+            showTotal: (t) => `共 ${t} 条`,
+            onChange: (p) => setPage(p),
+          }}
           columns={[
             { title: 'ID', dataIndex: 'id', width: 70 },
-            { title: '用户名', dataIndex: 'username' },
-            { title: '邮箱', dataIndex: 'email' },
+            { title: '用户名', dataIndex: 'username', width: 120 },
+            { title: '邮箱', dataIndex: 'email', ellipsis: true },
             { title: '手机', dataIndex: 'phone', width: 130 },
             {
               title: '角色',
@@ -153,6 +306,16 @@ export default function AdminUsersPage() {
               width: 110,
               render: (role: AdminUserRoleResponse['role']) => (
                 <Tag color={roleColors[role]}>{roleLabels[role]}</Tag>
+              ),
+            },
+            {
+              title: '状态',
+              dataIndex: 'account_status',
+              width: 90,
+              render: (status: AdminUserRoleResponse['account_status']) => (
+                <Tag color={status === 'active' ? 'success' : 'error'}>
+                  {status === 'active' ? '正常' : '已禁用'}
+                </Tag>
               ),
             },
             {
@@ -164,16 +327,23 @@ export default function AdminUsersPage() {
             {
               title: '操作',
               key: 'actions',
-              width: 220,
+              width: 320,
               fixed: 'right',
               render: (_, record) => (
-                <Space>
+                <Space wrap>
                   <Button
                     size="small"
                     icon={<MdEdit />}
                     onClick={() => openEdit(record)}
                   >
                     编辑
+                  </Button>
+                  <Button
+                    size="small"
+                    icon={<MdSecurity />}
+                    onClick={() => openPermissions(record)}
+                  >
+                    权限
                   </Button>
                   <Button
                     size="small"
@@ -187,7 +357,29 @@ export default function AdminUsersPage() {
                     重置密码
                   </Button>
                   <Popconfirm
-                    title="确定删除该用户？"
+                    title={
+                      record.account_status === 'active'
+                        ? '确定禁用该账号？禁用后无法登录云盘。'
+                        : '确定启用该账号？'
+                    }
+                    onConfirm={() => handleToggleStatus(record)}
+                  >
+                    <Button
+                      size="small"
+                      danger={record.account_status === 'active'}
+                      icon={
+                        record.account_status === 'active' ? (
+                          <MdBlock />
+                        ) : (
+                          <MdCheckCircle />
+                        )
+                      }
+                    >
+                      {record.account_status === 'active' ? '禁用' : '启用'}
+                    </Button>
+                  </Popconfirm>
+                  <Popconfirm
+                    title="确定删除该用户？此操作不可恢复。"
                     onConfirm={async () => {
                       try {
                         await deleteUser.mutateAsync(record.id);
@@ -280,6 +472,52 @@ export default function AdminUsersPage() {
           </Form.Item>
         </Form>
       </Modal>
+
+      <Drawer
+        title={permUser ? `权限设置 — ${permUser.username}` : '权限设置'}
+        open={permOpen}
+        onClose={() => {
+          setPermOpen(false);
+          setPermUser(null);
+        }}
+        width={400}
+        extra={
+          <Button
+            type="primary"
+            loading={updatePermissions.isPending}
+            onClick={handleSavePermissions}
+          >
+            保存
+          </Button>
+        }
+      >
+        {permUser && (
+          <div className="mb-4 text-sm text-gray-500">
+            当前角色：{roleLabels[permUser.role]}
+            {permUser.permissions.permissions_customized && (
+              <Tag className="ml-2" color="orange">
+                已自定义
+              </Tag>
+            )}
+          </div>
+        )}
+        <Form form={permForm} layout="vertical">
+          {(
+            Object.keys(permissionLabels) as Array<
+              keyof typeof permissionLabels
+            >
+          ).map((key) => (
+            <Form.Item
+              key={key}
+              name={key}
+              label={permissionLabels[key]}
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
+          ))}
+        </Form>
+      </Drawer>
     </AdminLayout>
   );
 }
