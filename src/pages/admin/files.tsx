@@ -1,10 +1,18 @@
 import { useState } from 'react';
-import { Card, Input, Select, Space, Table } from 'antd';
+import { Button, Card, Input, Popconfirm, Select, Space, Table } from 'antd';
+import { MdDelete, MdDownload, MdVisibility } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { AdminUserSelect } from '@/components/admin/AdminUserSelect';
 import { adminCardProps } from '@/components/admin/AdminPanel';
-import { useAdminFiles } from '@/network/hooks/admin';
+import { useAdminFeedback } from '@/hooks/useAdminFeedback';
+import {
+  downloadAdminFile,
+  previewAdminFile,
+  useAdminDeleteFile,
+  useAdminFiles,
+} from '@/network/hooks/admin';
+import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { formatDateTime, formatFileSize } from '@/utils/format/formatters';
 
 export default function AdminFilesPage() {
@@ -14,6 +22,9 @@ export default function AdminFilesPage() {
   const [typeFilter, setTypeFilter] = useState<'file' | 'folder' | undefined>();
   const [userIdFilter, setUserIdFilter] = useState<number | undefined>();
   const limit = 15;
+  const feedback = useAdminFeedback();
+  const canWrite = useAdminCanWrite();
+  const deleteFile = useAdminDeleteFile();
 
   const { data, isLoading, isError, refetch } = useAdminFiles({
     page,
@@ -78,7 +89,7 @@ export default function AdminFilesPage() {
           rowKey="id"
           loading={isLoading}
           dataSource={items}
-          scroll={{ x: 1100 }}
+          scroll={{ x: 1200 }}
           pagination={{
             current: page,
             pageSize: limit,
@@ -106,6 +117,86 @@ export default function AdminFilesPage() {
               width: 170,
               render: (v: string | null) =>
                 v ? formatDateTime(new Date(v)) : '-',
+            },
+            {
+              title: '操作',
+              key: 'actions',
+              width: 280,
+              fixed: 'right',
+              render: (_, record) => (
+                <Space wrap>
+                  {record.type === 'file' && (
+                    <>
+                      <Button
+                        size="small"
+                        icon={<MdDownload />}
+                        onClick={async () => {
+                          try {
+                            await downloadAdminFile(record.id, record.filename);
+                          } catch (err) {
+                            feedback.error(err, '下载失败');
+                          }
+                        }}
+                      >
+                        下载
+                      </Button>
+                      <Button
+                        size="small"
+                        icon={<MdVisibility />}
+                        onClick={async () => {
+                          try {
+                            await previewAdminFile(record.id);
+                          } catch (err) {
+                            feedback.error(err, '预览失败');
+                          }
+                        }}
+                      >
+                        预览
+                      </Button>
+                    </>
+                  )}
+                  {canWrite && (
+                    <>
+                      <Popconfirm
+                        title="移入用户回收站？"
+                        onConfirm={async () => {
+                          try {
+                            await deleteFile.mutateAsync({
+                              id: record.id,
+                              mode: 'trash',
+                            });
+                            feedback.success('已移入回收站');
+                          } catch (err) {
+                            feedback.error(err, '操作失败');
+                          }
+                        }}
+                      >
+                        <Button size="small" danger>
+                          回收站
+                        </Button>
+                      </Popconfirm>
+                      <Popconfirm
+                        title="永久删除文件及子项？此操作不可恢复"
+                        onConfirm={async () => {
+                          try {
+                            await deleteFile.mutateAsync({
+                              id: record.id,
+                              mode: 'purge',
+                            });
+                            feedback.success('已永久删除');
+                          } catch (err) {
+                            feedback.error(err, '删除失败');
+                          }
+                        }}
+                      >
+                        <Button size="small" danger icon={<MdDelete />}>
+                          删除
+                        </Button>
+                      </Popconfirm>
+                    </>
+                  )}
+                </Space>
+              ),
             },
           ]}
         />

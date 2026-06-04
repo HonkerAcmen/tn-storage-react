@@ -316,6 +316,59 @@ export function useAdminFiles(params: {
   });
 }
 
+export async function downloadAdminFile(
+  id: number,
+  filename: string,
+): Promise<void> {
+  const response = await adminHttp.get<Blob>(`/admin/files/${id}/download`, {
+    responseType: 'blob',
+  });
+  const contentType =
+    response.headers['content-type']?.split(';')[0] || 'application/octet-stream';
+  const blob = new Blob([response.data], { type: contentType });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
+export async function previewAdminFile(id: number): Promise<void> {
+  const response = await adminHttp.get<Blob>(`/admin/files/${id}/preview`, {
+    responseType: 'blob',
+  });
+  const contentType =
+    response.headers['content-type']?.split(';')[0] || 'application/octet-stream';
+  const url = window.URL.createObjectURL(
+    new Blob([response.data], { type: contentType }),
+  );
+  window.open(url, '_blank', 'noopener,noreferrer');
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
+}
+
+export function useAdminDeleteFile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      mode,
+    }: {
+      id: number;
+      mode: 'trash' | 'purge';
+    }) =>
+      await adminHttp.delete(`/admin/files/${id}`, {
+        params: { mode },
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'files'] });
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'trash'] });
+    },
+  });
+}
+
 export function useAdminTrash(params: {
   page: number;
   limit: number;
