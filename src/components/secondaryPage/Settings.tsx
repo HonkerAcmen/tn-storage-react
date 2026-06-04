@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { message } from 'antd';
 import {
   AiFillBell,
@@ -10,12 +11,10 @@ import {
 } from 'react-icons/ai';
 import {
   useChangeMyPassword,
-  useGetAdminUsers,
   useGetMyLoginHistory,
   useGetMySettings,
   useGetMyStorage,
   useResetMyPermissions,
-  useUpdateUserRole,
   useUpdateMySettings,
 } from '@/network/hooks/user';
 import { useGetShares, useRevokeShare } from '@/network/hooks/file';
@@ -442,16 +441,11 @@ function NotificationSettings() {
 function PermissionsSettings() {
   const [messageApi, contextHolder] = message.useMessage();
   const { data } = useGetMySettings();
-  const { data: adminUsersResponse } = useGetAdminUsers(
-    data?.data?.data?.role === 'admin'
-  );
   const { data: sharesResponse } = useGetShares();
   const updateSettings = useUpdateMySettings();
   const resetPermissions = useResetMyPermissions();
-  const updateUserRole = useUpdateUserRole();
   const revokeShare = useRevokeShare();
   const settings = data?.data?.data;
-  const adminUsers = adminUsersResponse?.data?.data ?? [];
   const shares = sharesResponse?.data?.data ?? [];
   const [draft, setDraft] = useState<UpdateUserSettingsRequest>({});
 
@@ -660,43 +654,17 @@ function PermissionsSettings() {
       </div>
 
       {settings?.role === 'admin' && (
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <div className="mb-4">
-            <p className="font-medium text-gray-800">用户管理</p>
-            <p className="text-sm text-gray-500">
-              管理员可以将用户设置为管理员、普通用户或访客。切换身份时会同步应用角色默认权限。
-            </p>
-          </div>
-          <div className="space-y-3">
-            {adminUsers.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3"
-              >
-                <div>
-                  <p className="font-medium text-gray-800">
-                    {user.username || '未命名用户'}
-                  </p>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                </div>
-                <select
-                  value={user.role}
-                  onChange={async (e) => {
-                    await updateUserRole.mutateAsync({
-                      id: user.id,
-                      role: e.target.value as 'admin' | 'user' | 'viewer',
-                    });
-                    messageApi.success('用户身份已更新');
-                  }}
-                  className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
-                >
-                  <option value="admin">管理员</option>
-                  <option value="user">普通用户</option>
-                  <option value="viewer">访客</option>
-                </select>
-              </div>
-            ))}
-          </div>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="font-medium text-gray-800">云盘用户管理已迁移</p>
+          <p className="mt-1 text-sm text-gray-600">
+            用户与权限管理请使用独立管理后台，与云盘账号体系分离。
+          </p>
+          <Link
+            href="/admin/login"
+            className="mt-3 inline-block rounded-lg bg-[#5542f6] px-4 py-2 text-sm text-white transition hover:bg-[#4535d4]"
+          >
+            前往管理后台
+          </Link>
         </div>
       )}
     </Section>

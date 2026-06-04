@@ -14,6 +14,7 @@ import { MdBackup, MdDownload, MdDelete, MdSchedule } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
+import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import {
   downloadAdminBackupJob,
   useAdminBackupJobs,
@@ -55,6 +56,7 @@ export default function AdminBackupPage() {
   const deleteBackup = useAdminDeleteBackupJob();
   const updateSchedule = useAdminUpdateBackupSchedule();
   const feedback = useAdminFeedback();
+  const canWrite = useAdminCanWrite();
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [scheduleForm] = Form.useForm<ScheduleFormValues>();
   const jobs = data?.data?.data ?? [];
@@ -119,17 +121,24 @@ export default function AdminBackupPage() {
         className="mb-4"
         loading={scheduleLoading}
         extra={
-          <Button
-            type="primary"
-            icon={<MdSchedule />}
-            loading={updateSchedule.isPending}
-            onClick={handleSaveSchedule}
-          >
-            保存配置
-          </Button>
+          canWrite ? (
+            <Button
+              type="primary"
+              icon={<MdSchedule />}
+              loading={updateSchedule.isPending}
+              onClick={handleSaveSchedule}
+            >
+              保存配置
+            </Button>
+          ) : null
         }
       >
-        <Form form={scheduleForm} layout="vertical" className="max-w-xl">
+        <Form
+          form={scheduleForm}
+          layout="vertical"
+          className="max-w-xl"
+          disabled={!canWrite}
+        >
           <Form.Item
             name="enabled"
             label="启用定时备份"
@@ -164,14 +173,18 @@ export default function AdminBackupPage() {
         {...adminCardProps}
         title="备份任务"
         extra={
-          <Button
-            type="primary"
-            icon={<MdBackup />}
-            loading={triggerBackup.isPending}
-            onClick={handleTrigger}
-          >
-            立即备份
-          </Button>
+          canWrite ? (
+            <Button
+              type="primary"
+              icon={<MdBackup />}
+              loading={triggerBackup.isPending}
+              onClick={handleTrigger}
+            >
+              立即备份
+            </Button>
+          ) : (
+            <span className="text-sm text-gray-400">只读角色无写权限</span>
+          )
         }
       >
         <p className="mb-4 text-sm text-gray-500">
@@ -246,7 +259,9 @@ export default function AdminBackupPage() {
                   <Popconfirm
                     title="确定删除该备份？本地文件将一并移除。"
                     disabled={
-                      record.status === 'running' || record.status === 'pending'
+                      !canWrite ||
+                      record.status === 'running' ||
+                      record.status === 'pending'
                     }
                     onConfirm={() => handleDelete(record.id)}
                   >
@@ -255,6 +270,7 @@ export default function AdminBackupPage() {
                       danger
                       icon={<MdDelete />}
                       disabled={
+                        !canWrite ||
                         record.status === 'running' ||
                         record.status === 'pending'
                       }

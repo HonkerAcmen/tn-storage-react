@@ -34,6 +34,7 @@ import {
   useAdminUpdateUserStatus,
   useAdminUsers,
 } from '@/network/hooks/admin';
+import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { AdminUserRoleResponse } from '@/network/types/Response/user';
 
 const roleLabels: Record<AdminUserRoleResponse['role'], string> = {
@@ -106,6 +107,7 @@ export default function AdminUsersPage() {
   const updatePermissions = useAdminUpdateUserPermissions();
   const updateStatus = useAdminUpdateUserStatus();
   const feedback = useAdminFeedback();
+  const canWrite = useAdminCanWrite();
 
   const [formOpen, setFormOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
@@ -232,9 +234,13 @@ export default function AdminUsersPage() {
       <Card
         {...adminCardProps}
         extra={
-          <Button type="primary" icon={<MdAdd />} onClick={openCreate}>
-            新建用户
-          </Button>
+          canWrite ? (
+            <Button type="primary" icon={<MdAdd />} onClick={openCreate}>
+              新建用户
+            </Button>
+          ) : (
+            <span className="text-sm text-gray-400">只读角色无写权限</span>
+          )
         }
       >
         <Space wrap className="mb-4">
@@ -329,72 +335,75 @@ export default function AdminUsersPage() {
               key: 'actions',
               width: 320,
               fixed: 'right',
-              render: (_, record) => (
-                <Space wrap>
-                  <Button
-                    size="small"
-                    icon={<MdEdit />}
-                    onClick={() => openEdit(record)}
-                  >
-                    编辑
-                  </Button>
-                  <Button
-                    size="small"
-                    icon={<MdSecurity />}
-                    onClick={() => openPermissions(record)}
-                  >
-                    权限
-                  </Button>
-                  <Button
-                    size="small"
-                    icon={<MdLockReset />}
-                    onClick={() => {
-                      setResetUserId(record.id);
-                      resetForm.resetFields();
-                      setResetOpen(true);
-                    }}
-                  >
-                    重置密码
-                  </Button>
-                  <Popconfirm
-                    title={
-                      record.account_status === 'active'
-                        ? '确定禁用该账号？禁用后无法登录云盘。'
-                        : '确定启用该账号？'
-                    }
-                    onConfirm={() => handleToggleStatus(record)}
-                  >
+              render: (_, record) =>
+                canWrite ? (
+                  <Space wrap>
                     <Button
                       size="small"
-                      danger={record.account_status === 'active'}
-                      icon={
-                        record.account_status === 'active' ? (
-                          <MdBlock />
-                        ) : (
-                          <MdCheckCircle />
-                        )
-                      }
+                      icon={<MdEdit />}
+                      onClick={() => openEdit(record)}
                     >
-                      {record.account_status === 'active' ? '禁用' : '启用'}
+                      编辑
                     </Button>
-                  </Popconfirm>
-                  <Popconfirm
-                    title="确定删除该用户？此操作不可恢复。"
-                    onConfirm={async () => {
-                      try {
-                        await deleteUser.mutateAsync(record.id);
-                        feedback.success('已删除');
-                      } catch (err) {
-                        feedback.error(err, '删除失败');
+                    <Button
+                      size="small"
+                      icon={<MdSecurity />}
+                      onClick={() => openPermissions(record)}
+                    >
+                      权限
+                    </Button>
+                    <Button
+                      size="small"
+                      icon={<MdLockReset />}
+                      onClick={() => {
+                        setResetUserId(record.id);
+                        resetForm.resetFields();
+                        setResetOpen(true);
+                      }}
+                    >
+                      重置密码
+                    </Button>
+                    <Popconfirm
+                      title={
+                        record.account_status === 'active'
+                          ? '确定禁用该账号？禁用后无法登录云盘。'
+                          : '确定启用该账号？'
                       }
-                    }}
-                  >
-                    <Button size="small" danger icon={<MdDelete />}>
-                      删除
-                    </Button>
-                  </Popconfirm>
-                </Space>
-              ),
+                      onConfirm={() => handleToggleStatus(record)}
+                    >
+                      <Button
+                        size="small"
+                        danger={record.account_status === 'active'}
+                        icon={
+                          record.account_status === 'active' ? (
+                            <MdBlock />
+                          ) : (
+                            <MdCheckCircle />
+                          )
+                        }
+                      >
+                        {record.account_status === 'active' ? '禁用' : '启用'}
+                      </Button>
+                    </Popconfirm>
+                    <Popconfirm
+                      title="确定删除该用户？此操作不可恢复。"
+                      onConfirm={async () => {
+                        try {
+                          await deleteUser.mutateAsync(record.id);
+                          feedback.success('已删除');
+                        } catch (err) {
+                          feedback.error(err, '删除失败');
+                        }
+                      }}
+                    >
+                      <Button size="small" danger icon={<MdDelete />}>
+                        删除
+                      </Button>
+                    </Popconfirm>
+                  </Space>
+                ) : (
+                  '-'
+                ),
             },
           ]}
         />

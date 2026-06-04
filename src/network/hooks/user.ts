@@ -189,6 +189,7 @@ export function useGetMySettings() {
   });
 }
 
+/** @deprecated 已废弃，请使用管理后台 /admin/users */
 export function useGetAdminUsers(enabled = true) {
   return useQuery({
     queryKey: ['user', 'admin', 'users'],
@@ -239,6 +240,7 @@ export function useResetMyPermissions() {
   });
 }
 
+/** @deprecated 已废弃，请使用管理后台 /admin/users */
 export function useUpdateUserRole() {
   const queryClient = useQueryClient();
   return useMutation({
