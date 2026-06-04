@@ -1,5 +1,14 @@
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 
+/** 前端合成的虚拟根目录（非数据库记录） */
+export function isVirtualRoot(node: FileSystemTreeNode): boolean {
+  return (
+    node.filename === 'root' &&
+    node.parent_id === 0 &&
+    node.UUID === '0'
+  );
+}
+
 /**
  * 将map转化为list
  */
@@ -8,7 +17,7 @@ export function mapToList(
 ): FileSystemTreeNode[] {
   const list: FileSystemTreeNode[] = [];
   map.forEach((v) => {
-    if (v.id === '1') return; // 去除root节点
+    if (isVirtualRoot(v)) return;
     list.push(v);
   });
 

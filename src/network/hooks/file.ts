@@ -24,7 +24,7 @@ import {
   SetDownloadTotalApiResponse,
   UploadFileApiResponse,
 } from '@/network/types/Response/file';
-import { isAuthed } from '@/utils/auth';
+import { useAuthed } from '@/utils/auth';
 import {
   getDownloadTotalPath,
   getFileInfoPath,
@@ -58,7 +58,7 @@ export function useGetDownloadTotal() {
  * @returns
  */
 export function useGetFileSystemTree() {
-  const authed = isAuthed();
+  const authed = useAuthed();
   return useQuery({
     queryKey: ['file', 'data', 'tree'],
     queryFn: async () => {
@@ -66,6 +66,7 @@ export function useGetFileSystemTree() {
       return res;
     },
     enabled: authed,
+    staleTime: 0,
   });
 }
 
@@ -172,7 +173,7 @@ export function useGetFileInfo(UUID: string) {
 }
 
 export function useGetDelListInTrash() {
-  const authed = isAuthed();
+  const authed = useAuthed();
   return useQuery({
     queryKey: ['file', 'data', 'trash'],
     queryFn: async () =>
@@ -182,7 +183,7 @@ export function useGetDelListInTrash() {
 }
 
 export function useGetFavorites() {
-  const authed = isAuthed();
+  const authed = useAuthed();
   return useQuery({
     queryKey: ['file', 'favorite'],
     queryFn: async () =>
@@ -192,16 +193,17 @@ export function useGetFavorites() {
 }
 
 export function useGetRecents() {
-  const authed = isAuthed();
+  const authed = useAuthed();
   return useQuery({
     queryKey: ['file', 'recent'],
     queryFn: async () => await http.get<GetRecentsApiResponse>('/file/recent'),
     enabled: authed,
+    staleTime: 0,
   });
 }
 
 export function useGetShares() {
-  const authed = isAuthed();
+  const authed = useAuthed();
   return useQuery({
     queryKey: ['file', 'share'],
     queryFn: async () => await http.get<GetShareListApiResponse>('/file/share'),

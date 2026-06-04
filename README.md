@@ -1,211 +1,304 @@
-# 伏羲文化数据云盘 - 文件存储管理系统
+# 伏羲文化数据云盘 · 前端
 
-一个基于 Next.js 和 React 的现代化文件存储管理系统，提供直观的用户界面和丰富的文件管理功能。
+基于 Next.js 16 + React 19 的文件存储管理 Web 端，对接 NestJS 后端 API（仓库 `TNStorage`）。
 
-## ✨ 功能特性
+## 仓库关系
 
-### 📁 文件管理
-- **我的云** - 仪表板视图，展示存储概览和最近文件
-- **所有文件** - 完整的文件浏览器，支持文件夹导航和面包屑导航
-- **最近的文件** - 快速访问最近访问、上传或修改的文件
-- **收藏** - 管理收藏的文件和文件夹
-- **已删除文件** - 回收站功能，支持恢复和永久删除
+| 仓库 | 路径示例 | 说明 |
+|------|----------|------|
+| **前端（本仓库）** | `tn-storage-react/` | Next.js 页面与 API 调用 |
+| **后端** | `TNStorage/` | NestJS API、MySQL、MinIO、Docker Compose |
 
-### 🔧 文件操作
-- ✅ 文件上传（支持多文件上传）
-- ✅ 文件下载
-- ✅ 文件分享
-- ✅ 文件重命名
-- ✅ 文件删除（移至回收站）
-- ✅ 文件收藏/取消收藏
-- ✅ 文件夹创建和导航
-- ✅ 文件详情查看
-- ✅ 文件搜索
-
-### 🎨 用户体验
-- 响应式设计，适配各种屏幕尺寸
-- 直观的图标和视觉反馈
-- 流畅的导航体验
-- 实时搜索功能
-- 面包屑导航支持深层文件夹结构
-
-## 🛠️ 技术栈
-
-- **框架**: [Next.js 16](https://nextjs.org/) - React 全栈框架
-- **UI 库**: [Ant Design 5](https://ant.design/) - 企业级 UI 组件库
-- **样式**: [Tailwind CSS 4](https://tailwindcss.com/) - 实用优先的 CSS 框架
-- **语言**: [TypeScript](https://www.typescriptlang.org/) - 类型安全的 JavaScript
-- **图标**: [React Icons](https://react-icons.github.io/react-icons/) - 丰富的图标库
-- **图表**: [ECharts](https://echarts.apache.org/) - 数据可视化
-- **状态管理**: React Context API + Custom Hooks
-
-## 📦 项目结构
+两个仓库需放在**同级目录**，一键部署由后端仓库的 `docker-compose.yml` 编排。
 
 ```
-tn-storage-react/
-├── src/
-│   ├── components/          # 通用组件
-│   │   ├── files/          # 文件相关组件
-│   │   ├── FileListItem.tsx
-│   │   └── ...
-│   ├── contexts/            # React Context
-│   │   └── FileDataContext.tsx
-│   ├── features/            # 功能模块
-│   │   └── files/
-│   │       ├── hooks/      # 自定义 Hooks
-│   │       └── services/   # 业务逻辑服务
-│   ├── pages/              # Next.js 页面
-│   │   ├── _components/   # 页面组件
-│   │   └── index.tsx
-│   ├── types/              # TypeScript 类型定义
-│   ├── utils/              # 工具函数
-│   │   ├── fileSystem/    # 文件系统工具
-│   │   ├── format/        # 格式化工具
-│   │   └── constants/     # 常量定义
-│   └── styles/            # 全局样式
-├── public/                 # 静态资源
-└── package.json
+codefiles/
+├── TNStorage/          # 后端 + docker-compose + nginx
+└── tn-storage-react/   # 本仓库
 ```
-
-## 🚀 快速开始
-
-### 环境要求
-
-- Node.js 18+ 
-- npm / yarn / pnpm / bun
-
-### 安装依赖
-
-```bash
-npm install
-# 或
-yarn install
-# 或
-pnpm install
-```
-
-### 开发模式
-
-```bash
-npm run dev
-# 或
-yarn dev
-# 或
-pnpm dev
-# 或
-bun dev
-```
-
-打开 [http://localhost:3000](http://localhost:3000) 查看应用。
-
-### 构建生产版本
-
-```bash
-npm run build
-npm run start
-```
-
-### 代码检查
-
-```bash
-npm run lint
-```
-
-## 📖 使用说明
-
-### 基本操作
-
-1. **上传文件**: 点击左侧边栏的"上传"按钮，选择要上传的文件
-2. **浏览文件**: 在"所有文件"视图中，点击文件夹进入子目录
-3. **文件操作**: 点击文件右侧的菜单按钮，可以执行下载、分享、重命名、删除等操作
-4. **收藏文件**: 在文件菜单中点击"添加到收藏"
-5. **搜索文件**: 使用顶部搜索栏快速查找文件
-6. **恢复文件**: 在"已删除文件"视图中，可以恢复或永久删除文件
-
-### 文件夹导航
-
-- 在"所有文件"视图中，支持完整的文件夹导航
-- 使用面包屑导航快速返回上级目录
-- 在其他视图中点击文件夹会自动跳转到"所有文件"视图查看文件夹内容
-
-## 🏗️ 架构设计
-
-### 模块化设计
-
-项目采用功能模块化的架构：
-
-- **Features**: 按功能划分的模块，包含相关的 hooks 和 services
-- **Components**: 可复用的 UI 组件
-- **Utils**: 纯函数工具库，不依赖业务逻辑
-- **Contexts**: 全局状态管理
-
-### 自定义 Hooks
-
-- `useFileActions` - 统一管理文件操作逻辑
-- `useFileMenu` - 生成文件操作菜单
-- `useFavorites` - 收藏功能管理
-- `useDeletedFiles` - 回收站功能管理
-
-### 服务层
-
-- `fileOperations` - 文件操作服务（下载、分享、重命名等）
-- `fileService` - 文件系统 API 服务
-
-## 🔄 数据流
-
-1. **文件系统数据**: 通过 `FileDataContext` 全局管理
-2. **本地存储**: 使用 localStorage 持久化收藏和删除记录
-3. **状态更新**: 通过 Context API 和自定义 Hooks 实现响应式更新
-
-## 🎯 开发计划
-
-### 已实现功能 ✅
-- [x] 文件列表展示
-- [x] 文件夹导航
-- [x] 文件上传
-- [x] 文件操作（下载、分享、重命名、删除）
-- [x] 收藏功能
-- [x] 回收站功能
-- [x] 搜索功能
-- [x] 文件详情查看
-
-### 待实现功能 🚧
-- [ ] 真实的文件上传 API 集成
-- [ ] 文件预览功能
-- [ ] 批量操作
-- [ ] 拖拽上传
-- [ ] 文件分享链接生成
-- [ ] 用户权限管理
-- [ ] 文件版本控制
-
-## 🤝 贡献指南
-
-欢迎提交 Issue 和 Pull Request！
-
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
-## 📝 代码规范
-
-- 使用 TypeScript 进行类型检查
-- 遵循 ESLint 规则
-- 使用 Prettier 进行代码格式化
-- 组件和函数使用清晰的命名
-- 添加必要的注释和文档
-
-## 📄 许可证
-
-本项目采用 MIT 许可证。
-
-## 🙏 致谢
-
-- [Next.js](https://nextjs.org/) - 优秀的 React 框架
-- [Ant Design](https://ant.design/) - 企业级 UI 组件库
-- [Tailwind CSS](https://tailwindcss.com/) - 实用优先的 CSS 框架
 
 ---
 
-如有问题或建议，欢迎提交 Issue！
+## 环境要求
+
+- Node.js >= 18
+- pnpm（推荐）或 npm
+
+环境变量模板（按模式选用）：
+
+| 文件 | 模式 |
+|------|------|
+| `.env.development.example` | 模式一：本地开发 |
+| `.env.deployment.example` | 模式二：Docker 部署 / 验收 |
+| `.env.production.example` | 模式三：正式环境 |
+
+---
+
+## 三种运行模式
+
+与后端 `TNStorage` 对齐，共三种模式。下表为**本仓库（前端）**需关注的变量；后端、MySQL、MinIO 参数见 **[TNStorage/README.md](../TNStorage/README.md)**。
+
+### 模式一：本地开发（Development）
+
+前后端分别在本机进程运行，浏览器只访问 Next（3000），API 经 Next 开发代理转发到 NestJS。
+
+**适用**：日常改页面、联调接口。
+
+**启动顺序**：
+
+1. 本机启动 MySQL（3306）、MinIO（9000）
+2. 后端：`cd ../TNStorage` → `cp .env.development.example .env.local` → `pnpm start:dev`（默认 `http://127.0.0.1:3002/api/v1`）
+3. 前端：`cp .env.development.example .env.local` → `pnpm install` → `pnpm dev`
+
+**访问**： [http://localhost:3000](http://localhost:3000)
+
+**前端环境变量**（`.env.local`，模板见 `.env.development.example`）：
+
+| 变量 | 必填 | 示例值 | 说明 |
+|------|------|--------|------|
+| `NEXT_PUBLIC_API_URL` | 是 | `/api/v1` | axios 请求前缀；走 Next `rewrites` 代理 |
+| `API_PROXY_TARGET` | 是 | `http://127.0.0.1:3002` | 仅 `pnpm dev` 时生效，代理到 NestJS |
+
+> **Windows**：`API_PROXY_TARGET` 请用 `127.0.0.1`，不要用 `localhost`，否则易出现 `ECONNREFUSED ::1:3002`。
+
+**可选：浏览器直连后端**（不用 Next 代理）：
+
+```env
+NEXT_PUBLIC_API_URL=http://127.0.0.1:3002/api/v1
+# 此时可不设 API_PROXY_TARGET
+```
+
+需与后端 `CORS_ORIGIN=http://localhost:3000` 一致。
+
+**实现位置**：`next.config.ts`（开发模式 `rewrites`）、`src/network/http.ts`（`BASE_URL`）。
+
+---
+
+### 模式二：Docker 部署 / 验收（Deployment）
+
+由 **TNStorage** 目录的 `docker compose` 一键拉起 MySQL、MinIO、API、本前端（`web`）、Nginx。本仓库**无需单独起 `pnpm dev`**。
+
+**适用**：本机验收全栈、演示、与生产相近的集成环境。
+
+**步骤**（在后端仓库执行）：
+
+```bash
+cd ../TNStorage
+cp .env.example .env
+# 编辑 .env：至少修改 MYSQL_ROOT_PASSWORD、DB_PASSWORD、MINIO_SECRET_KEY
+docker compose up -d --build
+docker compose ps
+```
+
+**目录要求**：`TNStorage/` 与 `tn-storage-react/` **同级**。
+
+**访问**：
+
+| 地址 | 说明 |
+|------|------|
+| http://localhost | Web（Nginx → `web`） |
+| http://localhost/api/v1/health | 后端健康检查 |
+
+**前端相关变量**（写在 `TNStorage/.env`，构建 `web` 镜像时注入）：
+
+| 变量 | 示例值 | 说明 |
+|------|--------|------|
+| `NEXT_PUBLIC_API_URL` | `/api/v1` | Docker build-arg，浏览器同域访问 API |
+| `HTTP_PORT` | `80` | Nginx 对外端口（在后端 `.env`） |
+| `CORS_ORIGIN` | `http://localhost` | 须与浏览器地址栏一致（在后端 `.env`） |
+
+本仓库模板：`.env.deployment.example`（仅说明；一般不必复制到本目录）。
+
+**架构**：
+
+```
+浏览器 → Nginx :80
+           ├─ /           → web（Next.js standalone）
+           └─ /api/v1/*   → api（NestJS）→ mysql / minio
+```
+
+---
+
+### 模式三：正式环境（Production）
+
+生产服务器或云主机上使用 Docker Compose（或等价编排），Nginx 对外提供 HTTPS 域名，前后端同域。
+
+**适用**：线上交付。
+
+**前端构建**：在 `TNStorage` 构建 `web` 服务时传入：
+
+| 变量 | 示例值 | 说明 |
+|------|--------|------|
+| `NEXT_PUBLIC_API_URL` | `/api/v1` | **不要**写死后端 IP/端口 |
+
+模板见 `.env.production.example`；完整后端变量（数据库、MinIO、`CORS_ORIGIN=https://你的域名` 等）见 `TNStorage/.env.production.example`。
+
+**注意**：
+
+- `CORS_ORIGIN` 必须与用户浏览器访问的 origin 完全一致（含 `https`）
+- 生产密码使用 `change-me-*` 占位符的项必须全部修改
+
+---
+
+## API 配置（三种模式通用）
+
+| 项 | 说明 |
+|----|------|
+| 基础路径 | `process.env.NEXT_PUBLIC_API_URL`，默认 `/api/v1` |
+| 定义位置 | `src/network/http.ts` |
+| 认证 | 请求头 `Authorization: Bearer <token>`，token 存 `localStorage.token` |
+| 响应格式 | `{ code, message, data, timestamp }`，`code === 0` 为成功 |
+
+---
+
+## 前端调用的后端接口一览
+
+以下路径均相对于 `{NEXT_PUBLIC_API_URL}`（如 `/api/v1`）。
+
+### 认证（无需 Token）
+
+| 方法 | 路径 | 请求体 / 参数 | 前端调用 |
+|------|------|---------------|----------|
+| POST | `/auth/login` | `{ email, password }` | `useLogin` |
+| POST | `/auth/register` | `{ username, password, email, phone, desc? }` | `useRegister` |
+| GET | `/auth/salt/:email` | 路径参数 `email` | （预留，当前页面未用） |
+
+> 前端 `useForgotPassword` 调用 `/auth/forgot-password`，**后端尚未实现**，请勿依赖。
+
+### 用户（需 Token）
+
+| 方法 | 路径 | 请求体 / 参数 | 前端调用 |
+|------|------|---------------|----------|
+| GET | `/user/profile/me` | — | `useGetMyProfile` |
+| GET | `/user/username/:username` | 路径 `username` | `useGetUserWithName` |
+| POST | `/user/update/me` | `{ username, email, phone, desc }` | `useUpdateMyUserData` |
+| PUT | `/user/changePassword/me` | `{ oldPassword, newPassword }` | `useChangeMyPassword` |
+| GET | `/user/storage/me` | — | `useGetMyStorage` |
+| GET | `/user/settings/me` | — | `useGetMySettings` |
+| POST | `/user/settings/me` | 见下方「用户设置字段」 | `useUpdateMySettings` |
+| POST | `/user/settings/me/reset-permissions` | — | `useResetMyPermissions` |
+| GET | `/user/security/login-history` | — | `useGetMyLoginHistory` |
+| POST | `/user/avatar/upload/me` | `multipart/form-data`，字段名 `avatar`，≤1MB | `useAvatarUploadMe` |
+| GET | `/user/avatar/me` | — | `useGetMyAvatar` |
+| GET | `/user/admin/users` | —（需 admin） | `useGetAdminUsers` |
+| PUT | `/user/admin/role/:id` | `{ role: 'admin' \| 'user' \| 'viewer' }` | `useUpdateUserRole` |
+
+**用户设置字段**（`POST /user/settings/me` 可选 body）：
+
+`language`, `theme`, `auto_save`, `default_upload_parent_id`, `auto_clean_temp`, `two_factor_enabled`, `email_notification`, `upload_notification`, `share_notification`, `allow_file_upload`, `allow_file_download`, `allow_file_delete`, `allow_favorite`, `allow_share`
+
+### 文件（除分享下载外需 Token）
+
+#### 分片上传（实际上传入口）
+
+| 步骤 | 方法 | 路径 | 说明 |
+|------|------|------|------|
+| 1 初始化 | POST | `/file/upload/init/:bucket/:parentId` | JSON body 见下 |
+| 2 传分片 | POST | `/file/upload/chunk/:taskId/:chunkIndex` | `multipart`，字段名 `chunk` |
+| 3 查进度 | GET | `/file/upload/status/:taskId` | 轮询至 `status === 'completed'` |
+
+**初始化 body**：
+
+```json
+{
+  "filename": "example.pdf",
+  "mimetype": "application/pdf",
+  "size": 1048576,
+  "totalChunks": 1
+}
+```
+
+**实现位置**：`src/features/files/services/chunkUpload.ts`（默认分片 5MB）。
+
+> `useUploadFile`（`POST /file/upload/:bucket/:parentid`）为旧接口封装，**后端无此路由**，实际上传请走分片流程。
+
+#### 浏览与操作
+
+| 方法 | 路径 | Body / 参数 | 前端调用 |
+|------|------|-------------|----------|
+| GET | `/file/tree` | — | `useGetFileSystemTree` |
+| GET | `/file/info/:UUID` | — | `useGetFileInfo` |
+| GET | `/file/data/:bucket/:UUID` | —，`responseType: blob` | `useGetFile` |
+| POST | `/file/folder/create/:foldername/:parent` | — | `useCreateFolder` |
+| PUT | `/file/rename/:UUID` | `{ filename }` | `FileDataContext` |
+| POST | `/file/move/:UUID` | `{ targetParentId }` | `FileDataContext` |
+| POST | `/file/copy/:UUID` | `{ targetParentId }` | `FileDataContext` |
+
+#### 回收站
+
+| 方法 | 路径 | 参数 | 前端调用 |
+|------|------|------|----------|
+| GET | `/file/trash` | — | `useGetDelListInTrash` |
+| POST | `/file/trash/move/:srcBucket/:UUID/:type` | `type`: `file` \| `folder` | `usePushFileDataTrash` |
+| POST | `/file/trash/restore/:UUID/:type` | — | `useReStore` |
+| DELETE | `/file/:bucket/:UUID/:type` | 永久删除 | `useDeleteFile` |
+| DELETE | `/file/trash/empty/:bucket` | — | `useDeleteAllTrash` |
+
+#### 收藏 / 最近 / 分享
+
+| 方法 | 路径 | 前端调用 |
+|------|------|----------|
+| GET | `/file/favorite` | `useGetFavorites` |
+| POST | `/file/favorite/:UUID` | `useAddFavorite` |
+| DELETE | `/file/favorite/:UUID` | `useRemoveFavorite` |
+| GET | `/file/recent` | `useGetRecents` |
+| POST | `/file/recent/access/:UUID` | `useMarkRecentAccess` |
+| POST | `/file/share/:UUID` | `useCreateShare` |
+| GET | `/file/share` | `useGetShares` |
+| DELETE | `/file/share/:token` | `useRevokeShare` |
+| GET | `/file/share/download/:token` | 公开下载，浏览器直链 |
+
+分享链接格式：`{origin}/api/v1/file/share/download/{token}`
+
+#### 统计
+
+| 方法 | 路径 | 前端调用 | 备注 |
+|------|------|----------|------|
+| GET | `/file/download/total` | `useGetDownloadTotal` | |
+| GET | `/file/upload/total` | `useGetUploadTotal` | |
+| GET | `/file/upload/typeTotal` | `useGetFilesTypeCount` | |
+| PUT | `/file/download/set/total` | `useSetDownloadTotal` | 前端误用 GET，应改为 PUT |
+
+---
+
+## 功能模块
+
+- **我的云** — 存储概览、最近文件
+- **所有文件** — 树形目录、面包屑、文件夹导航
+- **最近 / 收藏 / 回收站**
+- **上传** — 分片上传、进度展示
+- **设置** — 个人资料、密码、主题、权限（管理员可管用户角色）
+
+---
+
+## 项目结构
+
+```
+src/
+├── network/           # axios 实例、React Query hooks、类型定义
+│   ├── http.ts        # BASE_URL、拦截器
+│   ├── hooks/         # login / user / file
+│   └── types/         # Request / Response 类型
+├── features/files/    # 文件业务（chunkUpload、fileOperations）
+├── contexts/          # FileDataContext 等
+├── components/        # UI 组件
+├── pages/             # Next.js 页面
+└── utils/             # auth、fileSystem 工具
+```
+
+---
+
+## 常用命令
+
+```bash
+pnpm run dev      # 开发
+pnpm run build    # 生产构建（standalone，供 Docker）
+pnpm run start    # 生产运行
+pnpm run lint     # ESLint
+```
+
+---
+
+## 许可证
+
+UNLICENSED（与后端 `package.json` 一致）

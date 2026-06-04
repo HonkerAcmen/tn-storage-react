@@ -15,6 +15,7 @@ import {
 import {
   getChildrenByParentId,
   findPathToNode,
+  isVirtualRoot,
 } from '@/utils/fileSystem/fileSystemUtils';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import FileListItem from '@/components/FileListItem';
@@ -125,7 +126,7 @@ export default function AllFiles() {
     if (!currentFolderId) return [];
     const path = findPathToNode(fileTree, currentFolderId);
     // 确保路径包含根目录，如果第一个节点不是根目录，则添加根目录
-    if (path.length > 0 && path[0].id !== '1') {
+    if (path.length > 0 && !isVirtualRoot(path[0])) {
       // 如果路径不包含根目录，我们需要找到根目录
       // 但通常 findPathToNode 应该总是从根开始，所以这里主要是确保逻辑正确
       return path;
@@ -354,7 +355,7 @@ export default function AllFiles() {
                 ),
               },
               ...breadcrumbPath
-                .filter((node) => node.id !== '1')
+                .filter((node) => !isVirtualRoot(node))
                 .map((node, index, filteredPath) => {
                   const isLast = index === filteredPath.length - 1;
                   return {

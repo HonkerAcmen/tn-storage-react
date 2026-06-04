@@ -84,7 +84,7 @@ function cloneEmptyRoot(): FileSystemTreeNode {
  */
 const transformTreeNode = (node: BackendTreeNode): FileSystemTreeNode => {
   return {
-    id: node.id,
+    id: String(node.id),
     UUID: node.UUID,
     filename: node.filename || 'Untitled', // 提供默认名
     type: node.type,
@@ -139,7 +139,7 @@ function buildFileMap(
 
   function transformation(root: FileSystemTreeNode) {
     if (!root) return;
-    map.set(root.id, root);
+    map.set(String(root.id), root);
 
     if ('children' in root && root.children) {
       root.children.forEach(transformation);
@@ -452,7 +452,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
         onOk={() => void handleRenameConfirm()}
         onCancel={handleRenameCancel}
         confirmLoading={renameLoading}
-        destroyOnClose
+        destroyOnHidden
       >
         <div className="space-y-4 pt-2">
           <p className="text-sm text-gray-500">
@@ -481,7 +481,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
         onOk={() => void handleTransferConfirm()}
         onCancel={handleTransferCancel}
         confirmLoading={transferLoading}
-        destroyOnClose
+        destroyOnHidden
         width={700}
       >
         <div className="space-y-4 pt-2">

@@ -234,7 +234,7 @@ export default function FilePreviewModal({
       onCancel={onClose}
       footer={null}
       width={previewType === 'pdf' ? 960 : 860}
-      destroyOnClose
+      destroyOnHidden
       title={
         <div className="flex items-center gap-3">
           <div className="text-gray-400">{file ? getFileIcon(fileExt, 'small') : null}</div>

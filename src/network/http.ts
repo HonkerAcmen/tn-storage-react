@@ -12,8 +12,8 @@ import { clearAuthSession, forceRedirectToLogin } from '@/utils/auth';
  * 统一处理请求和响应拦截器
  */
 
-// API 基础 URL（可根据环境变量配置）
-const BASE_URL = 'http://localhost:3002/api/v1';
+// API 基础 URL：生产 Docker 部署用 /api/v1（Nginx 同域反代）；本地开发见 .env.local.example
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
 
 const PROFILE_ME_PATH = '/user/profile/me';
 

@@ -12,6 +12,7 @@ import {
   RegisterRequest,
 } from '@/network/types/Request/auth';
 import { notifyAuthChanged } from '@/utils/auth';
+import { queryClient } from '@/network/queryClient';
 
 export function useLogin() {
   return useMutation({
@@ -28,6 +29,8 @@ export function useLogin() {
       localStorage.setItem('email', email);
       localStorage.setItem('userId', userId);
       notifyAuthChanged();
+      await queryClient.invalidateQueries({ queryKey: ['file'] });
+      await queryClient.invalidateQueries({ queryKey: ['user'] });
 
       return { token, username, email, userId };
     },

@@ -22,6 +22,7 @@ import {
 } from 'react-icons/ai';
 import { formatFileSize } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
+import { isVirtualRoot } from '@/utils/fileSystem/fileSystemUtils';
 import { useFavorites } from '@/features/files/hooks';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 
@@ -596,7 +597,7 @@ function FilesTab() {
   const files = useMemo(
     () =>
       allFiles
-        .filter((item) => item.id !== '1')
+        .filter((item) => !isVirtualRoot(item))
         .sort(
           (a, b) =>
             new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()

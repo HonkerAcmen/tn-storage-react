@@ -1,5 +1,6 @@
 import { AiFillFolder } from 'react-icons/ai'; // 假设你用的是这个库
 import { FileSystemTreeNode } from '../../network/types/Response/file';
+import { isVirtualRoot } from '@/utils/fileSystem/fileSystemUtils';
 interface FolderItemProps {
   item: FileSystemTreeNode;
   selectKey: string;
@@ -34,7 +35,7 @@ export default function FolderItem({
           <div className="mr-2">
             <AiFillFolder className="h-4 w-4 text-amber-400" />
           </div>
-          {item.id === '1' ? <div>根目录</div> : <div>{item.filename}</div>}
+          {isVirtualRoot(item) ? <div>根目录</div> : <div>{item.filename}</div>}
         </div>
       </li>
 
