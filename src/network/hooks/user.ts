@@ -48,6 +48,7 @@ export function useGetMyProfile() {
       return res;
     },
     enabled: authed,
+    retry: false,
   });
 }
 

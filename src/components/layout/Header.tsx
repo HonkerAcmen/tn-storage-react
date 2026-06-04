@@ -64,7 +64,7 @@ export default function Header() {
       {/* 左侧：LOGO + 搜索 */}
       <div className="flex items-center justify-center">
         <h2 className="animate-gradient mr-16 ml-4 cursor-pointer bg-linear-to-r from-red-500 via-yellow-500 to-blue-500 bg-size-[200%_200%] bg-clip-text text-[24px] font-bold text-transparent">
-          TNStorage
+          伏羲文化存储系统
         </h2>
 
         {authed && (

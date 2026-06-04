@@ -68,17 +68,37 @@ export function useHydrated(): boolean {
 }
 
 /**
- * 退出登录
- * 清除所有本地数据并回到访客页
+ * 清除本地登录态（token 与用户信息）
  */
-export function logout() {
+export function clearAuthSession() {
+  if (typeof window === 'undefined') return;
   localStorage.removeItem('token');
   localStorage.removeItem('username');
   localStorage.removeItem('email');
   localStorage.removeItem('userId');
   notifyAuthChanged();
-  // 清除 React Query 缓存
   queryClient.clear();
-  // 回到访客页
+}
+
+let redirectingToLogin = false;
+
+/**
+ * 清空本地用户信息并跳转登录页（用于 profile 等鉴权接口异常）
+ */
+export function forceRedirectToLogin() {
+  if (typeof window === 'undefined') return;
+  clearAuthSession();
+  if (window.location.pathname === '/login') return;
+  if (redirectingToLogin) return;
+  redirectingToLogin = true;
+  window.location.href = '/login';
+}
+
+/**
+ * 退出登录
+ * 清除所有本地数据并回到访客页
+ */
+export function logout() {
+  clearAuthSession();
   window.location.href = '/visitor';
 }

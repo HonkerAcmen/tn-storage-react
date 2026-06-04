@@ -5,6 +5,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from 'axios';
 import { message } from 'antd';
+import { clearAuthSession, forceRedirectToLogin } from '@/utils/auth';
 
 /**
  * Axios 请求配置
@@ -13,6 +14,13 @@ import { message } from 'antd';
 
 // API 基础 URL（可根据环境变量配置）
 const BASE_URL = 'http://localhost:3002/api/v1';
+
+const PROFILE_ME_PATH = '/user/profile/me';
+
+function isProfileMeRequest(url?: string): boolean {
+  if (!url) return false;
+  return url.includes(PROFILE_ME_PATH);
+}
 
 /**
  * 创建 axios 实例
@@ -71,10 +79,14 @@ request.interceptors.response.use(
       // 请求守卫
       switch (status) {
         case 401:
-          // 可以在这里处理登出逻辑
           if (token && window.location.pathname !== '/login') {
+            clearAuthSession();
             window.location.href = '/login';
-            localStorage.removeItem('token');
+          }
+          break;
+        case 500:
+          if (isProfileMeRequest(error.config?.url)) {
+            forceRedirectToLogin();
           }
           break;
       }

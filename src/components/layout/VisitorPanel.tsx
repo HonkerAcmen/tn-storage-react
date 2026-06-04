@@ -54,7 +54,7 @@ export default function VisitorPanel() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-base leading-8 text-[#5f5b6b] md:text-lg">
-              TNStorage
+              伏羲文化存储系统
               为您提供安全稳定的云端存储体验，支持多端同步与高效文件管理，让数据触手可及。
             </p>
 
@@ -95,7 +95,7 @@ export default function VisitorPanel() {
                   <p className="text-sm tracking-[0.24em] text-white/60 uppercase">
                     Workspace
                   </p>
-                  <h2 className="mt-3 text-3xl font-semibold">TNStorage</h2>
+                  <h2 className="mt-3 text-3xl font-semibold">伏羲文化存储系统</h2>
                 </div>
                 <div className="rounded-2xl bg-white/12 p-3">
                   <AiFillCloud className="h-8 w-8 text-white" />
@@ -166,7 +166,7 @@ export default function VisitorPanel() {
                   Before You Sign In
                 </p>
                 <h3 className="mt-2 text-3xl font-semibold text-[#2e2c34]">
-                  伏羲云存储系统，安全可用
+                  伏羲文化存储系统，安全可用
                 </h3>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -192,7 +192,7 @@ export default function VisitorPanel() {
         <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.15fr_0.8fr_0.8fr_0.9fr]">
           <div>
             <p className="text-sm font-medium tracking-[0.24em] text-white/45 uppercase">
-              TNStorage
+              伏羲文化存储系统
             </p>
             <h4 className="mt-4 text-3xl font-semibold">访客入口</h4>
             <p className="mt-4 max-w-xl text-sm leading-7 text-white/68">
@@ -253,7 +253,7 @@ export default function VisitorPanel() {
         </div>
 
         <div className="mx-auto mt-10 flex max-w-6xl flex-col gap-3 border-t border-white/10 pt-6 text-sm text-white/45 md:flex-row md:items-center md:justify-between">
-          <p>© 2026 TNStorage. All rights reserved.</p>
+          <p>© 2026 伏羲文化存储系统. All rights reserved.</p>
           <p>
             Cloud workspace for storage, organization and account-based access.
           </p>
