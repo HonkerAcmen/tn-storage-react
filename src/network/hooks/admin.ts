@@ -5,6 +5,9 @@ import {
   GetAdminBackupJobApiResponse,
   GetAdminBackupJobsApiResponse,
   GetAdminBackupScheduleApiResponse,
+  GetAdminFilesApiResponse,
+  GetAdminSharesApiResponse,
+  GetAdminTrashApiResponse,
   GetAdminMetricsApiResponse,
   GetAdminStorageOverviewApiResponse,
   GetAdminStorageUsersApiResponse,
@@ -290,4 +293,72 @@ export async function downloadAdminBackupJob(id: string): Promise<void> {
   link.click();
   link.remove();
   window.URL.revokeObjectURL(url);
+}
+
+export function useAdminFiles(params: {
+  page: number;
+  limit: number;
+  keyword?: string;
+  type?: 'file' | 'folder';
+}) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'files', params],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminFilesApiResponse>('/admin/files', { params }),
+    enabled: authed,
+  });
+}
+
+export function useAdminTrash(params: {
+  page: number;
+  limit: number;
+  keyword?: string;
+}) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'trash', params],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminTrashApiResponse>('/admin/trash', { params }),
+    enabled: authed,
+  });
+}
+
+export function useAdminShares(params: {
+  page: number;
+  limit: number;
+  keyword?: string;
+  status?: 'active' | 'revoked' | 'expired';
+}) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'shares', params],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminSharesApiResponse>('/admin/shares', {
+        params,
+      }),
+    enabled: authed,
+  });
+}
+
+export function useAdminPurgeTrash() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) =>
+      await adminHttp.delete(`/admin/trash/${id}`),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'trash'] });
+    },
+  });
+}
+
+export function useAdminRevokeShare() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) =>
+      await adminHttp.post(`/admin/shares/${id}/revoke`),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'shares'] });
+    },
+  });
 }

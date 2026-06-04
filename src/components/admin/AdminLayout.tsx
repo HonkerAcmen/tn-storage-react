@@ -12,6 +12,11 @@ import {
   MdLogout,
   MdAdminPanelSettings,
   MdHistory,
+  MdFolder,
+  MdDeleteOutline,
+  MdLink,
+  MdBuild,
+  MdFactCheck,
 } from 'react-icons/md';
 import { HiOutlineCloud } from 'react-icons/hi';
 import AdminGuard from './AdminGuard';
@@ -26,6 +31,11 @@ const menuItems = [
   { key: '/admin', label: '仪表盘', icon: <MdDashboard /> },
   { key: '/admin/staff', label: '管理员账号', icon: <MdAdminPanelSettings /> },
   { key: '/admin/users', label: '云盘用户', icon: <MdPeople /> },
+  { key: '/admin/files', label: '全局文件', icon: <MdFolder /> },
+  { key: '/admin/trash', label: '回收站', icon: <MdDeleteOutline /> },
+  { key: '/admin/shares', label: '分享链接', icon: <MdLink /> },
+  { key: '/admin/ops', label: '运维中心', icon: <MdBuild /> },
+  { key: '/admin/audit-logs', label: '操作审计', icon: <MdFactCheck /> },
   { key: '/admin/storage', label: '存储分析', icon: <MdStorage /> },
   { key: '/admin/backup', label: '数据备份', icon: <MdBackup /> },
   { key: '/admin/login-logs', label: '登录日志', icon: <MdHistory /> },
