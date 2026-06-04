@@ -1,15 +1,15 @@
 # 伏羲文化数据云盘 · 前端
 
-基于 Next.js 16 + React 19 的文件存储管理 Web 端，对接 NestJS 后端 API（仓库 `TNStorage`）。
+基于 **Next.js 16 + React 19 + Ant Design** 的文件存储 Web 端，包含 **云盘用户界面** 与 **管理后台**，对接 NestJS 后端（仓库 `TNStorage`）。
 
 ## 仓库关系
 
 | 仓库 | 路径示例 | 说明 |
 |------|----------|------|
-| **前端（本仓库）** | `tn-storage-react/` | Next.js 页面与 API 调用 |
+| **前端（本仓库）** | `tn-storage-react/` | Next.js 页面、云盘与管理后台 UI |
 | **后端** | `TNStorage/` | NestJS API、MySQL、MinIO、Docker Compose |
 
-两个仓库需放在**同级目录**，一键部署由后端仓库的 `docker-compose.yml` 编排。
+两个仓库需放在**同级目录**，一键部署由后端 `docker-compose.yml` 编排。
 
 ```
 codefiles/
@@ -17,257 +17,270 @@ codefiles/
 └── tn-storage-react/   # 本仓库
 ```
 
+完整 API 参数与后端环境变量见 **[TNStorage/README.md](../TNStorage/README.md)**。
+
+---
+
+## 功能概览
+
+### 云盘用户端（`/`, `/login`）
+
+| 模块 | 路由 / 入口 | 说明 |
+|------|-------------|------|
+| 我的云 | `/` | 存储概览、最近文件 |
+| 所有文件 | `/`（文件 Tab） | 树形目录、面包屑、上传、移动/复制/重命名 |
+| 最近 / 收藏 / 回收站 | 侧栏 | 快捷访问与回收站操作 |
+| 设置 | 设置面板 | 资料、密码、主题、权限（云盘 admin 角色可管用户） |
+| 分享 | 文件菜单 | 创建/撤销分享链接 |
+
+### 管理后台（`/admin/*`）
+
+独立登录与会话，与云盘用户 Token **分离**。
+
+| 页面 | 路由 | 主要能力 |
+|------|------|----------|
+| 登录 | `/admin/login` | 管理员邮箱密码登录 |
+| 仪表盘 | `/admin` | 系统指标、活动图表 |
+| 云盘用户 | `/admin/users` | 列表/搜索/创建、权限、禁用、配额、详情抽屉 |
+| 全局文件 | `/admin/files` | 跨用户文件列表；**下载、预览、移入回收站、永久删除** |
+| 回收站 | `/admin/trash` | 恢复、永久删除 |
+| 分享 | `/admin/shares` | 列表、撤销 |
+| 存储 | `/admin/storage` | 全局与用户存储视图 |
+| 备份 | `/admin/backup` | 定时配置、手动备份、下载 ZIP、取消、**恢复** |
+| 运维 | `/admin/ops` | 缓存、MinIO、系统配置（脱敏展示） |
+| 审计日志 | `/admin/audit-logs` | 管理员操作记录 |
+| 员工 | `/admin/staff` | 后台账号 CRUD |
+| 登录日志 | `/admin/login-logs` | 管理员登录审计 |
+
+**写权限**：`super_admin` / `admin` 可执行删除、备份触发等；`operator` 只读（按钮隐藏或接口 403）。
+
+默认超级管理员：`admin@fuxi.local` / `Admin@123456`（生产请修改，见后端 `sql/admin_user.sql`）。
+
 ---
 
 ## 环境要求
 
 - Node.js >= 18
-- pnpm（推荐）或 npm
+- pnpm >= 9（推荐）
 
-环境变量模板（按模式选用）：
+环境变量模板：
 
 | 文件 | 模式 |
 |------|------|
 | `.env.development.example` | 模式一：本地开发 |
-| `.env.deployment.example` | 模式二：Docker 部署 / 验收 |
+| `.env.deployment.example` | 模式二：Docker（说明用，变量写在 TNStorage `.env`） |
 | `.env.production.example` | 模式三：正式环境 |
 
 ---
 
 ## 三种运行模式
 
-与后端 `TNStorage` 对齐，共三种模式。下表为**本仓库（前端）**需关注的变量；后端、MySQL、MinIO 参数见 **[TNStorage/README.md](../TNStorage/README.md)**。
-
 ### 模式一：本地开发（Development）
 
-前后端分别在本机进程运行，浏览器只访问 Next（3000），API 经 Next 开发代理转发到 NestJS。
-
-**适用**：日常改页面、联调接口。
+前后端分别在本机运行；浏览器访问 Next（3000），API 经 Next 开发代理转发到 NestJS。
 
 **启动顺序**：
 
-1. 本机启动 MySQL（3306）、MinIO（9000）
-2. 后端：`cd ../TNStorage` → `cp .env.development.example .env.local` → `pnpm start:dev`（默认 `http://127.0.0.1:3002/api/v1`）
+1. 本机 MySQL（3306）、MinIO（9000）
+2. 后端：`cd ../TNStorage` → `cp .env.development.example .env.local` → `pnpm start:dev`
 3. 前端：`cp .env.development.example .env.local` → `pnpm install` → `pnpm dev`
-
-**访问**： [http://localhost:3000](http://localhost:3000)
-
-**前端环境变量**（`.env.local`，模板见 `.env.development.example`）：
-
-| 变量 | 必填 | 示例值 | 说明 |
-|------|------|--------|------|
-| `NEXT_PUBLIC_API_URL` | 是 | `/api/v1` | axios 请求前缀；走 Next `rewrites` 代理 |
-| `API_PROXY_TARGET` | 是 | `http://127.0.0.1:3002` | 仅 `pnpm dev` 时生效，代理到 NestJS |
-
-> **Windows**：`API_PROXY_TARGET` 请用 `127.0.0.1`，不要用 `localhost`，否则易出现 `ECONNREFUSED ::1:3002`。
-
-**可选：浏览器直连后端**（不用 Next 代理）：
-
-```env
-NEXT_PUBLIC_API_URL=http://127.0.0.1:3002/api/v1
-# 此时可不设 API_PROXY_TARGET
-```
-
-需与后端 `CORS_ORIGIN=http://localhost:3000` 一致。
-
-**实现位置**：`next.config.ts`（开发模式 `rewrites`）、`src/network/http.ts`（`BASE_URL`）。
-
----
-
-### 模式二：Docker 部署 / 验收（Deployment）
-
-由 **TNStorage** 目录的 `docker compose` 一键拉起 MySQL、MinIO、API、本前端（`web`）、Nginx。本仓库**无需单独起 `pnpm dev`**。
-
-**适用**：本机验收全栈、演示、与生产相近的集成环境。
-
-**步骤**（在后端仓库执行）：
-
-```bash
-cd ../TNStorage
-cp .env.example .env
-# 编辑 .env：至少修改 MYSQL_ROOT_PASSWORD、DB_PASSWORD、MINIO_SECRET_KEY
-docker compose up -d --build
-docker compose ps
-```
-
-**目录要求**：`TNStorage/` 与 `tn-storage-react/` **同级**。
 
 **访问**：
 
 | 地址 | 说明 |
 |------|------|
-| http://localhost | Web（Nginx → `web`） |
-| http://localhost/api/v1/health | 后端健康检查 |
+| http://localhost:3000 | 云盘 |
+| http://localhost:3000/admin/login | 管理后台 |
 
-**前端相关变量**（写在 `TNStorage/.env`，构建 `web` 镜像时注入）：
+**前端环境变量**（`.env.local`）：
 
-| 变量 | 示例值 | 说明 |
-|------|--------|------|
-| `NEXT_PUBLIC_API_URL` | `/api/v1` | Docker build-arg，浏览器同域访问 API |
-| `HTTP_PORT` | `80` | Nginx 对外端口（在后端 `.env`） |
-| `CORS_ORIGIN` | `http://localhost` | 须与浏览器地址栏一致（在后端 `.env`） |
+| 变量 | 必填 | 示例值 | 说明 |
+|------|------|--------|------|
+| `NEXT_PUBLIC_API_URL` | 是 | `/api/v1` | axios 请求前缀；开发走 Next `rewrites` |
+| `API_PROXY_TARGET` | 是 | `http://127.0.0.1:3002` | 仅 `pnpm dev` 生效，代理到 NestJS |
 
-本仓库模板：`.env.deployment.example`（仅说明；一般不必复制到本目录）。
+> **Windows**：`API_PROXY_TARGET` 请用 `127.0.0.1`，避免 `ECONNREFUSED ::1:3002`。
 
-**架构**：
+**可选：浏览器直连后端**（不经 Next 代理）：
 
-```
-浏览器 → Nginx :80
-           ├─ /           → web（Next.js standalone）
-           └─ /api/v1/*   → api（NestJS）→ mysql / minio
+```env
+NEXT_PUBLIC_API_URL=http://127.0.0.1:3002/api/v1
 ```
 
----
+需与后端 `CORS_ORIGIN=http://localhost:3000` 一致。
 
-### 模式三：正式环境（Production）
-
-生产服务器或云主机上使用 Docker Compose（或等价编排），Nginx 对外提供 HTTPS 域名，前后端同域。
-
-**适用**：线上交付。
-
-**前端构建**：在 `TNStorage` 构建 `web` 服务时传入：
-
-| 变量 | 示例值 | 说明 |
-|------|--------|------|
-| `NEXT_PUBLIC_API_URL` | `/api/v1` | **不要**写死后端 IP/端口 |
-
-模板见 `.env.production.example`；完整后端变量（数据库、MinIO、`CORS_ORIGIN=https://你的域名` 等）见 `TNStorage/.env.production.example`。
-
-**注意**：
-
-- `CORS_ORIGIN` 必须与用户浏览器访问的 origin 完全一致（含 `https`）
-- 生产密码使用 `change-me-*` 占位符的项必须全部修改
+**实现位置**：`next.config.ts`（开发 `rewrites`）、`src/network/http.ts`（云盘）、`src/network/adminHttp.ts`（管理后台）。
 
 ---
 
-## API 配置（三种模式通用）
+### 模式二：Docker 部署 / 验收
 
-| 项 | 说明 |
-|----|------|
-| 基础路径 | `process.env.NEXT_PUBLIC_API_URL`，默认 `/api/v1` |
-| 定义位置 | `src/network/http.ts` |
-| 认证 | 请求头 `Authorization: Bearer <token>`，token 存 `localStorage.token` |
-| 响应格式 | `{ code, message, data, timestamp }`，`code === 0` 为成功 |
+在后端仓库执行 `docker compose up -d --build`，本仓库无需单独 `pnpm dev`。
+
+```bash
+cd ../TNStorage
+cp .env.example .env
+docker compose up -d --build
+```
+
+访问 http://localhost（云盘与管理后台同域）。
+
+构建时注入（写在 `TNStorage/.env`）：
+
+| 变量 | 示例 | 说明 |
+|------|------|------|
+| `NEXT_PUBLIC_API_URL` | `/api/v1` | 浏览器同域访问 API |
+| `HTTP_PORT` | `80` | Nginx 端口 |
+| `CORS_ORIGIN` | `http://localhost` | 与浏览器 origin 一致 |
 
 ---
 
-## 前端调用的后端接口一览
+### 模式三：正式环境
 
-以下路径均相对于 `{NEXT_PUBLIC_API_URL}`（如 `/api/v1`）。
+`NEXT_PUBLIC_API_URL=/api/v1`（同域反代），`CORS_ORIGIN=https://你的域名`。详见 `TNStorage/.env.production.example`。
+
+---
+
+## API 与认证
+
+| 客户端 | HTTP 实例 | Token 存储 | 请求头 |
+|--------|-----------|------------|--------|
+| 云盘 | `src/network/http.ts` | `localStorage.token` | `Authorization: Bearer <token>` |
+| 管理后台 | `src/network/adminHttp.ts` | `localStorage.adminToken` | 同上 |
+
+响应格式：`{ code, message, data, timestamp }`，`code === 0` 为成功。  
+流式接口（文件下载、备份 ZIP、管理端文件 preview/download）返回二进制，无 JSON 包装。
+
+401 时：云盘跳转 `/login`；管理后台跳转 `/admin/login`（见 `src/utils/auth/adminSession.ts`）。
+
+---
+
+## 云盘接口与 Hooks
+
+路径均相对于 `{NEXT_PUBLIC_API_URL}`。
 
 ### 认证（无需 Token）
 
-| 方法 | 路径 | 请求体 / 参数 | 前端调用 |
-|------|------|---------------|----------|
-| POST | `/auth/login` | `{ email, password }` | `useLogin` |
-| POST | `/auth/register` | `{ username, password, email, phone, desc? }` | `useRegister` |
-| GET | `/auth/salt/:email` | 路径参数 `email` | （预留，当前页面未用） |
+| 方法 | 路径 | Hook |
+|------|------|------|
+| POST | `/auth/login` | `useLogin` |
+| POST | `/auth/register` | `useRegister` |
+| GET | `/auth/salt/:email` | （预留） |
 
-> 前端 `useForgotPassword` 调用 `/auth/forgot-password`，**后端尚未实现**，请勿依赖。
+> `useForgotPassword` 调用 `/auth/forgot-password`，**后端未实现**。
 
-### 用户（需 Token）
+### 用户
 
-| 方法 | 路径 | 请求体 / 参数 | 前端调用 |
-|------|------|---------------|----------|
-| GET | `/user/profile/me` | — | `useGetMyProfile` |
-| GET | `/user/username/:username` | 路径 `username` | `useGetUserWithName` |
-| POST | `/user/update/me` | `{ username, email, phone, desc }` | `useUpdateMyUserData` |
-| PUT | `/user/changePassword/me` | `{ oldPassword, newPassword }` | `useChangeMyPassword` |
-| GET | `/user/storage/me` | — | `useGetMyStorage` |
-| GET | `/user/settings/me` | — | `useGetMySettings` |
-| POST | `/user/settings/me` | 见下方「用户设置字段」 | `useUpdateMySettings` |
-| POST | `/user/settings/me/reset-permissions` | — | `useResetMyPermissions` |
-| GET | `/user/security/login-history` | — | `useGetMyLoginHistory` |
-| POST | `/user/avatar/upload/me` | `multipart/form-data`，字段名 `avatar`，≤1MB | `useAvatarUploadMe` |
-| GET | `/user/avatar/me` | — | `useGetMyAvatar` |
-| GET | `/user/admin/users` | —（需 admin） | `useGetAdminUsers` |
-| PUT | `/user/admin/role/:id` | `{ role: 'admin' \| 'user' \| 'viewer' }` | `useUpdateUserRole` |
+| 方法 | 路径 | Hook |
+|------|------|------|
+| GET | `/user/profile/me` | `useGetMyProfile` |
+| POST | `/user/update/me` | `useUpdateMyUserData` |
+| PUT | `/user/changePassword/me` | `useChangeMyPassword` |
+| GET | `/user/storage/me` | `useGetMyStorage` |
+| GET/POST | `/user/settings/me` | `useGetMySettings` / `useUpdateMySettings` |
+| POST | `/user/settings/me/reset-permissions` | `useResetMyPermissions` |
+| GET | `/user/security/login-history` | `useGetMyLoginHistory` |
+| POST | `/user/avatar/upload/me` | `useAvatarUploadMe`（字段 `avatar`，≤1MB） |
+| GET | `/user/admin/users` | `useGetAdminUsers`（云盘 admin 角色） |
 
-**用户设置字段**（`POST /user/settings/me` 可选 body）：
+**用户设置 body 可选字段**：`language`, `theme`, `auto_save`, `default_upload_parent_id`, `auto_clean_temp`, 各类 notification、`allow_file_upload/download/delete`, `allow_favorite`, `allow_share`。
 
-`language`, `theme`, `auto_save`, `default_upload_parent_id`, `auto_clean_temp`, `two_factor_enabled`, `email_notification`, `upload_notification`, `share_notification`, `allow_file_upload`, `allow_file_download`, `allow_file_delete`, `allow_favorite`, `allow_share`
+### 文件
 
-### 文件（除分享下载外需 Token）
+**分片上传**（实际上传入口，`src/features/files/services/chunkUpload.ts`，默认分片 5MB）：
 
-#### 分片上传（实际上传入口）
+1. `POST /file/upload/init/:bucket/:parentId` — body: `{ filename, mimetype, size, totalChunks }`
+2. `POST /file/upload/chunk/:taskId/:chunkIndex` — multipart 字段 `chunk`
+3. `GET /file/upload/status/:taskId` — 轮询至 `completed`
 
-| 步骤 | 方法 | 路径 | 说明 |
-|------|------|------|------|
-| 1 初始化 | POST | `/file/upload/init/:bucket/:parentId` | JSON body 见下 |
-| 2 传分片 | POST | `/file/upload/chunk/:taskId/:chunkIndex` | `multipart`，字段名 `chunk` |
-| 3 查进度 | GET | `/file/upload/status/:taskId` | 轮询至 `status === 'completed'` |
-
-**初始化 body**：
-
-```json
-{
-  "filename": "example.pdf",
-  "mimetype": "application/pdf",
-  "size": 1048576,
-  "totalChunks": 1
-}
-```
-
-**实现位置**：`src/features/files/services/chunkUpload.ts`（默认分片 5MB）。
-
-> `useUploadFile`（`POST /file/upload/:bucket/:parentid`）为旧接口封装，**后端无此路由**，实际上传请走分片流程。
-
-#### 浏览与操作
-
-| 方法 | 路径 | Body / 参数 | 前端调用 |
-|------|------|-------------|----------|
-| GET | `/file/tree` | — | `useGetFileSystemTree` |
-| GET | `/file/info/:UUID` | — | `useGetFileInfo` |
-| GET | `/file/data/:bucket/:UUID` | —，`responseType: blob` | `useGetFile` |
-| POST | `/file/folder/create/:foldername/:parent` | — | `useCreateFolder` |
-| PUT | `/file/rename/:UUID` | `{ filename }` | `FileDataContext` |
-| POST | `/file/move/:UUID` | `{ targetParentId }` | `FileDataContext` |
-| POST | `/file/copy/:UUID` | `{ targetParentId }` | `FileDataContext` |
-
-#### 回收站
-
-| 方法 | 路径 | 参数 | 前端调用 |
-|------|------|------|----------|
-| GET | `/file/trash` | — | `useGetDelListInTrash` |
-| POST | `/file/trash/move/:srcBucket/:UUID/:type` | `type`: `file` \| `folder` | `usePushFileDataTrash` |
-| POST | `/file/trash/restore/:UUID/:type` | — | `useReStore` |
-| DELETE | `/file/:bucket/:UUID/:type` | 永久删除 | `useDeleteFile` |
-| DELETE | `/file/trash/empty/:bucket` | — | `useDeleteAllTrash` |
-
-#### 收藏 / 最近 / 分享
-
-| 方法 | 路径 | 前端调用 |
-|------|------|----------|
-| GET | `/file/favorite` | `useGetFavorites` |
-| POST | `/file/favorite/:UUID` | `useAddFavorite` |
-| DELETE | `/file/favorite/:UUID` | `useRemoveFavorite` |
-| GET | `/file/recent` | `useGetRecents` |
-| POST | `/file/recent/access/:UUID` | `useMarkRecentAccess` |
+| 方法 | 路径 | Hook / 位置 |
+|------|------|-------------|
+| GET | `/file/tree` | `useGetFileSystemTree` |
+| GET | `/file/data/:bucket/:UUID` | `useGetFile`（blob） |
+| POST | `/file/folder/create/:foldername/:parent` | `useCreateFolder` |
+| PUT | `/file/rename/:UUID` | `FileDataContext` |
+| POST | `/file/move/:UUID` | `{ targetParentId }` |
+| GET | `/file/trash` | `useGetDelListInTrash` |
+| POST | `/file/trash/move/:srcBucket/:UUID/:type` | `usePushFileDataTrash` |
+| DELETE | `/file/:bucket/:UUID/:type` | `useDeleteFile`（永久删除） |
 | POST | `/file/share/:UUID` | `useCreateShare` |
-| GET | `/file/share` | `useGetShares` |
-| DELETE | `/file/share/:token` | `useRevokeShare` |
-| GET | `/file/share/download/:token` | 公开下载，浏览器直链 |
+| GET | `/file/share/download/:token` | 公开直链 |
 
-分享链接格式：`{origin}/api/v1/file/share/download/{token}`
-
-#### 统计
-
-| 方法 | 路径 | 前端调用 | 备注 |
-|------|------|----------|------|
-| GET | `/file/download/total` | `useGetDownloadTotal` | |
-| GET | `/file/upload/total` | `useGetUploadTotal` | |
-| GET | `/file/upload/typeTotal` | `useGetFilesTypeCount` | |
-| PUT | `/file/download/set/total` | `useSetDownloadTotal` | 前端误用 GET，应改为 PUT |
+> 旧封装 `useUploadFile`（`POST /file/upload/...`）**无对应后端路由**，请勿使用。
 
 ---
 
-## 功能模块
+## 管理后台接口与 Hooks
 
-- **我的云** — 存储概览、最近文件
-- **所有文件** — 树形目录、面包屑、文件夹导航
-- **最近 / 收藏 / 回收站**
-- **上传** — 分片上传、进度展示
-- **设置** — 个人资料、密码、主题、权限（管理员可管用户角色）
+路径相对于 `{NEXT_PUBLIC_API_URL}`，Token 为管理后台 JWT。
+
+### 认证 · `src/network/hooks/adminAuth.ts`
+
+| 方法 | 路径 | Hook / 函数 |
+|------|------|-------------|
+| POST | `/admin/auth/login` | `useAdminLogin` |
+| GET | `/admin/auth/me` | `useAdminProfile` / `useAdminCanWrite` |
+| POST | `/admin/auth/logout` | `useAdminLogout` |
+| PUT | `/admin/auth/password` | `useAdminChangePassword` |
+
+### 仪表盘 · 用户 · `src/network/hooks/admin.ts`
+
+| 方法 | 路径 | Hook |
+|------|------|------|
+| GET | `/admin/metrics` | `useAdminMetrics` |
+| GET | `/admin/metrics/activity` | `useAdminActivity` |
+| GET | `/admin/storage/overview` | `useAdminStorageOverview` |
+| GET | `/admin/storage/users` | `useAdminStorageUsers` |
+| GET | `/admin/users` | `useAdminUsers`（`page`, `limit`, `keyword`, `role`, `status`） |
+| POST | `/admin/users` | `useAdminCreateUser` |
+| PUT | `/admin/users/:id` | `useAdminUpdateUser`（含 `role`） |
+| DELETE | `/admin/users/:id` | `useAdminDeleteUser` |
+| GET | `/admin/users/:id` | `useAdminUser` |
+| PUT | `/admin/users/:id/quota` | `useAdminUpdateUserQuota` |
+| PUT | `/admin/users/:id/permissions` | `useAdminUpdateUserPermissions` |
+| PUT | `/admin/users/:id/status` | `useAdminUpdateUserStatus` |
+| POST | `/admin/users/:id/reset-password` | `useAdminResetPassword` |
+| GET | `/admin/users/:id/login-logs` | `useAdminUserLoginLogs` |
+
+### 文件 · 回收站 · 分享
+
+| 方法 | 路径 | Hook / 函数 |
+|------|------|-------------|
+| GET | `/admin/files` | `useAdminFiles` |
+| GET | `/admin/files/:id/download` | `downloadAdminFile(id, filename)` |
+| GET | `/admin/files/:id/preview` | `previewAdminFile(id)` |
+| DELETE | `/admin/files/:id?mode=trash\|purge` | `useAdminDeleteFile` |
+| GET | `/admin/trash` | `useAdminTrash` |
+| POST | `/admin/trash/:id/restore` | `useAdminRestoreTrash` |
+| DELETE | `/admin/trash/:id` | `useAdminPurgeTrash` |
+| GET | `/admin/shares` | `useAdminShares` |
+| POST | `/admin/shares/:id/revoke` | `useAdminRevokeShare` |
+
+### 备份 · `src/network/hooks/admin.ts`
+
+| 方法 | 路径 | Hook / 函数 |
+|------|------|-------------|
+| GET | `/admin/backup/jobs` | `useAdminBackupJobs` |
+| GET | `/admin/backup/schedule` | `useAdminBackupSchedule` |
+| PUT | `/admin/backup/schedule` | `useAdminUpdateBackupSchedule` |
+| POST | `/admin/backup/trigger` | `useAdminTriggerBackup` |
+| GET | `/admin/backup/jobs/:id/download` | `downloadAdminBackupJob(id)` |
+| DELETE | `/admin/backup/jobs/:id` | `useAdminDeleteBackupJob` |
+| POST | `/admin/backup/jobs/:id/cancel` | `useAdminCancelBackupJob` |
+| POST | `/admin/backup/jobs/:id/restore` | `useAdminRestoreBackupJob`（body: `{ includeMinio? }`） |
+
+### 运维 · 审计 · 员工
+
+| 方法 | 路径 | Hook |
+|------|------|------|
+| GET | `/admin/ops/overview` | `useAdminOpsOverview` |
+| GET | `/admin/ops/minio` | `useAdminOpsMinio` |
+| GET | `/admin/ops/config` | `useAdminOpsConfig` |
+| POST | `/admin/ops/cache/clear` | `useAdminClearCache` |
+| GET | `/admin/audit/logs` | `useAdminAuditLogs` |
+| GET | `/admin/staff` | `useAdminStaffList` |
+| POST/PUT/DELETE | `/admin/staff` … | `useAdminCreateStaff` 等（`adminStaff.ts`） |
+| GET | `/admin/login-logs` | `useAdminLoginLogs` |
 
 ---
 
@@ -275,15 +288,17 @@ docker compose ps
 
 ```
 src/
-├── network/           # axios 实例、React Query hooks、类型定义
-│   ├── http.ts        # BASE_URL、拦截器
-│   ├── hooks/         # login / user / file
-│   └── types/         # Request / Response 类型
-├── features/files/    # 文件业务（chunkUpload、fileOperations）
-├── contexts/          # FileDataContext 等
-├── components/        # UI 组件
-├── pages/             # Next.js 页面
-└── utils/             # auth、fileSystem 工具
+├── pages/
+│   ├── index.tsx, login.tsx …     # 云盘
+│   └── admin/                     # 管理后台各页面
+├── network/
+│   ├── http.ts                    # 云盘 axios
+│   ├── adminHttp.ts               # 管理后台 axios
+│   └── hooks/                     # admin.ts, adminAuth.ts, adminOps.ts, adminStaff.ts, user.ts, file.ts
+├── features/files/                # 分片上传、文件操作
+├── components/admin/              # AdminLayout, AdminUserSelect 等
+├── contexts/                      # FileDataContext
+└── utils/auth/                    # token / adminSession
 ```
 
 ---
@@ -291,14 +306,33 @@ src/
 ## 常用命令
 
 ```bash
-pnpm run dev      # 开发
-pnpm run build    # 生产构建（standalone，供 Docker）
-pnpm run start    # 生产运行
-pnpm run lint     # ESLint
+pnpm dev          # 开发（:3000）
+pnpm build        # 生产构建（standalone，供 Docker web 镜像）
+pnpm start        # 生产运行
+pnpm lint         # ESLint
 ```
+
+**后端联调验收**（在 `TNStorage` 目录）：
+
+```bash
+pnpm test:smoke:dev    # 云盘核心链路
+pnpm test:admin        # 管理后台 P0
+pnpm test:admin:files  # 活跃区文件操作
+```
+
+---
+
+## 故障排除
+
+| 现象 | 处理 |
+|------|------|
+| API `ECONNREFUSED ::1:3002` | `API_PROXY_TARGET=http://127.0.0.1:3002` |
+| 管理后台 401 循环 | 清 `localStorage.adminToken`，重新 `/admin/login` |
+| 云盘与管理后台 Token 混用 | 两套会话独立，不可互换 |
+| Compose 构建失败 | 确认 `tn-storage-react` 与 `TNStorage` 同级 |
 
 ---
 
 ## 许可证
 
-UNLICENSED（与后端 `package.json` 一致）
+UNLICENSED（与后端一致）
