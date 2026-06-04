@@ -115,6 +115,16 @@ export type GetAdminBackupScheduleApiResponse =
   BaseResponse<AdminBackupScheduleConfig>;
 export type TriggerAdminBackupApiResponse = BaseResponse<AdminBackupJob>;
 
+export interface AdminBackupRestoreResult {
+  jobId: string;
+  tables: Array<{ name: string; rows: number }>;
+  minio?: { objectCount: number };
+  message: string;
+}
+
+export type RestoreAdminBackupApiResponse =
+  BaseResponse<AdminBackupRestoreResult>;
+
 export interface AdminFileItem {
   id: number;
   filename: string;

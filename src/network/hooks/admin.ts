@@ -15,6 +15,7 @@ import {
   GetAdminStorageUsersApiResponse,
   GetAdminUsersApiResponse,
   TriggerAdminBackupApiResponse,
+  RestoreAdminBackupApiResponse,
 } from '@/network/types/Response/admin';
 import { AdminUserRoleResponse } from '@/network/types/Response/user';
 import { isAdminAuthed } from '@/utils/auth/adminSession';
@@ -264,6 +265,22 @@ export function useAdminCancelBackupJob() {
         queryKey: [...adminKey, 'backup', 'jobs'],
       });
     },
+  });
+}
+
+export function useAdminRestoreBackupJob() {
+  return useMutation({
+    mutationFn: async ({
+      id,
+      includeMinio = true,
+    }: {
+      id: string;
+      includeMinio?: boolean;
+    }) =>
+      await adminHttp.post<RestoreAdminBackupApiResponse>(
+        `/admin/backup/jobs/${id}/restore`,
+        { includeMinio },
+      ),
   });
 }
 

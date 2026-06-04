@@ -10,7 +10,7 @@ import {
   Table,
   Tag,
 } from 'antd';
-import { MdBackup, MdDownload, MdDelete, MdSchedule, MdCancel } from 'react-icons/md';
+import { MdBackup, MdDownload, MdDelete, MdSchedule, MdCancel, MdRestore } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { adminCardProps } from '@/components/admin/AdminPanel';
@@ -22,6 +22,7 @@ import {
   useAdminBackupSchedule,
   useAdminCancelBackupJob,
   useAdminDeleteBackupJob,
+  useAdminRestoreBackupJob,
   useAdminTriggerBackup,
   useAdminUpdateBackupSchedule,
 } from '@/network/hooks/admin';
@@ -61,6 +62,7 @@ export default function AdminBackupPage() {
   const triggerBackup = useAdminTriggerBackup();
   const deleteBackup = useAdminDeleteBackupJob();
   const cancelBackup = useAdminCancelBackupJob();
+  const restoreBackup = useAdminRestoreBackupJob();
   const updateSchedule = useAdminUpdateBackupSchedule();
   const feedback = useAdminFeedback();
   const canWrite = useAdminCanWrite();
@@ -283,6 +285,32 @@ export default function AdminBackupPage() {
                         loading={cancelBackup.isPending}
                       >
                         取消
+                      </Button>
+                    </Popconfirm>
+                  ) : null}
+                  {record.status === 'completed' && canWrite ? (
+                    <Popconfirm
+                      title="从该备份恢复数据？将合并 JSON 表数据（不覆盖管理员账号），可选恢复 MinIO 镜像。"
+                      onConfirm={async () => {
+                        try {
+                          const res = await restoreBackup.mutateAsync({
+                            id: record.id,
+                            includeMinio: true,
+                          });
+                          feedback.success(
+                            res.data?.data?.message ?? '恢复完成',
+                          );
+                        } catch (err) {
+                          feedback.error(err, '恢复失败');
+                        }
+                      }}
+                    >
+                      <Button
+                        size="small"
+                        icon={<MdRestore />}
+                        loading={restoreBackup.isPending}
+                      >
+                        恢复
                       </Button>
                     </Popconfirm>
                   ) : null}
