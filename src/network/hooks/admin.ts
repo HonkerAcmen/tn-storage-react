@@ -233,3 +233,32 @@ export function useAdminTriggerBackup() {
     },
   });
 }
+
+export function useAdminDeleteBackupJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) =>
+      await adminHttp.delete(`/admin/backup/jobs/${id}`),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'backup', 'jobs'],
+      });
+    },
+  });
+}
+
+export async function downloadAdminBackupJob(id: string): Promise<void> {
+  const response = await adminHttp.get<Blob>(
+    `/admin/backup/jobs/${id}/download`,
+    { responseType: 'blob' },
+  );
+  const blob = new Blob([response.data], { type: 'application/zip' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${id}.zip`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
