@@ -355,7 +355,7 @@ export default function Login() {
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
           {/* Logo 和标题 */}
           <div className="mb-8 text-center">
-            <h1 className="mb-2 text-3xl font-bold text-gray-800">伏羲文化存储系统</h1>
+            <h1 className="mb-2 text-3xl font-bold text-gray-800">伏羲文化数据云盘</h1>
             <p className="text-gray-500">欢迎使用云存储服务</p>
           </div>
 

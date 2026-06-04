@@ -85,3 +85,99 @@ body {
 :root[data-theme='dark'] .ant-dropdown-menu-title-content {
   color: var(--foreground) !important;
 }
+
+/* 工作台品牌标题 — 科技感 */
+@keyframes brand-gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes brand-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    box-shadow: 0 0 8px rgba(34, 211, 238, 0.45);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 14px rgba(85, 66, 246, 0.65);
+  }
+}
+
+.brand-logo-link {
+  display: inline-flex;
+  text-decoration: none;
+}
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.25s ease;
+}
+
+.brand-logo:hover {
+  transform: translateY(-1px);
+}
+
+.brand-logo__bar {
+  flex-shrink: 0;
+  width: 3px;
+  height: 1.35em;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #22d3ee 0%, #5542f6 55%, #818cf8 100%);
+  animation: brand-glow-pulse 3s ease-in-out infinite;
+}
+
+.brand-logo__text {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.12em;
+  font-size: 1.6rem;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+}
+
+.brand-logo__main {
+  background: linear-gradient(
+    120deg,
+    #06b6d4 0%,
+    #5542f6 42%,
+    #7c3aed 72%,
+    #22d3ee 100%
+  );
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: brand-gradient-shift 5s ease infinite;
+  filter: drop-shadow(0 0 10px rgba(85, 66, 246, 0.28));
+}
+
+.brand-logo__accent {
+  font-size: 0.94em;
+  letter-spacing: 0.14em;
+  background: linear-gradient(90deg, #22d3ee 0%, #a5b4fc 50%, #c4b5fd 100%);
+  background-size: 180% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: brand-gradient-shift 4.5s ease infinite reverse;
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.22));
+}
+
+:root[data-theme='dark'] .brand-logo__main {
+  filter: drop-shadow(0 0 12px rgba(129, 140, 248, 0.35));
+}
+
+:root[data-theme='dark'] .brand-logo__accent {
+  filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.3));
+}

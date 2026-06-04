@@ -13,6 +13,7 @@ import Profile from '../secondaryPage/Profile';
 import SearchResults from '../secondaryPage/SearchResults';
 import Settings from '../secondaryPage/Settings';
 import Link from 'next/link';
+import BrandTitle from '@/components/BrandTitle';
 
 export default function Header() {
   const [clickProfile, setClickProfile] = useState(false);
@@ -63,9 +64,9 @@ export default function Header() {
     <div className="flex h-16 w-full flex-row justify-between border-b border-gray-200 bg-white">
       {/* 左侧：LOGO + 搜索 */}
       <div className="flex items-center justify-center">
-        <h2 className="animate-gradient mr-16 ml-4 cursor-pointer bg-linear-to-r from-red-500 via-yellow-500 to-blue-500 bg-size-[200%_200%] bg-clip-text text-[24px] font-bold text-transparent">
-          伏羲文化存储系统
-        </h2>
+        <div className="mr-16 ml-4">
+          <BrandTitle asLink />
+        </div>
 
         {authed && (
           <button
@@ -170,33 +171,6 @@ export default function Header() {
         />
       )}
 
-      {/* 自定义动画样式 */}
-      <style jsx>{`
-        @keyframes gradient {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-        @keyframes fadein {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-gradient {
-          animation: gradient 4s ease infinite;
-        }
-      `}</style>
     </div>
   );
 }
