@@ -24,6 +24,7 @@ import {
   MdHistory,
 } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
 import {
@@ -96,7 +97,7 @@ export default function AdminUsersPage() {
   >();
   const limit = 10;
 
-  const { data, isLoading, refetch } = useAdminUsers({
+  const { data, isLoading, isError, refetch } = useAdminUsers({
     page,
     limit,
     keyword: keyword || undefined,
@@ -303,6 +304,12 @@ export default function AdminUsersPage() {
             ]}
           />
         </Space>
+
+        <AdminQueryAlert
+          isError={isError}
+          message="无法加载用户列表"
+          onRetry={() => refetch()}
+        />
 
         <Table
           rowKey="id"

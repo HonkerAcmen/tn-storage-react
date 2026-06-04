@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Button, Card, Input, Popconfirm, Select, Space, Table, Tag } from 'antd';
 import { MdBlock } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
+import { AdminUserSelect } from '@/components/admin/AdminUserSelect';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
-import { useAdminRevokeShare, useAdminShares, useAdminUsers } from '@/network/hooks/admin';
+import { useAdminRevokeShare, useAdminShares } from '@/network/hooks/admin';
 import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { AdminShareItem } from '@/network/types/Response/admin';
 import { formatDateTime } from '@/utils/format/formatters';
@@ -31,13 +33,7 @@ export default function AdminSharesPage() {
   const canWrite = useAdminCanWrite();
   const revokeShare = useAdminRevokeShare();
 
-  const { data: usersRes } = useAdminUsers({ page: 1, limit: 200 });
-  const userOptions = (usersRes?.data?.data?.items ?? []).map((u) => ({
-    value: u.id,
-    label: `${u.username} (${u.email})`,
-  }));
-
-  const { data, isLoading } = useAdminShares({
+  const { data, isLoading, isError, refetch } = useAdminShares({
     page,
     limit,
     keyword: search || undefined,
@@ -69,18 +65,12 @@ export default function AdminSharesPage() {
               setPage(1);
             }}
           />
-          <Select
-            allowClear
-            showSearch
-            optionFilterProp="label"
-            placeholder="所属用户"
-            className="w-56"
+          <AdminUserSelect
             value={userIdFilter}
             onChange={(v) => {
               setUserIdFilter(v);
               setPage(1);
             }}
-            options={userOptions}
           />
           <Select
             allowClear
@@ -98,6 +88,11 @@ export default function AdminSharesPage() {
             ]}
           />
         </Space>
+        <AdminQueryAlert
+          isError={isError}
+          message="无法加载分享列表"
+          onRetry={() => refetch()}
+        />
         <Table
           rowKey="id"
           loading={isLoading}

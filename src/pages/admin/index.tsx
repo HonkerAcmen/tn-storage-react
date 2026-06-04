@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Card, Col, Row, Statistic, Tag, Segmented, Spin, Alert } from 'antd';
 import type { EChartsOption } from 'echarts';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import EChart from '@/components/Echart';
 import { useAdminActivity, useAdminMetrics } from '@/network/hooks/admin';
@@ -25,7 +26,12 @@ function formatUptime(seconds: number) {
 
 export default function AdminDashboardPage() {
   const { data: metricsRes, isLoading, isError } = useAdminMetrics();
-  const { data: activityRes, isLoading: activityLoading } = useAdminActivity();
+  const {
+    data: activityRes,
+    isLoading: activityLoading,
+    isError: activityError,
+    refetch: refetchActivity,
+  } = useAdminActivity();
   const activityRange = useAdminUiStore((s) => s.activityRange);
   const setActivityRange = useAdminUiStore((s) => s.setActivityRange);
   const activityMetric = useAdminUiStore((s) => s.activityMetric);
@@ -105,8 +111,10 @@ export default function AdminDashboardPage() {
     return {
       tooltip: {
         trigger: 'item',
-        formatter: (params: { name: string; value: number; percent: number }) =>
-          `${params.name}: ${formatFileSize(params.value)} (${params.percent}%)`,
+        formatter: (params: unknown) => {
+          const p = params as { name: string; value: number; percent: number };
+          return `${p.name}: ${formatFileSize(p.value)} (${p.percent}%)`;
+        },
       },
       legend: { orient: 'vertical', left: 'left' },
       series: [
@@ -231,15 +239,29 @@ export default function AdminDashboardPage() {
                 </div>
               }
             >
-              <Spin spinning={activityLoading}>
-                <EChart option={uploadChartOption} height="320px" />
+              <AdminQueryAlert
+                isError={activityError}
+                message="无法加载上传活动数据"
+                onRetry={() => refetchActivity()}
+              />
+              <Spin spinning={activityLoading && !activityError}>
+                {!activityError && (
+                  <EChart option={uploadChartOption} height="320px" />
+                )}
               </Spin>
             </Card>
           </Col>
           <Col xs={24} lg={8}>
             <Card {...adminCardProps} title="存储类型分布">
-              <Spin spinning={activityLoading}>
-                <EChart option={categoryChartOption} height="320px" />
+              <AdminQueryAlert
+                isError={activityError}
+                message="无法加载存储类型分布"
+                onRetry={() => refetchActivity()}
+              />
+              <Spin spinning={activityLoading && !activityError}>
+                {!activityError && (
+                  <EChart option={categoryChartOption} height="320px" />
+                )}
               </Spin>
             </Card>
           </Col>

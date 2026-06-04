@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Button, Card, Input, Popconfirm, Select, Space, Table } from 'antd';
 import { MdDelete } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
+import { AdminUserSelect } from '@/components/admin/AdminUserSelect';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
-import { useAdminPurgeTrash, useAdminTrash, useAdminUsers } from '@/network/hooks/admin';
+import { useAdminPurgeTrash, useAdminTrash } from '@/network/hooks/admin';
 import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { formatDateTime, formatFileSize } from '@/utils/format/formatters';
 
@@ -18,13 +20,7 @@ export default function AdminTrashPage() {
   const canWrite = useAdminCanWrite();
   const purgeTrash = useAdminPurgeTrash();
 
-  const { data: usersRes } = useAdminUsers({ page: 1, limit: 200 });
-  const userOptions = (usersRes?.data?.data?.items ?? []).map((u) => ({
-    value: u.id,
-    label: `${u.username} (${u.email})`,
-  }));
-
-  const { data, isLoading } = useAdminTrash({
+  const { data, isLoading, isError, refetch } = useAdminTrash({
     page,
     limit,
     keyword: search || undefined,
@@ -55,20 +51,19 @@ export default function AdminTrashPage() {
               setPage(1);
             }}
           />
-          <Select
-            allowClear
-            showSearch
-            optionFilterProp="label"
-            placeholder="所属用户"
-            className="w-56"
+          <AdminUserSelect
             value={userIdFilter}
             onChange={(v) => {
               setUserIdFilter(v);
               setPage(1);
             }}
-            options={userOptions}
           />
         </Space>
+        <AdminQueryAlert
+          isError={isError}
+          message="无法加载回收站列表"
+          onRetry={() => refetch()}
+        />
         <Table
           rowKey="id"
           loading={isLoading}

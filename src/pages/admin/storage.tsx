@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Card, Col, Row, Spin, Table } from 'antd';
 import type { EChartsOption } from 'echarts';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import EChart from '@/components/Echart';
 import {
@@ -11,9 +12,18 @@ import {
 import { formatFileSize } from '@/utils/format/formatters';
 
 export default function AdminStoragePage() {
-  const { data: overviewRes, isLoading: overviewLoading } =
-    useAdminStorageOverview();
-  const { data: usersRes, isLoading: usersLoading } = useAdminStorageUsers();
+  const {
+    data: overviewRes,
+    isLoading: overviewLoading,
+    isError: overviewError,
+    refetch: refetchOverview,
+  } = useAdminStorageOverview();
+  const {
+    data: usersRes,
+    isLoading: usersLoading,
+    isError: usersError,
+    refetch: refetchUsers,
+  } = useAdminStorageUsers();
 
   const totals = overviewRes?.data?.data?.totals;
   const users = usersRes?.data?.data ?? [];
@@ -24,8 +34,10 @@ export default function AdminStoragePage() {
     return {
       tooltip: {
         trigger: 'item',
-        formatter: (p: { name: string; value: number; percent: number }) =>
-          `${p.name}: ${formatFileSize(p.value)} (${p.percent}%)`,
+        formatter: (params: unknown) => {
+          const p = params as { name: string; value: number; percent: number };
+          return `${p.name}: ${formatFileSize(p.value)} (${p.percent}%)`;
+        },
       },
       legend: { bottom: 0 },
       series: [
@@ -50,8 +62,10 @@ export default function AdminStoragePage() {
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        formatter: (params: Array<{ name: string; value: number }>) => {
-          const item = params[0];
+        formatter: (params: unknown) => {
+          const list = Array.isArray(params) ? params : [params];
+          const item = list[0] as { name: string; value: number } | undefined;
+          if (!item) return '';
           return `${item.name}<br/>${formatFileSize(item.value)}`;
         },
       },
@@ -76,7 +90,12 @@ export default function AdminStoragePage() {
 
   return (
     <AdminLayout title="存储分析">
-      <Spin spinning={overviewLoading}>
+      <AdminQueryAlert
+        isError={overviewError}
+        message="无法加载存储概览"
+        onRetry={() => refetchOverview()}
+      />
+      <Spin spinning={overviewLoading && !overviewError}>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={8}>
             <Card {...adminCardProps} title="总文件数">{totals?.totalFiles ?? 0}</Card>
@@ -106,6 +125,11 @@ export default function AdminStoragePage() {
       </Spin>
 
       <Card {...adminCardProps} title="用户存储明细" className="mt-4">
+        <AdminQueryAlert
+          isError={usersError}
+          message="无法加载用户存储明细"
+          onRetry={() => refetchUsers()}
+        />
         <Table
           rowKey="userId"
           loading={usersLoading}

@@ -1,6 +1,7 @@
 import { Button, Card, Col, Descriptions, Popconfirm, Row, Statistic, Table, Tag } from 'antd';
 import { MdCleaningServices, MdMemory, MdSettings } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
 import {
@@ -22,10 +23,24 @@ function formatUptime(seconds: number) {
 export default function AdminOpsPage() {
   const feedback = useAdminFeedback();
   const canWrite = useAdminCanWrite();
-  const { data: overviewRes, isLoading: overviewLoading } =
-    useAdminOpsOverview();
-  const { data: minioRes, isLoading: minioLoading } = useAdminOpsMinio();
-  const { data: configRes, isLoading: configLoading } = useAdminOpsConfig();
+  const {
+    data: overviewRes,
+    isLoading: overviewLoading,
+    isError: overviewError,
+    refetch: refetchOverview,
+  } = useAdminOpsOverview();
+  const {
+    data: minioRes,
+    isLoading: minioLoading,
+    isError: minioError,
+    refetch: refetchMinio,
+  } = useAdminOpsMinio();
+  const {
+    data: configRes,
+    isLoading: configLoading,
+    isError: configError,
+    refetch: refetchConfig,
+  } = useAdminOpsConfig();
   const clearCache = useAdminClearCache();
 
   const overview = overviewRes?.data?.data;
@@ -37,8 +52,8 @@ export default function AdminOpsPage() {
       const res = await clearCache.mutateAsync();
       const cleared = res.data?.data?.cleared ?? 0;
       feedback.success(`已清空 ${cleared} 条缓存`);
-    } catch {
-      feedback.error('清空缓存失败');
+    } catch (err) {
+      feedback.error(err, '清空缓存失败');
     }
   };
 
@@ -47,6 +62,12 @@ export default function AdminOpsPage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={8}>
           <Card {...adminCardProps} loading={overviewLoading} title="内存缓存">
+            <AdminQueryAlert
+              isError={overviewError}
+              message="无法加载缓存概览"
+              onRetry={() => refetchOverview()}
+              className="mb-3"
+            />
             <Row gutter={16}>
               <Col span={12}>
                 <Statistic
@@ -98,6 +119,12 @@ export default function AdminOpsPage() {
               )
             }
           >
+            <AdminQueryAlert
+              isError={minioError}
+              message="无法加载 MinIO 监控"
+              onRetry={() => refetchMinio()}
+              className="mb-3"
+            />
             <Row gutter={16} className="mb-4">
               <Col span={8}>
                 <Statistic title="对象总数" value={minio?.totalObjects ?? 0} />
@@ -141,6 +168,12 @@ export default function AdminOpsPage() {
               </span>
             }
           >
+            <AdminQueryAlert
+              isError={configError}
+              message="无法加载系统配置"
+              onRetry={() => refetchConfig()}
+              className="mb-3"
+            />
             <Descriptions bordered size="small" column={{ xs: 1, md: 2, lg: 3 }}>
               <Descriptions.Item label="环境">
                 {config?.nodeEnv}

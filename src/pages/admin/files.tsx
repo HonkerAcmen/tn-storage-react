@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Card, Input, Select, Space, Table } from 'antd';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
+import { AdminUserSelect } from '@/components/admin/AdminUserSelect';
 import { adminCardProps } from '@/components/admin/AdminPanel';
-import { useAdminFiles, useAdminUsers } from '@/network/hooks/admin';
+import { useAdminFiles } from '@/network/hooks/admin';
 import { formatDateTime, formatFileSize } from '@/utils/format/formatters';
 
 export default function AdminFilesPage() {
@@ -13,13 +15,7 @@ export default function AdminFilesPage() {
   const [userIdFilter, setUserIdFilter] = useState<number | undefined>();
   const limit = 15;
 
-  const { data: usersRes } = useAdminUsers({ page: 1, limit: 200 });
-  const userOptions = (usersRes?.data?.data?.items ?? []).map((u) => ({
-    value: u.id,
-    label: `${u.username} (${u.email})`,
-  }));
-
-  const { data, isLoading } = useAdminFiles({
+  const { data, isLoading, isError, refetch } = useAdminFiles({
     page,
     limit,
     keyword: search || undefined,
@@ -51,18 +47,12 @@ export default function AdminFilesPage() {
               setPage(1);
             }}
           />
-          <Select
-            allowClear
-            showSearch
-            optionFilterProp="label"
-            placeholder="所属用户"
-            className="w-56"
+          <AdminUserSelect
             value={userIdFilter}
             onChange={(v) => {
               setUserIdFilter(v);
               setPage(1);
             }}
-            options={userOptions}
           />
           <Select
             allowClear
@@ -79,6 +69,11 @@ export default function AdminFilesPage() {
             ]}
           />
         </Space>
+        <AdminQueryAlert
+          isError={isError}
+          message="无法加载文件列表，请确认后端服务正常"
+          onRetry={() => refetch()}
+        />
         <Table
           rowKey="id"
           loading={isLoading}

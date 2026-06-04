@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card, Input, Select, Table } from 'antd';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import { useAdminAuditLogs } from '@/network/hooks/adminOps';
 import { useAdminStaffList } from '@/network/hooks/adminStaff';
@@ -12,8 +13,9 @@ export default function AdminAuditLogsPage() {
   const [action, setAction] = useState<string | undefined>();
   const limit = 15;
 
-  const { data: staffRes } = useAdminStaffList();
-  const { data, isLoading } = useAdminAuditLogs({
+  const { data: staffRes, isError: staffError, refetch: refetchStaff } =
+    useAdminStaffList();
+  const { data, isLoading, isError, refetch } = useAdminAuditLogs({
     page,
     limit,
     adminId,
@@ -56,6 +58,16 @@ export default function AdminAuditLogsPage() {
           </div>
         }
       >
+        <AdminQueryAlert
+          isError={staffError}
+          message="无法加载管理员列表"
+          onRetry={() => refetchStaff()}
+        />
+        <AdminQueryAlert
+          isError={isError}
+          message="无法加载审计日志"
+          onRetry={() => refetch()}
+        />
         <Table
           rowKey="id"
           loading={isLoading}

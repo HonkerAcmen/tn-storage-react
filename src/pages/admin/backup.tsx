@@ -12,6 +12,7 @@ import {
 } from 'antd';
 import { MdBackup, MdDownload, MdDelete, MdSchedule } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
 import { useAdminCanWrite } from '@/network/hooks/adminAuth';
@@ -49,9 +50,13 @@ type ScheduleFormValues = {
 };
 
 export default function AdminBackupPage() {
-  const { data, isLoading, refetch } = useAdminBackupJobs();
-  const { data: scheduleRes, isLoading: scheduleLoading } =
-    useAdminBackupSchedule();
+  const { data, isLoading, isError, refetch } = useAdminBackupJobs();
+  const {
+    data: scheduleRes,
+    isLoading: scheduleLoading,
+    isError: scheduleError,
+    refetch: refetchSchedule,
+  } = useAdminBackupSchedule();
   const triggerBackup = useAdminTriggerBackup();
   const deleteBackup = useAdminDeleteBackupJob();
   const updateSchedule = useAdminUpdateBackupSchedule();
@@ -133,6 +138,11 @@ export default function AdminBackupPage() {
           ) : null
         }
       >
+        <AdminQueryAlert
+          isError={scheduleError}
+          message="无法加载定时备份配置"
+          onRetry={() => refetchSchedule()}
+        />
         <Form
           form={scheduleForm}
           layout="vertical"
@@ -191,6 +201,11 @@ export default function AdminBackupPage() {
           备份包含核心数据表 JSON（密码已脱敏）、MinIO 清单/镜像，以及
           mysqldump SQL（若可用）。已完成任务可下载 ZIP 或删除。
         </p>
+        <AdminQueryAlert
+          isError={isError}
+          message="无法加载备份任务列表"
+          onRetry={() => refetch()}
+        />
         <Table
           rowKey="id"
           loading={isLoading}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card, Select, Table, Tag } from 'antd';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import {
   useAdminLoginLogs,
@@ -13,8 +14,13 @@ export default function AdminLoginLogsPage() {
   const [adminId, setAdminId] = useState<number | undefined>();
   const limit = 15;
 
-  const { data: staffRes } = useAdminStaffList();
-  const { data, isLoading } = useAdminLoginLogs({ page, limit, adminId });
+  const { data: staffRes, isError: staffError, refetch: refetchStaff } =
+    useAdminStaffList();
+  const { data, isLoading, isError, refetch } = useAdminLoginLogs({
+    page,
+    limit,
+    adminId,
+  });
 
   const staffList = staffRes?.data?.data ?? [];
   const result = data?.data?.data;
@@ -42,6 +48,16 @@ export default function AdminLoginLogsPage() {
           />
         }
       >
+        <AdminQueryAlert
+          isError={staffError}
+          message="无法加载管理员列表"
+          onRetry={() => refetchStaff()}
+        />
+        <AdminQueryAlert
+          isError={isError}
+          message="无法加载登录日志"
+          onRetry={() => refetch()}
+        />
         <Table
           rowKey="id"
           loading={isLoading}
