@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import adminHttp from '@/network/adminHttp';
 import {
   GetAdminActivityApiResponse,
-  GetAdminBackupJobApiResponse,
   GetAdminBackupJobsApiResponse,
   GetAdminBackupScheduleApiResponse,
   GetAdminFilesApiResponse,
@@ -146,22 +145,6 @@ export function useAdminResetPassword() {
   });
 }
 
-export function useAdminUpdateUserRole() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      id,
-      role,
-    }: {
-      id: number;
-      role: AdminUserRoleResponse['role'];
-    }) => await adminHttp.put(`/admin/users/${id}/role`, { role }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'users'] });
-    },
-  });
-}
-
 export function useAdminUpdateUserPermissions() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -240,17 +223,6 @@ export function useAdminUpdateBackupSchedule() {
         queryKey: [...adminKey, 'backup', 'schedule'],
       });
     },
-  });
-}
-
-export function useAdminBackupJob(id: string | null, enabled = true) {
-  const authed = isAdminAuthed();
-  return useQuery({
-    queryKey: [...adminKey, 'backup', 'job', id],
-    queryFn: async () =>
-      await adminHttp.get<GetAdminBackupJobApiResponse>(`/admin/backup/jobs/${id}`),
-    enabled: authed && enabled && !!id,
-    refetchInterval: 3000,
   });
 }
 

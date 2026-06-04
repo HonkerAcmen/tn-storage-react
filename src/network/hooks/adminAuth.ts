@@ -65,9 +65,17 @@ export function useAdminCanWrite() {
 
 export function useAdminLogout() {
   const queryClient = useQueryClient();
-  return () => {
-    clearAdminSession();
-    queryClient.removeQueries({ queryKey: ['admin'] });
-    window.location.href = '/admin/login';
+  return async () => {
+    try {
+      if (isAdminAuthed()) {
+        await adminHttp.post('/admin/auth/logout');
+      }
+    } catch {
+      // 本地会话仍须清理
+    } finally {
+      clearAdminSession();
+      queryClient.removeQueries({ queryKey: ['admin'] });
+      window.location.href = '/admin/login';
+    }
   };
 }
