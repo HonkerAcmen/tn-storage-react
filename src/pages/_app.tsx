@@ -30,6 +30,9 @@ export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const isLoginPage = router.pathname === '/login';
   const isVisitorPage = router.pathname === '/visitor';
+  const isAdminLoginPage = router.pathname === '/admin/login';
+  const isAdminPage =
+    router.pathname.startsWith('/admin') && !isAdminLoginPage;
   const authed = useAuthed();
 
   // 配置 message
@@ -42,15 +45,45 @@ export default function App({ Component, pageProps }: AppProps) {
     });
   }, []);
 
-  // 路由守卫
+  // 路由守卫（管理后台 /admin 有独立鉴权，不在此处理）
   useEffect(() => {
+    if (isAdminPage || isAdminLoginPage) return;
     if (isLoginPage && authed) {
-      router.push('/');
+      const redirect =
+        typeof router.query.redirect === 'string'
+          ? router.query.redirect
+          : '/';
+      if (redirect.startsWith('/admin')) {
+        router.replace('/admin');
+        return;
+      }
+      router.replace(redirect);
     }
     if (isVisitorPage && authed) {
       router.push('/');
     }
-  }, [router, isLoginPage, isVisitorPage, authed]);
+  }, [
+    router,
+    isLoginPage,
+    isVisitorPage,
+    isAdminPage,
+    isAdminLoginPage,
+    authed,
+  ]);
+
+  const skipFileProvider =
+    isAdminPage || isAdminLoginPage;
+
+  const page = (
+    <>
+      <UserPreferenceBridge
+        enabled={
+          !isLoginPage && !isVisitorPage && !skipFileProvider && authed
+        }
+      />
+      <Component {...pageProps} />
+    </>
+  );
 
   return (
     <QueryProvider>
@@ -79,10 +112,7 @@ export default function App({ Component, pageProps }: AppProps) {
         }}
       >
         <AntApp>
-          <FileDataProvider>
-            <UserPreferenceBridge enabled={!isLoginPage && !isVisitorPage && authed} />
-            <Component {...pageProps} />
-          </FileDataProvider>
+          {skipFileProvider ? page : <FileDataProvider>{page}</FileDataProvider>}
         </AntApp>
       </ConfigProvider>
     </QueryProvider>

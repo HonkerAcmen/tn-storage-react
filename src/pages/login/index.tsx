@@ -27,6 +27,14 @@ export default function Login() {
   const register = useRegister();
   const forgotPassword = useForgotPassword();
 
+  const postLoginPath = () => {
+    const redirect = router.query.redirect;
+    if (typeof redirect === 'string' && redirect.startsWith('/admin')) {
+      return redirect;
+    }
+    return '/';
+  };
+
   // 登录表单提交
   const onLoginFinish = async (values: LoginRequest) => {
     setLoading(true);
@@ -36,10 +44,9 @@ export default function Login() {
       // 确保 token 已保存到 localStorage
       if (localStorage.getItem('token')) {
         messageApi.success('登录成功！');
-        // 延迟跳转，确保 message 能够显示
-        // 使用 router.push 而不是 window.location.href，以保持 React Query 缓存
+        const target = postLoginPath();
         setTimeout(() => {
-          router.push('/');
+          router.push(target);
         }, 1500);
       }
     } catch {

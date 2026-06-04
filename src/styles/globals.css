@@ -181,3 +181,36 @@ body {
 :root[data-theme='dark'] .brand-logo__accent {
   filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.3));
 }
+
+/* 管理后台：强制浅色，不受云盘 dark 主题影响 */
+:root[data-admin-route='true'] {
+  --background: #f4f5f7;
+  --foreground: #1f2937;
+  --panel-bg: #ffffff;
+  --panel-muted: #f9fafb;
+  --panel-soft: #f3f4f6;
+  --border-color: #e8eaed;
+}
+
+:root[data-admin-route='true'] body {
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+:root[data-admin-route='true'] .bg-white {
+  background-color: #ffffff !important;
+}
+
+:root[data-admin-route='true'] .bg-gray-50 {
+  background-color: #f4f5f7 !important;
+}
+
+:root[data-admin-route='true'] .text-gray-800,
+:root[data-admin-route='true'] .text-gray-900 {
+  color: #1f2937 !important;
+}
+
+:root[data-admin-route='true'] .text-gray-600,
+:root[data-admin-route='true'] .text-gray-500 {
+  color: #6b7280 !important;
+}
