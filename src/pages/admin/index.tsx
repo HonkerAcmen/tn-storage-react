@@ -28,6 +28,8 @@ export default function AdminDashboardPage() {
   const { data: activityRes, isLoading: activityLoading } = useAdminActivity();
   const activityRange = useAdminUiStore((s) => s.activityRange);
   const setActivityRange = useAdminUiStore((s) => s.setActivityRange);
+  const activityMetric = useAdminUiStore((s) => s.activityMetric);
+  const setActivityMetric = useAdminUiStore((s) => s.setActivityMetric);
 
   const metrics = metricsRes?.data?.data;
   const activity = activityRes?.data?.data;
@@ -38,44 +40,65 @@ export default function AdminDashboardPage() {
     return list;
   }, [activity?.uploadsByDay, activityRange]);
 
-  const uploadChartOption: EChartsOption = useMemo(
-    () => ({
-      tooltip: { trigger: 'axis' },
-      legend: { data: ['上传次数', '上传流量'] },
-      grid: { left: 48, right: 48, bottom: 32, top: 48 },
+  const uploadChartOption: EChartsOption = useMemo(() => {
+    const isCount = activityMetric === 'count';
+    const xLabels = uploadsByDay.map((item) => item.date.slice(5));
+    const values = uploadsByDay.map((item) =>
+      isCount ? item.uploads : item.bytes
+    );
+
+    return {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: (params: unknown) => {
+          const list = Array.isArray(params) ? params : [params];
+          const first = list[0] as { dataIndex?: number } | undefined;
+          const idx = first?.dataIndex ?? 0;
+          const row = uploadsByDay[idx];
+          if (!row) return '';
+          return [
+            row.date,
+            `上传次数：${row.uploads}`,
+            `上传流量：${formatFileSize(row.bytes)}`,
+          ].join('<br/>');
+        },
+      },
+      grid: { left: 16, right: 16, bottom: 8, top: 24, containLabel: true },
       xAxis: {
         type: 'category',
-        data: uploadsByDay.map((item) => item.date.slice(5)),
+        data: xLabels,
+        boundaryGap: true,
+        axisTick: { alignWithLabel: true },
+        axisLine: { lineStyle: { color: '#e5e7eb' } },
+        axisLabel: { color: '#6b7280' },
       },
-      yAxis: [
-        { type: 'value', name: '次数' },
-        {
-          type: 'value',
-          name: '流量',
-          axisLabel: {
-            formatter: (v: number) => formatFileSize(v),
-          },
+      yAxis: {
+        type: 'value',
+        name: isCount ? '次数' : '流量',
+        splitLine: { lineStyle: { type: 'dashed', color: '#f0f0f0' } },
+        axisLabel: {
+          color: '#6b7280',
+          formatter: isCount
+            ? (v: number) => String(v)
+            : (v: number) => formatFileSize(v),
         },
-      ],
+      },
       series: [
         {
-          name: '上传次数',
+          name: isCount ? '上传次数' : '上传流量',
           type: 'bar',
-          data: uploadsByDay.map((item) => item.uploads),
-          itemStyle: { color: '#5542f6' },
-        },
-        {
-          name: '上传流量',
-          type: 'line',
-          yAxisIndex: 1,
-          smooth: true,
-          data: uploadsByDay.map((item) => item.bytes),
-          itemStyle: { color: '#52c41a' },
+          barMaxWidth: 28,
+          data: values,
+          itemStyle: {
+            color: isCount ? '#5542f6' : '#22c55e',
+            borderRadius: [4, 4, 0, 0],
+          },
+          emphasis: { focus: 'series' },
         },
       ],
-    }),
-    [uploadsByDay]
-  );
+    };
+  }, [uploadsByDay, activityMetric]);
 
   const categoryChartOption: EChartsOption = useMemo(() => {
     const breakdown = activity?.categoryBreakdown ?? [];
@@ -186,14 +209,26 @@ export default function AdminDashboardPage() {
               {...adminCardProps}
               title="上传活动"
               extra={
-                <Segmented
-                  options={[
-                    { label: '近 7 天', value: 7 },
-                    { label: '近 30 天', value: 30 },
-                  ]}
-                  value={activityRange}
-                  onChange={(v) => setActivityRange(v as 7 | 30)}
-                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Segmented
+                    size="small"
+                    options={[
+                      { label: '按次数', value: 'count' },
+                      { label: '按流量', value: 'bytes' },
+                    ]}
+                    value={activityMetric}
+                    onChange={(v) => setActivityMetric(v as 'count' | 'bytes')}
+                  />
+                  <Segmented
+                    size="small"
+                    options={[
+                      { label: '近 7 天', value: 7 },
+                      { label: '近 30 天', value: 30 },
+                    ]}
+                    value={activityRange}
+                    onChange={(v) => setActivityRange(v as 7 | 30)}
+                  />
+                </div>
               }
             >
               <Spin spinning={activityLoading}>
