@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Button, Card, Input, Popconfirm, Select, Space, Table } from 'antd';
-import { MdDelete } from 'react-icons/md';
+import { Button, Card, Input, Popconfirm, Space, Table } from 'antd';
+import { MdDelete, MdRestore } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { AdminUserSelect } from '@/components/admin/AdminUserSelect';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
-import { useAdminPurgeTrash, useAdminTrash } from '@/network/hooks/admin';
+import { useAdminPurgeTrash, useAdminRestoreTrash, useAdminTrash } from '@/network/hooks/admin';
 import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { formatDateTime, formatFileSize } from '@/utils/format/formatters';
 
@@ -19,6 +19,7 @@ export default function AdminTrashPage() {
   const feedback = useAdminFeedback();
   const canWrite = useAdminCanWrite();
   const purgeTrash = useAdminPurgeTrash();
+  const restoreTrash = useAdminRestoreTrash();
 
   const { data, isLoading, isError, refetch } = useAdminTrash({
     page,
@@ -97,24 +98,41 @@ export default function AdminTrashPage() {
             {
               title: '操作',
               key: 'actions',
-              width: 120,
+              width: 200,
               render: (_, record) =>
                 canWrite ? (
-                  <Popconfirm
-                    title="永久删除？此操作不可恢复。"
-                    onConfirm={async () => {
-                      try {
-                        await purgeTrash.mutateAsync(record.id);
-                        feedback.success('已永久删除');
-                      } catch (err) {
-                        feedback.error(err, '删除失败');
-                      }
-                    }}
-                  >
-                    <Button size="small" danger icon={<MdDelete />}>
-                      永久删除
-                    </Button>
-                  </Popconfirm>
+                  <Space>
+                    <Popconfirm
+                      title="恢复至用户文件区？"
+                      onConfirm={async () => {
+                        try {
+                          await restoreTrash.mutateAsync(record.id);
+                          feedback.success('已恢复');
+                        } catch (err) {
+                          feedback.error(err, '恢复失败');
+                        }
+                      }}
+                    >
+                      <Button size="small" icon={<MdRestore />}>
+                        恢复
+                      </Button>
+                    </Popconfirm>
+                    <Popconfirm
+                      title="永久删除？此操作不可恢复。"
+                      onConfirm={async () => {
+                        try {
+                          await purgeTrash.mutateAsync(record.id);
+                          feedback.success('已永久删除');
+                        } catch (err) {
+                          feedback.error(err, '删除失败');
+                        }
+                      }}
+                    >
+                      <Button size="small" danger icon={<MdDelete />}>
+                        永久删除
+                      </Button>
+                    </Popconfirm>
+                  </Space>
                 ) : (
                   '-'
                 ),

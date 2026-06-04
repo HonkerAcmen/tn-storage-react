@@ -10,7 +10,7 @@ import {
   Table,
   Tag,
 } from 'antd';
-import { MdBackup, MdDownload, MdDelete, MdSchedule } from 'react-icons/md';
+import { MdBackup, MdDownload, MdDelete, MdSchedule, MdCancel } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { adminCardProps } from '@/components/admin/AdminPanel';
@@ -20,6 +20,7 @@ import {
   downloadAdminBackupJob,
   useAdminBackupJobs,
   useAdminBackupSchedule,
+  useAdminCancelBackupJob,
   useAdminDeleteBackupJob,
   useAdminTriggerBackup,
   useAdminUpdateBackupSchedule,
@@ -59,6 +60,7 @@ export default function AdminBackupPage() {
   } = useAdminBackupSchedule();
   const triggerBackup = useAdminTriggerBackup();
   const deleteBackup = useAdminDeleteBackupJob();
+  const cancelBackup = useAdminCancelBackupJob();
   const updateSchedule = useAdminUpdateBackupSchedule();
   const feedback = useAdminFeedback();
   const canWrite = useAdminCanWrite();
@@ -256,10 +258,34 @@ export default function AdminBackupPage() {
             {
               title: '操作',
               key: 'actions',
-              width: 160,
+              width: 220,
               fixed: 'right',
               render: (_, record) => (
                 <Space>
+                  {(record.status === 'running' ||
+                    record.status === 'pending') &&
+                  canWrite ? (
+                    <Popconfirm
+                      title="确定取消该备份任务？"
+                      onConfirm={async () => {
+                        try {
+                          await cancelBackup.mutateAsync(record.id);
+                          feedback.success('任务已取消');
+                          await refetch();
+                        } catch (err) {
+                          feedback.error(err, '取消失败');
+                        }
+                      }}
+                    >
+                      <Button
+                        size="small"
+                        icon={<MdCancel />}
+                        loading={cancelBackup.isPending}
+                      >
+                        取消
+                      </Button>
+                    </Popconfirm>
+                  ) : null}
                   <Button
                     size="small"
                     icon={<MdDownload />}

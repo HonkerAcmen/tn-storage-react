@@ -8,6 +8,8 @@ import {
   GetAdminSharesApiResponse,
   GetAdminTrashApiResponse,
   GetAdminUserLoginLogsApiResponse,
+  GetAdminUserApiResponse,
+  UpdateAdminUserQuotaApiResponse,
   GetAdminMetricsApiResponse,
   GetAdminStorageOverviewApiResponse,
   GetAdminStorageUsersApiResponse,
@@ -252,6 +254,19 @@ export function useAdminDeleteBackupJob() {
   });
 }
 
+export function useAdminCancelBackupJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) =>
+      await adminHttp.post(`/admin/backup/jobs/${id}/cancel`),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'backup', 'jobs'],
+      });
+    },
+  });
+}
+
 export async function downloadAdminBackupJob(id: string): Promise<void> {
   const response = await adminHttp.get<Blob>(
     `/admin/backup/jobs/${id}/download`,
@@ -324,6 +339,19 @@ export function useAdminPurgeTrash() {
       await adminHttp.delete(`/admin/trash/${id}`),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [...adminKey, 'trash'] });
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'files'] });
+    },
+  });
+}
+
+export function useAdminRestoreTrash() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) =>
+      await adminHttp.post(`/admin/trash/${id}/restore`),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'trash'] });
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'files'] });
     },
   });
 }
@@ -352,5 +380,38 @@ export function useAdminUserLoginLogs(
         { params },
       ),
     enabled: authed && !!userId,
+  });
+}
+
+export function useAdminUser(userId: number | null, enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'users', userId, 'detail'],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminUserApiResponse>(`/admin/users/${userId}`),
+    enabled: authed && enabled && !!userId,
+  });
+}
+
+export function useAdminUpdateUserQuota() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      quotaBytes,
+    }: {
+      id: number;
+      quotaBytes: number;
+    }) =>
+      await adminHttp.put<UpdateAdminUserQuotaApiResponse>(
+        `/admin/users/${id}/quota`,
+        { quotaBytes },
+      ),
+    onSuccess: async (_, { id }) => {
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'users'] });
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'users', id, 'detail'],
+      });
+    },
   });
 }

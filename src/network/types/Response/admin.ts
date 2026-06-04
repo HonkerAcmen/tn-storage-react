@@ -64,6 +64,22 @@ export interface AdminStorageUserItem {
 
 export type AdminUserItem = AdminUserRoleResponse;
 
+export interface AdminUserDetailResponse extends AdminUserItem {
+  storageQuotaBytes?: number;
+  storage: {
+    usedBytes: number;
+    quotaBytes: number;
+    totalFiles: number;
+    totalFolders: number;
+  };
+}
+
+export type GetAdminUserApiResponse = BaseResponse<AdminUserDetailResponse>;
+export type UpdateAdminUserQuotaApiResponse = BaseResponse<{
+  userId: number;
+  quotaBytes: number;
+}>;
+
 export interface AdminBackupJob {
   id: string;
   status: 'pending' | 'running' | 'completed' | 'failed';

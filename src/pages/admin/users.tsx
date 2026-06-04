@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   Card,
   Drawer,
   Form,
   Input,
+  InputNumber,
   Modal,
   Popconfirm,
   Select,
@@ -22,6 +23,7 @@ import {
   MdBlock,
   MdCheckCircle,
   MdHistory,
+  MdStorage,
 } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
@@ -34,12 +36,14 @@ import {
   useAdminUpdateUser,
   useAdminUpdateUserPermissions,
   useAdminUpdateUserStatus,
+  useAdminUpdateUserQuota,
+  useAdminUser,
   useAdminUserLoginLogs,
   useAdminUsers,
 } from '@/network/hooks/admin';
 import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { AdminUserRoleResponse } from '@/network/types/Response/user';
-import { formatDateTime } from '@/utils/format/formatters';
+import { formatDateTime, formatFileSize } from '@/utils/format/formatters';
 
 const roleLabels: Record<AdminUserRoleResponse['role'], string> = {
   admin: '管理员',
@@ -110,6 +114,7 @@ export default function AdminUsersPage() {
   const resetPassword = useAdminResetPassword();
   const updatePermissions = useAdminUpdateUserPermissions();
   const updateStatus = useAdminUpdateUserStatus();
+  const updateQuota = useAdminUpdateUserQuota();
   const feedback = useAdminFeedback();
   const canWrite = useAdminCanWrite();
 
@@ -123,10 +128,16 @@ export default function AdminUsersPage() {
     null,
   );
   const [loginLogPage, setLoginLogPage] = useState(1);
+  const [quotaOpen, setQuotaOpen] = useState(false);
+  const [quotaUserId, setQuotaUserId] = useState<number | null>(null);
   const loginLogLimit = 10;
   const [form] = Form.useForm<UserFormValues>();
   const [resetForm] = Form.useForm<{ password: string }>();
   const [permForm] = Form.useForm<PermissionFormValues>();
+  const [quotaForm] = Form.useForm<{ quotaGb: number }>();
+
+  const { data: quotaDetailRes, isLoading: quotaDetailLoading } =
+    useAdminUser(quotaUserId, quotaOpen);
 
   const result = data?.data?.data;
   const users = result?.items ?? [];
@@ -139,6 +150,15 @@ export default function AdminUsersPage() {
     });
   const loginLogs = loginLogsRes?.data?.data?.items ?? [];
   const loginLogsTotal = loginLogsRes?.data?.data?.pagination.total ?? 0;
+  const quotaDetail = quotaDetailRes?.data?.data;
+
+  useEffect(() => {
+    if (quotaOpen && quotaDetail?.storage) {
+      quotaForm.setFieldsValue({
+        quotaGb: Math.round(quotaDetail.storage.quotaBytes / 1024 / 1024 / 1024),
+      });
+    }
+  }, [quotaOpen, quotaDetail, quotaForm]);
 
   const openCreate = () => {
     setEditingId(null);
@@ -238,6 +258,22 @@ export default function AdminUsersPage() {
       feedback.success(nextStatus === 'disabled' ? '账号已禁用' : '账号已启用');
     } catch (err) {
       feedback.error(err, '状态更新失败');
+    }
+  };
+
+  const handleSaveQuota = async () => {
+    if (!quotaUserId) return;
+    const values = await quotaForm.validateFields();
+    try {
+      await updateQuota.mutateAsync({
+        id: quotaUserId,
+        quotaBytes: values.quotaGb * 1024 * 1024 * 1024,
+      });
+      feedback.success('存储配额已更新');
+      setQuotaOpen(false);
+      setQuotaUserId(null);
+    } catch (err) {
+      feedback.error(err, '配额更新失败');
     }
   };
 
@@ -388,6 +424,16 @@ export default function AdminUsersPage() {
                     </Button>
                     <Button
                       size="small"
+                      icon={<MdStorage />}
+                      onClick={() => {
+                        setQuotaUserId(record.id);
+                        setQuotaOpen(true);
+                      }}
+                    >
+                      配额
+                    </Button>
+                    <Button
+                      size="small"
                       icon={<MdLockReset />}
                       onClick={() => {
                         setResetUserId(record.id);
@@ -514,6 +560,43 @@ export default function AdminUsersPage() {
             <Input.Password />
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title={
+          quotaDetail
+            ? `存储配额 — ${quotaDetail.username}`
+            : '存储配额'
+        }
+        open={quotaOpen}
+        onCancel={() => {
+          setQuotaOpen(false);
+          setQuotaUserId(null);
+        }}
+        onOk={handleSaveQuota}
+        confirmLoading={updateQuota.isPending}
+        destroyOnClose
+      >
+        {quotaDetailLoading ? (
+          <p className="py-4 text-center text-gray-400">加载中…</p>
+        ) : (
+          <Form form={quotaForm} layout="vertical" className="mt-4">
+            {quotaDetail?.storage && (
+              <p className="mb-3 text-sm text-gray-500">
+                已用 {formatFileSize(quotaDetail.storage.usedBytes)} /{' '}
+                {formatFileSize(quotaDetail.storage.quotaBytes)}（
+                {quotaDetail.storage.totalFiles} 个文件）
+              </p>
+            )}
+            <Form.Item
+              name="quotaGb"
+              label="配额上限（GB）"
+              rules={[{ required: true, type: 'number', min: 1 }]}
+            >
+              <InputNumber min={1} max={10240} className="w-full" />
+            </Form.Item>
+          </Form>
+        )}
       </Modal>
 
       <Drawer
