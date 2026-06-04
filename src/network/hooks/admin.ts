@@ -4,6 +4,7 @@ import {
   GetAdminActivityApiResponse,
   GetAdminBackupJobApiResponse,
   GetAdminBackupJobsApiResponse,
+  GetAdminBackupScheduleApiResponse,
   GetAdminMetricsApiResponse,
   GetAdminStorageOverviewApiResponse,
   GetAdminStorageUsersApiResponse,
@@ -206,6 +207,34 @@ export function useAdminBackupJobs(enabled = true) {
         (job) => job.status === 'running' || job.status === 'pending'
       );
       return hasRunning ? 3000 : false;
+    },
+  });
+}
+
+export function useAdminBackupSchedule(enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'backup', 'schedule'],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminBackupScheduleApiResponse>(
+        '/admin/backup/schedule'
+      ),
+    enabled: authed && enabled,
+  });
+}
+
+export function useAdminUpdateBackupSchedule() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: {
+      enabled?: boolean;
+      cron?: string;
+      minioMirror?: boolean;
+    }) => await adminHttp.put('/admin/backup/schedule', body),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'backup', 'schedule'],
+      });
     },
   });
 }

@@ -67,11 +67,20 @@ export type AdminUserItem = AdminUserRoleResponse;
 export interface AdminBackupJob {
   id: string;
   status: 'pending' | 'running' | 'completed' | 'failed';
+  trigger?: 'manual' | 'scheduled';
   createdAt: string;
   finishedAt: string | null;
   outputDir: string;
   files: string[];
   message: string;
+}
+
+export interface AdminBackupScheduleConfig {
+  enabled: boolean;
+  cron: string;
+  minioMirror: boolean;
+  updatedAt: string;
+  nextRunAt: string | null;
 }
 
 export type GetAdminMetricsApiResponse = BaseResponse<AdminMetricsResponse>;
@@ -86,6 +95,8 @@ export type GetAdminUsersApiResponse = BaseResponse<
 >;
 export type GetAdminBackupJobsApiResponse = BaseResponse<AdminBackupJob[]>;
 export type GetAdminBackupJobApiResponse = BaseResponse<AdminBackupJob | null>;
+export type GetAdminBackupScheduleApiResponse =
+  BaseResponse<AdminBackupScheduleConfig>;
 export type TriggerAdminBackupApiResponse = BaseResponse<AdminBackupJob>;
 
 export interface AdminAuthProfile {
