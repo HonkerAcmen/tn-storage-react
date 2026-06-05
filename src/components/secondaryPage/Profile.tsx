@@ -6,6 +6,7 @@ import {
   useUpdateMyUserData,
 } from '@/network/hooks/user';
 import { useGetRecents } from '@/network/hooks/file';
+import { getApiErrorMessage } from '@/utils/apiError';
 import { message } from 'antd';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
@@ -252,9 +253,9 @@ function OverviewTab() {
     setIsSaving(true);
     try {
       await updateUserData.mutateAsync(userdata);
-    } catch {
+    } catch (err) {
       setIsSaving(false);
-      messageApi.error('资料保存失败，请重试');
+      messageApi.error(getApiErrorMessage(err, '资料保存失败，请重试'));
       return;
     }
 
@@ -266,11 +267,10 @@ function OverviewTab() {
       setPendingAvatarFile(null);
       setIsEditing(false);
       messageApi.success('资料已更新');
-    } catch (error) {
-      const messageText =
-        (error as { message?: string })?.message ||
-        '资料已保存，但头像上传失败，请重试头像上传';
-      messageApi.warning(messageText);
+    } catch (err) {
+      messageApi.warning(
+        getApiErrorMessage(err, '资料已保存，但头像上传失败，请重试头像上传'),
+      );
     } finally {
       setIsSaving(false);
     }

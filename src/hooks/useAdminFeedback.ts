@@ -1,5 +1,5 @@
 import { App } from 'antd';
-import { getAdminApiErrorMessage } from '@/utils/admin/apiError';
+import { getApiErrorMessage } from '@/utils/apiError';
 
 /**
  * 管理后台统一提示（基于 Ant Design App.useApp）
@@ -13,7 +13,7 @@ export function useAdminFeedback() {
     },
     error: (err: unknown, fallback = '操作失败') => {
       message.error({
-        content: getAdminApiErrorMessage(err, fallback),
+        content: getApiErrorMessage(err, fallback),
         duration: 3,
       });
     },
@@ -23,7 +23,7 @@ export function useAdminFeedback() {
     notifyError: (title: string, err: unknown, fallback = '操作失败') => {
       notification.error({
         message: title,
-        description: getAdminApiErrorMessage(err, fallback),
+        description: getApiErrorMessage(err, fallback),
         duration: 4,
       });
     },

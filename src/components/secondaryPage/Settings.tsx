@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { message } from 'antd';
+import { getApiErrorMessage } from '@/utils/apiError';
 import {
   AiFillBell,
   AiFillCloud,
@@ -268,10 +269,14 @@ function SecuritySettings() {
     twoFactorEnabled ?? Boolean(settings?.two_factor_enabled);
 
   const saveTwoFactor = async () => {
-    await updateSettings.mutateAsync({
-      two_factor_enabled: currentTwoFactorEnabled,
-    });
-    messageApi.success('安全设置已保存');
+    try {
+      await updateSettings.mutateAsync({
+        two_factor_enabled: currentTwoFactorEnabled,
+      });
+      messageApi.success('安全设置已保存');
+    } catch (err) {
+      messageApi.error(getApiErrorMessage(err, '安全设置保存失败'));
+    }
   };
 
   const submitPassword = async () => {
@@ -279,9 +284,13 @@ function SecuritySettings() {
       messageApi.error('请填写完整密码信息');
       return;
     }
-    await changePassword.mutateAsync(passwordForm);
-    setPasswordForm({ oldPassword: '', newPassword: '' });
-    messageApi.success('密码已更新');
+    try {
+      await changePassword.mutateAsync(passwordForm);
+      setPasswordForm({ oldPassword: '', newPassword: '' });
+      messageApi.success('密码已更新');
+    } catch (err) {
+      messageApi.error(getApiErrorMessage(err, '密码修改失败'));
+    }
   };
 
   return (

@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { Input, Modal, message } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
+import { getApiErrorMessage } from '@/utils/apiError';
 import http from '@/network/http';
 
 import {
@@ -281,7 +282,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
             },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onError: (error: any) => {
-              const errorMsg = error?.message || '未知错误';
+              const errorMsg = getApiErrorMessage(error, '未知错误');
               messageApi.error(`删除失败: ${errorMsg}`);
               reject(error);
             },
@@ -335,7 +336,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
       setRenameValue('');
     } catch (error) {
       const err = error as { message?: string };
-      messageApi.error(err?.message || '重命名失败');
+      messageApi.error(getApiErrorMessage(err, '重命名失败'));
     } finally {
       setRenameLoading(false);
     }
@@ -393,7 +394,10 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       const err = error as { message?: string };
       messageApi.error(
-        err?.message || (transferMode === 'move' ? '移动失败' : '复制失败')
+        getApiErrorMessage(
+          err,
+          transferMode === 'move' ? '移动失败' : '复制失败',
+        ),
       );
     } finally {
       setTransferLoading(false);

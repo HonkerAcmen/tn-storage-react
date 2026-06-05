@@ -6,6 +6,7 @@ import axios, {
 } from 'axios';
 import { message } from 'antd';
 import { clearAuthSession, forceRedirectToLogin } from '@/utils/auth';
+import { normalizeApiError } from '@/utils/apiError';
 
 /**
  * Axios 请求配置
@@ -106,7 +107,9 @@ request.interceptors.response.use(
       message.error(error.message || '请求失败');
     }
 
-    return Promise.reject(error.response?.data);
+    return Promise.reject(
+      normalizeApiError(error.response?.data ?? error, error.response?.status),
+    );
   }
 );
 

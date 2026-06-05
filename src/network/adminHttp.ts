@@ -10,6 +10,7 @@ import {
   forceRedirectToAdminLogin,
   getAdminToken,
 } from '@/utils/auth/adminSession';
+import { normalizeApiError } from '@/utils/apiError';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
 
@@ -44,7 +45,9 @@ adminHttp.interceptors.response.use(
     } else if (!error.response) {
       message.error('网络异常，请稍后重试');
     }
-    return Promise.reject(error.response?.data ?? error);
+    return Promise.reject(
+      normalizeApiError(error.response?.data ?? error, error.response?.status),
+    );
   },
 );
 

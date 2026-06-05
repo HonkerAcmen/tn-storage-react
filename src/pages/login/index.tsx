@@ -17,6 +17,7 @@ import {
   LoginRequest,
   ForgotPasswordRequest,
 } from '@/network/types/Request/auth';
+import { getApiErrorMessage } from '@/utils/apiError';
 import { useRouter } from 'next/router';
 
 export default function Login() {
@@ -49,8 +50,8 @@ export default function Login() {
           router.push(target);
         }, 1500);
       }
-    } catch {
-      messageApi.error('登录失败，请检查邮箱和密码');
+    } catch (err) {
+      messageApi.error(getApiErrorMessage(err, '登录失败，请检查邮箱和密码'));
     } finally {
       setLoading(false);
     }
@@ -71,8 +72,8 @@ export default function Login() {
       messageApi.success('注册成功！请登录');
       // 切换到登录标签页
       setActiveTab('login');
-    } catch {
-      messageApi.error('注册失败，请稍后重试');
+    } catch (err) {
+      messageApi.error(getApiErrorMessage(err, '注册失败，请稍后重试'));
     } finally {
       setLoading(false);
     }
@@ -88,13 +89,8 @@ export default function Login() {
       setTimeout(() => {
         setActiveTab('login');
       }, 2000);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : (error as { response?: { data?: { message?: string } } })?.response
-              ?.data?.message || '发送失败，请稍后重试';
-      messageApi.error(errorMessage);
+    } catch (err) {
+      messageApi.error(getApiErrorMessage(err, '发送失败，请稍后重试'));
     } finally {
       setLoading(false);
     }

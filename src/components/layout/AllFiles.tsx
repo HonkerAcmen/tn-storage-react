@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { Empty, Button, message, Dropdown, Modal } from 'antd';
+import { getApiErrorMessage } from '@/utils/apiError';
 import type { MenuProps } from 'antd';
 
 import {
@@ -261,15 +262,7 @@ export default function AllFiles() {
           },
           onError: (err) => {
             setConfirmLoading(false);
-            // 判断err.message为一个object
-            if (
-              Object.prototype.toString.call(err.message) === '[object Object]'
-            ) {
-              messageApi.error('未知错误, 请稍后重试');
-            } else {
-              // 如果不是就是普通的字符串message
-              messageApi.error(err.message);
-            }
+            messageApi.error(getApiErrorMessage(err, '创建文件夹失败'));
           },
         }
       );
