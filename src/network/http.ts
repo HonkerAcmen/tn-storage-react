@@ -104,7 +104,7 @@ request.interceptors.response.use(
             {
               message: `上传超时（${UPLOAD_REQUEST_TIMEOUT_MS / 1000} 秒），请检查网络后重试`,
             },
-            error.response?.status,
+            undefined,
           ),
         );
       }
