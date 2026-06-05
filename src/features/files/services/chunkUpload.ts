@@ -1,4 +1,5 @@
 import http from '@/network/http';
+import { UPLOAD_REQUEST_TIMEOUT_MS } from '@/network/uploadTimeout';
 import {
   initMultipartUploadPath,
   uploadChunkPath,
@@ -62,6 +63,7 @@ async function uploadChunk(params: {
     `${uploadChunkPath}/${params.taskId}/${params.chunkIndex}`,
     formData,
     {
+      timeout: UPLOAD_REQUEST_TIMEOUT_MS,
       onUploadProgress: (event) => {
         params.onProgress?.(event.loaded ?? 0);
       },

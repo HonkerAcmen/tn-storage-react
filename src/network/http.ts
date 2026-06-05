@@ -7,6 +7,7 @@ import axios, {
 import { message } from 'antd';
 import { clearAuthSession, forceRedirectToLogin } from '@/utils/auth';
 import { normalizeApiError } from '@/utils/apiError';
+import { UPLOAD_REQUEST_TIMEOUT_MS } from '@/network/uploadTimeout';
 
 /**
  * Axios 请求配置
@@ -92,6 +93,22 @@ request.interceptors.response.use(
           break;
       }
     } else if (error.request) {
+      const isTimeout =
+        error.code === 'ECONNABORTED' ||
+        (typeof error.message === 'string' &&
+          error.message.toLowerCase().includes('timeout'));
+
+      if (isTimeout) {
+        return Promise.reject(
+          normalizeApiError(
+            {
+              message: `上传超时（${UPLOAD_REQUEST_TIMEOUT_MS / 1000} 秒），请检查网络后重试`,
+            },
+            error.response?.status,
+          ),
+        );
+      }
+
       // 请求已发出但没有收到响应
 
       if (

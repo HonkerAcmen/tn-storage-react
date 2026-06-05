@@ -1,4 +1,5 @@
 import http from '@/network/http';
+import { UPLOAD_REQUEST_TIMEOUT_MS } from '@/network/uploadTimeout';
 import {
   InitAvatarUploadApiResponse,
   UploadAvatarChunkApiResponse,
@@ -43,6 +44,7 @@ async function uploadAvatarChunk(params: {
     `/user/avatar/upload/chunk/${params.taskId}/${params.chunkIndex}`,
     formData,
     {
+      timeout: UPLOAD_REQUEST_TIMEOUT_MS,
       onUploadProgress: (event) => {
         params.onProgress?.(event.loaded ?? 0);
       },
