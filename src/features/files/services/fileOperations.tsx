@@ -7,21 +7,42 @@ import {
 } from '@/network/types/Response/file';
 import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
 import { queryClient } from '@/network/queryClient';
+import { buildSharePageUrl } from '@/utils/shareUrl';
 
 /**
  * 文件操作服务
  * 统一处理文件的各种操作（下载、分享、重命名等）
- * 注意：消息提示由调用方处理
+ * 分享复制提示由调用方通过 App.useApp().message 展示
  */
 
-/**
- * 获取文件 Blob 数据，供预览和下载复用
- */
+async function writeClipboard(text: string): Promise<void> {
+  if (!navigator.clipboard?.writeText) {
+    throw new Error('当前浏览器不支持自动复制，请手动复制链接');
+  }
+  await navigator.clipboard.writeText(text);
+}
+
+/** 创建分享并复制链接到剪贴板，返回分享页 URL */
+export async function copyShareLinkForFile(
+  file: FileSystemTreeNode,
+): Promise<string> {
+  if (file.type === 'folder') {
+    throw new Error('当前仅支持分享文件');
+  }
+
+  const res = await http.post(`/file/share/${file.UUID}`);
+  const shareToken = res.data.data.token;
+  const shareUrl = buildSharePageUrl(shareToken);
+  await writeClipboard(shareUrl);
+  await queryClient.invalidateQueries({ queryKey: ['file', 'share'] });
+  return shareUrl;
+}
+
 export async function fetchFileBlob(
-  file: FileSystemTreeNode
+  file: FileSystemTreeNode,
 ): Promise<{ blob: Blob; filename: string; mimetype: string }> {
   const manifestRes = await http.get<GetFileChunkManifestApiResponse>(
-    `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunks`
+    `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunks`,
   );
   const manifest = manifestRes.data.data;
   const chunkBuffers: BlobPart[] = [];
@@ -31,7 +52,7 @@ export async function fetchFileBlob(
       `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunk/${chunkIndex}`,
       {
         responseType: 'blob',
-      }
+      },
     );
     chunkBuffers.push(chunkRes.data);
   }
@@ -43,9 +64,6 @@ export async function fetchFileBlob(
   };
 }
 
-/**
- * 下载文件
- */
 export async function downloadFile(file: FileSystemTreeNode): Promise<void> {
   if (file.type === 'folder') {
     return;
@@ -67,40 +85,16 @@ export async function downloadFile(file: FileSystemTreeNode): Promise<void> {
   }
 }
 
-/**
- * 分享文件
- */
+/** @deprecated 请使用 copyShareLinkForFile */
 export async function shareFile(
   file: FileSystemTreeNode,
-  shouldNotify = true
-): Promise<void> {
-  if (file.type === 'folder') {
-    message.error('当前仅支持分享文件');
-    return;
-  }
-
-  const res = await http.post(`/file/share/${file.UUID}`);
-  const shareUrl = res.data.data.url;
-  await navigator.clipboard.writeText(shareUrl);
-  await queryClient.invalidateQueries({ queryKey: ['file', 'share'] });
-  if (shouldNotify) {
-    message.success('已复制');
-  }
+  _shouldNotify = true,
+): Promise<string> {
+  return copyShareLinkForFile(file);
 }
 
-/**
- * 预览文件
- */
 export function previewFile(file: FileSystemTreeNode): void {
   if (file.type === 'folder') {
-    // 消息提示由调用方处理
     return;
   }
-
-  // TODO: 根据文件类型实现不同的预览方式
-  // 消息提示由调用方处理
-
-  // 示例：打开预览窗口
-  // const previewUrl = `/api/files/${file.id}/preview`;
-  // window.open(previewUrl, '_blank');
 }

@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
-import { message } from 'antd';
+import { App } from 'antd';
 import { useRouter } from 'next/router';
+import { getApiErrorMessage } from '@/utils/apiError';
 import { useFavorites } from './useFavorites';
 import { useDeletedFiles } from './useDeletedFiles';
 import { useFileData } from '@/contexts/FileDataContext';
@@ -13,7 +14,7 @@ import { useGetMySettings } from '@/network/hooks/user';
  * 统一管理所有文件操作逻辑
  */
 export function useFileActions() {
-  const [messageApi] = message.useMessage();
+  const { message: appMessage } = App.useApp();
   const router = useRouter();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addDeletedFile } = useDeletedFiles();
@@ -39,13 +40,17 @@ export function useFileActions() {
           break;
         case 'share':
           if (!(settings?.allow_share ?? false)) {
-            messageApi.error('当前账户未开启分享权限');
+            appMessage.error('当前账户未开启分享权限');
             break;
           }
-          void fileOperations.shareFile(
-            item,
-            settings?.share_notification ?? true
-          );
+          void fileOperations
+            .copyShareLinkForFile(item)
+            .then(() => {
+              appMessage.success('链接已复制');
+            })
+            .catch((err) => {
+              appMessage.error(getApiErrorMessage(err, '分享失败，请重试'));
+            });
           break;
         case 'rename':
           openRenameDialog(item);
@@ -67,10 +72,10 @@ export function useFileActions() {
           const wasFavorite = isFavorite(item.UUID);
           void toggleFavorite(item.UUID)
             .then((isNowFavorite) => {
-              messageApi.success(isNowFavorite ? '已添加到收藏' : '已取消收藏');
+              appMessage.success(isNowFavorite ? '已添加到收藏' : '已取消收藏');
             })
             .catch(() => {
-              messageApi.error(wasFavorite ? '取消收藏失败' : '收藏失败');
+              appMessage.error(wasFavorite ? '取消收藏失败' : '收藏失败');
             });
           break;
         }
@@ -86,7 +91,7 @@ export function useFileActions() {
     [
       openRenameDialog,
       openTransferDialog,
-      messageApi,
+      appMessage,
       addDeletedFile,
       isFavorite,
       settings,

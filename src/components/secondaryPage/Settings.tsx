@@ -21,6 +21,7 @@ import {
 import { useGetShares, useRevokeShare } from '@/network/hooks/file';
 import { UpdateUserSettingsRequest } from '@/network/types/Request/user';
 import { formatFileSize } from '@/utils/format/formatters';
+import { buildSharePageUrl } from '@/utils/shareUrl';
 
 interface SettingsProps {
   onClose: () => void;
@@ -635,9 +636,9 @@ function PermissionsSettings() {
                   <div className="flex shrink-0 items-center gap-2">
                     <button
                       onClick={async () => {
-                        const shareUrl = `${window.location.origin}/api/v1/file/share/download/${share.token}`;
+                        const shareUrl = buildSharePageUrl(share.token);
                         await navigator.clipboard.writeText(shareUrl);
-                        messageApi.success('已复制');
+                        messageApi.success('链接已复制');
                       }}
                       className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50"
                     >

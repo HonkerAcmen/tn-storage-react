@@ -30,8 +30,10 @@ export default function Login() {
 
   const postLoginPath = () => {
     const redirect = router.query.redirect;
-    if (typeof redirect === 'string' && redirect.startsWith('/admin')) {
-      return redirect;
+    if (typeof redirect === 'string' && redirect.startsWith('/')) {
+      if (redirect.startsWith('/admin') || redirect.startsWith('/share/')) {
+        return redirect;
+      }
     }
     return '/';
   };

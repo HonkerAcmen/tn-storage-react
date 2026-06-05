@@ -23,6 +23,7 @@ import {
 
 import { getFileIcon } from '@/components/FilesHandle/FileIcon';
 import { formatFileSize, formatDateTime } from '@/utils/format/formatters';
+import { getApiErrorMessage } from '@/utils/apiError';
 import { useFileData } from '@/contexts/FileDataContext';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { findPathToNode } from '@/utils/fileSystem/fileSystemUtils';
@@ -246,12 +247,18 @@ export default function FileDetailsModal({
               <Button
                 icon={<AiOutlineShareAlt />}
                 disabled={!(settings?.allow_share ?? false)}
-                onClick={() =>
-                  void fileOperations.shareFile(
-                    file,
-                    settings?.share_notification ?? true
-                  )
-                }
+                onClick={() => {
+                  void fileOperations
+                    .copyShareLinkForFile(file)
+                    .then(() => {
+                      messageApi.success('链接已复制');
+                    })
+                    .catch((err) => {
+                      messageApi.error(
+                        getApiErrorMessage(err, '分享失败，请重试'),
+                      );
+                    });
+                }}
               >
                 分享
               </Button>
