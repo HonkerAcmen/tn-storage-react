@@ -8,8 +8,11 @@ import {
   UploadChunkApiResponse,
 } from '@/network/types/Response/file';
 
-/** 默认 3MB，避免部分网关/WAF 对单次请求 ~4MB 的限制（multipart 略有开销） */
-const DEFAULT_CHUNK_SIZE = 3 * 1024 * 1024;
+/** 默认 3MB；可通过 NEXT_PUBLIC_UPLOAD_CHUNK_SIZE 与后端 MAX_CHUNK_SIZE 对齐 */
+const DEFAULT_CHUNK_SIZE =
+  Number(process.env.NEXT_PUBLIC_UPLOAD_CHUNK_SIZE) > 0
+    ? Number(process.env.NEXT_PUBLIC_UPLOAD_CHUNK_SIZE)
+    : 3 * 1024 * 1024;
 
 interface UploadFilesInChunksParams {
   bucket: string;
