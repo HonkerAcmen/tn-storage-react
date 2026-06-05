@@ -284,19 +284,23 @@ function OverviewTab() {
     }
 
     // 先进行文件验证（必须在读取文件之前）
-    const allowedFileTypes = ['image/png', 'image/jpeg', 'image/jpg'];
-    const upSize = 1 * 1024 * 1024; // 1MB
+    const allowedFileTypes = [
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/webp',
+    ];
+    const maxAvatarSize = 5 * 1024 * 1024; // 与后端 MAX_AVATAR_SIZE 默认一致
 
-    // 验证文件大小
-    if (file.size > upSize) {
-      messageApi.error('头像文件太大，请选择小于 1MB 的图片');
+    if (file.size > maxAvatarSize) {
+      messageApi.error('头像文件太大，请选择小于 5MB 的图片');
       e.target.value = '';
       return;
     }
 
     // 验证文件类型
     if (!allowedFileTypes.includes(file.type)) {
-      messageApi.error('文件类型不支持，请选择 PNG 或 JPEG 格式的图片');
+      messageApi.error('文件类型不支持，请选择 PNG、JPEG 或 WEBP 格式的图片');
       // 清空 input，允许重新选择
       e.target.value = '';
       return;

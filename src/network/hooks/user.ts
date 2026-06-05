@@ -23,6 +23,8 @@ import {
   UpdateUserDataRequest,
   UpdateUserSettingsRequest,
 } from '@/network/types/Request/user';
+import { uploadAvatarInChunks } from '@/features/user/uploadAvatarInChunks';
+import { getApiErrorMessage } from '@/utils/apiError';
 import { isAuthed } from '@/utils/auth';
 
 export function useGetUserWithName(username: string) {
@@ -109,14 +111,13 @@ export function useAvatarUpload() {
 export function useAvatarUploadMe() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ file }: { file: File }) => {
-      const formData = new FormData();
-      formData.append('avatar', file);
-      return await http.post<AvatarUploadApiResponse>(
-        '/user/avatar/upload/me',
-        formData
-      );
-    },
+    mutationFn: async ({
+      file,
+      onProgress,
+    }: {
+      file: File;
+      onProgress?: (progress: number) => void;
+    }) => uploadAvatarInChunks({ file, onProgress }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['user', 'avatar', 'me'],
@@ -124,6 +125,9 @@ export function useAvatarUploadMe() {
       await queryClient.refetchQueries({
         queryKey: ['user', 'avatar', 'me'],
       });
+    },
+    onError: (err) => {
+      throw new Error(getApiErrorMessage(err, '头像上传失败'));
     },
   });
 }

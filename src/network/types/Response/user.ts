@@ -78,10 +78,30 @@ interface GetUserAvatarResponse {
 }
 
 type AvatarUploadResponse = object;
+
+export interface InitAvatarUploadResponse {
+  taskId: string;
+  avatarUuid: string;
+  totalChunks: number;
+  bucket: string;
+  message: string;
+}
+
+export interface UploadAvatarChunkResponse {
+  taskId: string;
+  avatarUuid: string;
+  chunkIndex: number;
+  receivedChunks: number;
+  totalChunks: number;
+  status: string;
+}
+
+export type InitAvatarUploadApiResponse = BaseResponse<InitAvatarUploadResponse>;
+export type UploadAvatarChunkApiResponse = BaseResponse<UploadAvatarChunkResponse>;
 type UpdateUserDataResponse = string;
 
 export type GetUserWithNameApiResponse = BaseResponse<GetUserWithNameResponse>;
-export type AvatarUploadApiResponse = BaseResponse<AvatarUploadResponse>; // 头像上传
+export type AvatarUploadApiResponse = BaseResponse<AvatarUploadResponse>;
 export type GetUserAvatarApiResponse = BaseResponse<GetUserAvatarResponse>;
 export type UpdateUserDataApiResponse = BaseResponse<UpdateUserDataResponse>;
 export type GetUserStorageApiResponse = BaseResponse<StorageSummaryResponse>;
