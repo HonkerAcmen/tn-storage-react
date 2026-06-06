@@ -29,7 +29,12 @@ export default function FolderItem({
           onSelect(item.UUID);
           onSelectId(item.id);
         }}
-        className={`my-1 flex cursor-pointer rounded-lg border border-gray-100 bg-gray-100 p-2 transition duration-200 hover:border-gray-300 ${isSelect ? 'border-gray-400' : ''}`}
+        className={`my-1 flex cursor-pointer rounded-lg border-2 p-2 transition duration-200 ${
+          isSelect
+            ? 'border-[var(--color-text-primary)] bg-[var(--color-accent-muted)] shadow-sm'
+            : 'border-transparent bg-[var(--color-surface-soft)] hover:border-[var(--color-border-strong)]'
+        }`}
+        aria-selected={isSelect}
       >
         <div className="flex flex-row items-center justify-between">
           <div className="mr-2">
