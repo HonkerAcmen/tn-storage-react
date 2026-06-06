@@ -24,6 +24,10 @@ const LIGHT_PALETTE = {
   colorError: '#ff4d4f',
   controlItemBgHover: '#f3f4f6',
   controlItemBgActive: '#eceef2',
+  colorErrorBg: '#fff1f0',
+  colorErrorBgHover: '#fff1f0',
+  colorErrorBorderHover: '#ff7875',
+  colorErrorHover: '#a8071a',
 } as const;
 
 /** 深色：蓝紫域 */
@@ -50,6 +54,10 @@ const DARK_PALETTE = {
   colorError: '#f87171',
   controlItemBgHover: '#222838',
   controlItemBgActive: '#283040',
+  colorErrorBg: 'rgba(248, 113, 113, 0.14)',
+  colorErrorBgHover: 'rgba(239, 68, 68, 0.22)',
+  colorErrorBorderHover: '#fca5a5',
+  colorErrorHover: '#fecaca',
 } as const;
 
 export function buildAntTheme(isDark: boolean): ThemeConfig {

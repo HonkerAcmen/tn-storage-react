@@ -288,9 +288,54 @@ body {
   color: var(--color-danger) !important;
 }
 
-:root[data-theme='dark'] .ant-dropdown-menu-item-danger:hover {
-  background-color: var(--color-danger-muted) !important;
-  color: #fca5a5 !important;
+:root[data-theme='dark'] .ant-dropdown-menu-item-danger:hover,
+:root[data-theme='dark'] .ant-dropdown-menu-item-danger.ant-dropdown-menu-item-active {
+  background-color: rgba(239, 68, 68, 0.22) !important;
+  color: #fecaca !important;
+}
+
+:root[data-theme='dark'] .ant-dropdown-menu-item-danger:hover *,
+:root[data-theme='dark'] .ant-dropdown-menu-item-danger.ant-dropdown-menu-item-active * {
+  color: inherit !important;
+}
+
+:root:not([data-theme='dark']) .ant-dropdown-menu-item-danger,
+:root:not([data-theme='dark']) .ant-dropdown-menu-item-danger .ant-dropdown-menu-title-content {
+  color: #cf1322 !important;
+}
+
+:root:not([data-theme='dark']) .ant-dropdown-menu-item-danger:hover,
+:root:not([data-theme='dark']) .ant-dropdown-menu-item-danger.ant-dropdown-menu-item-active {
+  background-color: #fff1f0 !important;
+  color: #a8071a !important;
+}
+
+:root:not([data-theme='dark']) .ant-dropdown-menu-item-danger:hover *,
+:root:not([data-theme='dark']) .ant-dropdown-menu-item-danger.ant-dropdown-menu-item-active * {
+  color: inherit !important;
+}
+
+/* Danger 按钮：hover 时保证文字与背景对比度 */
+:root:not([data-theme='dark']) .ant-btn-dangerous:not(:disabled):not(.ant-btn-primary):hover {
+  color: #a8071a !important;
+  border-color: #ff7875 !important;
+  background-color: #fff1f0 !important;
+}
+
+:root[data-theme='dark'] .ant-btn-dangerous:not(:disabled):not(.ant-btn-primary) {
+  color: #f87171 !important;
+  border-color: #f87171 !important;
+}
+
+:root[data-theme='dark'] .ant-btn-dangerous:not(:disabled):not(.ant-btn-primary):hover {
+  color: #fecaca !important;
+  border-color: #fca5a5 !important;
+  background-color: rgba(239, 68, 68, 0.22) !important;
+}
+
+:root[data-theme='dark'] .ant-btn-dangerous.ant-btn-primary:not(:disabled):hover {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
 }
 
 :root[data-theme='dark'] .ant-typography.ant-typography-secondary {

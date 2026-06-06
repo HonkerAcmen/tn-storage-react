@@ -136,7 +136,7 @@ export function useFileMenu(): {
           ? {
           key: 'delete',
           label: (
-            <div className="flex items-center space-x-2 text-red-500">
+            <div className="flex items-center space-x-2">
               <AiOutlineDelete className="h-4 w-4" />
               <span>删除</span>
             </div>
