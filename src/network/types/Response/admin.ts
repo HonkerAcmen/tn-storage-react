@@ -49,9 +49,56 @@ export interface AdminActivityResponse {
   categoryBreakdown: Array<{ name: string; value: number }>;
 }
 
+export interface SiteStoragePolicy {
+  mode: 'local' | 'oss';
+  disk_total_bytes: number;
+  user_pool_ratio: number;
+  allocation_mode: string;
+  warn_min_quota_bytes: number;
+  warn_pool_usage_ratio: number;
+  updated_at?: string;
+}
+
+export interface StoragePoolSnapshot {
+  diskTotalBytes: number;
+  reservedBytes: number;
+  userPoolBytes: number;
+  userPoolRatio: number;
+  siteUsedBytes: number;
+  userPoolFreeBytes: number;
+  userPoolUsageRatio: number;
+  activeUserCount: number;
+  dynamicPerUserQuotaBytes: number;
+}
+
+export interface StorageAlert {
+  code: 'POOL_USAGE_HIGH' | 'PER_USER_QUOTA_LOW' | 'POOL_NEARLY_FULL';
+  level: 'warning' | 'critical';
+  message: string;
+}
+
+export interface AdminStoragePolicyView {
+  policy: SiteStoragePolicy;
+  pool: StoragePoolSnapshot;
+  alerts: StorageAlert[];
+}
+
 export interface AdminStorageOverviewResponse {
   totals: AdminMetricsResponse['storage'];
+  pool?: StoragePoolSnapshot;
+  policy?: SiteStoragePolicy;
+  alerts?: StorageAlert[];
 }
+
+export type GetAdminStoragePolicyApiResponse =
+  BaseResponse<AdminStoragePolicyView>;
+export type UpdateAdminStoragePolicyApiResponse =
+  BaseResponse<AdminStoragePolicyView>;
+export type RebalanceStorageQuotasApiResponse = BaseResponse<{
+  updatedUsers: number;
+  perUserQuotaBytes: number;
+}>;
+export type GetAdminStorageAlertsApiResponse = BaseResponse<StorageAlert[]>;
 
 export interface AdminStorageUserItem {
   userId: number;

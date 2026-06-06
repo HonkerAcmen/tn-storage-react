@@ -12,6 +12,10 @@ import {
   UpdateAdminUserQuotaApiResponse,
   GetAdminMetricsApiResponse,
   GetAdminStorageOverviewApiResponse,
+  GetAdminStoragePolicyApiResponse,
+  UpdateAdminStoragePolicyApiResponse,
+  RebalanceStorageQuotasApiResponse,
+  GetAdminStorageAlertsApiResponse,
   GetAdminStorageUsersApiResponse,
   GetAdminUsersApiResponse,
   TriggerAdminBackupApiResponse,
@@ -68,6 +72,71 @@ export function useAdminStorageUsers(enabled = true) {
     queryFn: async () =>
       await adminHttp.get<GetAdminStorageUsersApiResponse>('/admin/storage/users'),
     enabled: authed && enabled,
+  });
+}
+
+export function useAdminStoragePolicy(enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'storage', 'policy'],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminStoragePolicyApiResponse>(
+        '/admin/storage/policy',
+      ),
+    enabled: authed && enabled,
+  });
+}
+
+export function useAdminStorageAlerts(enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'storage', 'alerts'],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminStorageAlertsApiResponse>(
+        '/admin/storage/alerts',
+      ),
+    enabled: authed && enabled,
+    refetchInterval: 60_000,
+  });
+}
+
+async function invalidateStorageQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: [...adminKey, 'storage'] }),
+    queryClient.invalidateQueries({ queryKey: [...adminKey, 'metrics'] }),
+    queryClient.invalidateQueries({ queryKey: [...adminKey, 'users'] }),
+  ]);
+}
+
+export function useUpdateAdminStoragePolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: {
+      disk_total_bytes?: number;
+      user_pool_ratio?: number;
+      warn_min_quota_bytes?: number;
+      warn_pool_usage_ratio?: number;
+    }) =>
+      await adminHttp.put<UpdateAdminStoragePolicyApiResponse>(
+        '/admin/storage/policy',
+        body,
+      ),
+    onSuccess: async () => {
+      await invalidateStorageQueries(queryClient);
+    },
+  });
+}
+
+export function useRebalanceStorageQuotas() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () =>
+      await adminHttp.post<RebalanceStorageQuotasApiResponse>(
+        '/admin/storage/rebalance',
+      ),
+    onSuccess: async () => {
+      await invalidateStorageQueries(queryClient);
+    },
   });
 }
 
@@ -570,6 +639,7 @@ export function useAdminUpdateUserQuota() {
       await queryClient.invalidateQueries({
         queryKey: [...adminKey, 'users', id, 'detail'],
       });
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'storage'] });
     },
   });
 }

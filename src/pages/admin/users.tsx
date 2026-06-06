@@ -39,6 +39,7 @@ import {
   useAdminResetPassword,
   useAdminUpdateUser,
   useAdminUpdateUserStatus,
+  useAdminStoragePolicy,
   useAdminUpdateUserQuota,
   useAdminUser,
   useAdminUserLoginLogs,
@@ -118,6 +119,12 @@ export default function AdminUsersPage() {
 
   const { data: quotaDetailRes, isLoading: quotaDetailLoading } =
     useAdminUser(quotaUserId, quotaOpen);
+  const { data: storagePolicyRes } = useAdminStoragePolicy(quotaOpen);
+  const storagePool = storagePolicyRes?.data?.data?.pool;
+  const storageAlerts = storagePolicyRes?.data?.data?.alerts ?? [];
+  const poolMaxGb = storagePool
+    ? Math.max(1, Math.floor(storagePool.userPoolBytes / (1024 * 1024 * 1024)))
+    : 10240;
 
   const result = data?.data?.data;
   const users = result?.items ?? [];
@@ -535,12 +542,25 @@ export default function AdminUsersPage() {
                 {quotaDetail.storage.totalFiles} 个文件）
               </p>
             )}
+            {storagePool && (
+              <p className="mb-3 text-sm text-gray-500">
+                全站用户池 {formatFileSize(storagePool.userPoolBytes)}，当前动态人均{' '}
+                {formatFileSize(storagePool.dynamicPerUserQuotaBytes)}（活跃用户{' '}
+                {storagePool.activeUserCount} 人）。单用户上限不得超过用户池总量。
+              </p>
+            )}
+            {storageAlerts.some((item) => item.code === 'PER_USER_QUOTA_LOW') && (
+              <p className="mb-3 text-sm text-amber-600">
+                警告：活跃用户较多，动态人均配额已低于告警阈值，建议在「存储分析」中调整总盘或用户池比例。
+              </p>
+            )}
             <Form.Item
               name="quotaGb"
               label="配额上限（GB）"
               rules={[{ required: true, type: 'number', min: 1 }]}
+              extra="保存后仅影响该用户；执行「重新均分」会覆盖为动态人均值"
             >
-              <InputNumber min={1} max={10240} className="w-full" />
+              <InputNumber min={1} max={poolMaxGb} className="w-full" />
             </Form.Item>
           </Form>
         )}
