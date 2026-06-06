@@ -141,6 +141,59 @@ export type TestAdminStorageBackendApiResponse =
 export type ActivateAdminStorageBackendApiResponse =
   BaseResponse<StorageBackendPublicView>;
 
+export type StorageMigrationMode = 'migrate' | 'backup' | 'sync';
+export type StorageMigrationJobStatus =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled';
+
+export interface StorageMigrationJobView {
+  id: number;
+  source_backend_id: number;
+  target_backend_id: number;
+  mode: StorageMigrationMode;
+  status: StorageMigrationJobStatus;
+  total_objects: number;
+  copied_objects: number;
+  copied_bytes: number;
+  failed_objects: number;
+  progress_percent: number;
+  error_message: string | null;
+  retention_expire_at: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  created_at: string;
+}
+
+export interface StorageRetentionView {
+  id: number;
+  backend_id: number;
+  migration_job_id: number | null;
+  migrated_at: string;
+  purge_at: string;
+  purged_at: string | null;
+  manual_purge: boolean;
+  remaining_label: string;
+  expired: boolean;
+}
+
+export type GetAdminStorageMigrationsApiResponse = BaseResponse<
+  StorageMigrationJobView[]
+>;
+export type GetAdminStorageMigrationApiResponse =
+  BaseResponse<StorageMigrationJobView>;
+export type CreateAdminStorageMigrationApiResponse =
+  BaseResponse<StorageMigrationJobView>;
+export type GetAdminStorageRetentionsApiResponse = BaseResponse<
+  StorageRetentionView[]
+>;
+export type PurgeAdminStorageRetentionApiResponse = BaseResponse<{
+  retention: StorageRetentionView;
+  deletedObjects: number;
+}>;
+
 export interface AdminStorageUserItem {
   userId: number;
   username: string;

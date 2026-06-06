@@ -21,6 +21,10 @@ import {
   UpdateAdminStorageBackendApiResponse,
   TestAdminStorageBackendApiResponse,
   ActivateAdminStorageBackendApiResponse,
+  GetAdminStorageMigrationsApiResponse,
+  CreateAdminStorageMigrationApiResponse,
+  GetAdminStorageRetentionsApiResponse,
+  PurgeAdminStorageRetentionApiResponse,
   GetOssStorageOverviewApiResponse,
   GetOssStorageBucketsApiResponse,
   GetAdminStorageUsersApiResponse,
@@ -244,6 +248,89 @@ export function useActivateAdminStorageBackend() {
     onSuccess: async () => {
       await invalidateBackendQueries(queryClient);
       await invalidateStorageQueries(queryClient);
+      await invalidateMigrationQueries(queryClient);
+    },
+  });
+}
+
+async function invalidateMigrationQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  await queryClient.invalidateQueries({
+    queryKey: [...adminKey, 'storage', 'migrations'],
+  });
+  await queryClient.invalidateQueries({
+    queryKey: [...adminKey, 'storage', 'retention'],
+  });
+}
+
+export function useAdminStorageMigrations(enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'storage', 'migrations'],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminStorageMigrationsApiResponse>(
+        '/admin/storage/migrations',
+      ),
+    enabled: authed && enabled,
+    refetchInterval: (query) => {
+      const jobs = query.state.data?.data?.data ?? [];
+      const hasRunning = jobs.some(
+        (job) => job.status === 'running' || job.status === 'pending',
+      );
+      return hasRunning ? 3000 : false;
+    },
+  });
+}
+
+export function useCreateAdminStorageMigration() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: {
+      source_backend_id: number;
+      target_backend_id: number;
+      mode: 'migrate' | 'backup';
+    }) =>
+      await adminHttp.post<CreateAdminStorageMigrationApiResponse>(
+        '/admin/storage/migrations',
+        body,
+      ),
+    onSuccess: async () => {
+      await invalidateMigrationQueries(queryClient);
+    },
+  });
+}
+
+export function useAdminStorageRetentions(enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'storage', 'retention'],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminStorageRetentionsApiResponse>(
+        '/admin/storage/retention',
+      ),
+    enabled: authed && enabled,
+    refetchInterval: 60_000,
+  });
+}
+
+export function usePurgeAdminStorageRetention() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      challengeToken,
+    }: {
+      id: number;
+      challengeToken: string;
+    }) =>
+      await adminHttp.post<PurgeAdminStorageRetentionApiResponse>(
+        `/admin/storage/retention/${id}/purge`,
+        { challengeToken },
+      ),
+    onSuccess: async () => {
+      await invalidateMigrationQueries(queryClient);
+      await invalidateBackendQueries(queryClient);
     },
   });
 }

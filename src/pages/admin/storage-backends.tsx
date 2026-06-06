@@ -16,7 +16,9 @@ import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
 import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import {
+  useActivateAdminStorageBackend,
   useAdminStorageBackends,
+  useAdminStorageMigrations,
   useCreateAdminStorageBackend,
   useTestAdminStorageBackend,
   useUpdateAdminStorageBackend,
@@ -36,6 +38,9 @@ function statusTag(status: StorageBackendPublicView['status']) {
 function roleTag(backend: StorageBackendPublicView) {
   if (backend.role === 'active') {
     return <Tag color="blue">主存储</Tag>;
+  }
+  if (backend.role === 'readonly') {
+    return <Tag color="orange">只读保留</Tag>;
   }
   if (backend.is_builtin) {
     return <Tag>本机内置</Tag>;
@@ -58,9 +63,11 @@ export default function AdminStorageBackendsPage() {
   const feedback = useAdminFeedback();
   const canWrite = useAdminCanWrite();
   const { data, isLoading, isError, refetch } = useAdminStorageBackends();
+  const { data: migrationsRes } = useAdminStorageMigrations();
   const createBackend = useCreateAdminStorageBackend();
   const updateBackend = useUpdateAdminStorageBackend();
   const testBackend = useTestAdminStorageBackend();
+  const activateBackend = useActivateAdminStorageBackend();
   const [form] = Form.useForm<BackendFormValues>();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<StorageBackendPublicView | null>(null);
@@ -74,6 +81,14 @@ export default function AdminStorageBackendsPage() {
       ),
     [backends],
   );
+  const completedMigrateTargets = useMemo(() => {
+    const jobs = migrationsRes?.data?.data ?? [];
+    return new Set(
+      jobs
+        .filter((job) => job.mode === 'migrate' && job.status === 'completed')
+        .map((job) => job.target_backend_id),
+    );
+  }, [migrationsRes]);
 
   const openCreate = () => {
     setEditing(null);
@@ -139,6 +154,15 @@ export default function AdminStorageBackendsPage() {
     }
   };
 
+  const handleActivate = async (id: number) => {
+    try {
+      await activateBackend.mutateAsync(id);
+      feedback.success('已切换为主存储');
+    } catch (err) {
+      feedback.error(err, '切换失败');
+    }
+  };
+
   const handleRetest = async (id: number) => {
     try {
       const res = await testBackend.mutateAsync(id);
@@ -159,7 +183,7 @@ export default function AdminStorageBackendsPage() {
         <Alert
           type="info"
           showIcon
-          message="配置外部 OSS（S3 兼容）后保存即自动测连。测连成功后可前往「OSS 管理」查看桶与容量。切换主存储将在迁移阶段开放。"
+          message="配置外部 OSS（S3 兼容）后保存即自动测连。测连成功后可在「数据迁移」页一键迁移；迁移完成后可在此切换主存储。"
         />
 
         <Card
@@ -234,6 +258,18 @@ export default function AdminStorageBackendsPage() {
                           测连
                         </Button>
                       )}
+                      {canWrite &&
+                        record.role !== 'active' &&
+                        completedMigrateTargets.has(record.id) && (
+                          <Button
+                            size="small"
+                            type="primary"
+                            loading={activateBackend.isPending}
+                            onClick={() => handleActivate(record.id)}
+                          >
+                            切换为主存储
+                          </Button>
+                        )}
                     </div>
                   ),
               },

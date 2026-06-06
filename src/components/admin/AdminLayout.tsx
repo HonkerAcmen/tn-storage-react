@@ -22,6 +22,7 @@ import {
   MdSecurity,
   MdSettings,
   MdCloud,
+  MdSwapHoriz,
 } from 'react-icons/md';
 import { HiOutlineCloud } from 'react-icons/hi';
 import AdminGuard from './AdminGuard';
@@ -47,6 +48,7 @@ const menuItems = [
   { key: '/admin/storage', label: '存储分析', icon: <MdStorage /> },
   { key: '/admin/storage-backends', label: '存储配置', icon: <MdSettings /> },
   { key: '/admin/storage-oss', label: 'OSS 管理', icon: <MdCloud /> },
+  { key: '/admin/storage-migration', label: '数据迁移', icon: <MdSwapHoriz /> },
   { key: '/admin/backup', label: '数据备份', icon: <MdBackup /> },
   { key: '/admin/login-logs', label: '登录日志', icon: <MdHistory /> },
 ];
