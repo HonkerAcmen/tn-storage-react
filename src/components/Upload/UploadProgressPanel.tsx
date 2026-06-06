@@ -315,6 +315,11 @@ export default function UploadProgressPanel() {
                           <div className="text-xs text-gray-500">
                             {formatFileSize(item.fileSize)} ·{' '}
                             {downloadStatusLabel(item.status)}
+                            {item.status === 'downloading' &&
+                            item.speed &&
+                            item.speed > 0
+                              ? ` · ${formatSpeed(item.speed)}`
+                              : ''}
                           </div>
                           {item.error ? (
                             <div className="mt-1 text-xs text-red-500">

@@ -38,11 +38,23 @@ export async function copyShareLinkForFile(
   return shareUrl;
 }
 
+export type FetchFileBlobOptions = {
+  onProgress?: (progress: number, loadedBytes: number) => void;
+  signal?: AbortSignal;
+  throttle?: (bytes: number) => Promise<void>;
+};
+
 export async function fetchFileBlob(
   file: FileSystemTreeNode,
-  onProgress?: (progress: number) => void,
-  signal?: AbortSignal,
+  options?: FetchFileBlobOptions | ((progress: number) => void),
+  legacySignal?: AbortSignal,
 ): Promise<{ blob: Blob; filename: string; mimetype: string }> {
+  const normalized: FetchFileBlobOptions =
+    typeof options === 'function'
+      ? { onProgress: (progress) => options(progress) }
+      : (options ?? {});
+  const signal = normalized.signal ?? legacySignal;
+
   const manifestRes = await http.get<GetFileChunkManifestApiResponse>(
     `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunks`,
     { signal },
@@ -50,6 +62,8 @@ export async function fetchFileBlob(
   const manifest = manifestRes.data.data;
   const chunkBuffers: BlobPart[] = [];
   const totalChunks = Math.max(1, manifest.totalChunks);
+  const totalBytes = Math.max(Number(file.size) || 0, 0);
+  let loadedBytes = 0;
 
   for (let chunkIndex = 1; chunkIndex <= totalChunks; chunkIndex++) {
     if (signal?.aborted) {
@@ -62,8 +76,14 @@ export async function fetchFileBlob(
         signal,
       },
     );
+    const chunkBytes = chunkRes.data.size;
     chunkBuffers.push(chunkRes.data);
-    onProgress?.(Math.round((chunkIndex / totalChunks) * 100));
+    loadedBytes += chunkBytes;
+    await normalized.throttle?.(chunkBytes);
+    const progress = totalBytes
+      ? Math.min(100, Math.round((loadedBytes / totalBytes) * 100))
+      : Math.round((chunkIndex / totalChunks) * 100);
+    normalized.onProgress?.(progress, loadedBytes);
   }
 
   return {

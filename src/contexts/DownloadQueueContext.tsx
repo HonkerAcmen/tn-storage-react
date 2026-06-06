@@ -2,12 +2,25 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from 'react';
 import { fetchFileBlob } from '@/features/files/services/fileOperations';
+import { createDownloadRateLimiter } from '@/features/files/services/download-rate-limiter';
+import {
+  claimNextDownloadItem,
+  shouldStartAnotherDownloadWorker,
+} from '@/features/files/services/download-queue.scheduler';
+import {
+  clampDownloadConcurrency,
+  clampDownloadRateLimitKbps,
+  DEFAULT_DOWNLOAD_CONCURRENCY,
+  DEFAULT_DOWNLOAD_RATE_LIMIT_KBPS,
+} from '@/features/files/services/download-settings';
+import { useGetMySettings } from '@/network/hooks/user';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 export type DownloadItemStatus =
@@ -24,6 +37,7 @@ export interface DownloadQueueItem {
   progress: number;
   status: DownloadItemStatus;
   error?: string;
+  speed?: number;
 }
 
 interface DownloadQueueContextValue {
@@ -54,11 +68,31 @@ function triggerBrowserDownload(blob: Blob, filename: string) {
 }
 
 export function DownloadQueueProvider({ children }: { children: ReactNode }) {
+  const { data: settingsResponse } = useGetMySettings();
+  const settings = settingsResponse?.data?.data;
+
   const [items, setItems] = useState<DownloadQueueItem[]>([]);
   const itemsRef = useRef<DownloadQueueItem[]>([]);
   const filesRef = useRef<Map<string, FileSystemTreeNode>>(new Map());
   const controllersRef = useRef<Map<string, AbortController>>(new Map());
-  const processingRef = useRef(false);
+  const activeWorkersRef = useRef(0);
+  const concurrencyRef = useRef(DEFAULT_DOWNLOAD_CONCURRENCY);
+  const rateLimiterRef = useRef(
+    createDownloadRateLimiter(DEFAULT_DOWNLOAD_RATE_LIMIT_KBPS),
+  );
+  const speedTrackRef = useRef(
+    new Map<string, { loadedBytes: number; startedAt: number; lastTickAt: number }>(),
+  );
+
+  useEffect(() => {
+    concurrencyRef.current = clampDownloadConcurrency(
+      settings?.download_concurrency ?? DEFAULT_DOWNLOAD_CONCURRENCY,
+    );
+    const nextLimit = clampDownloadRateLimitKbps(
+      settings?.download_rate_limit_kbps ?? DEFAULT_DOWNLOAD_RATE_LIMIT_KBPS,
+    );
+    rateLimiterRef.current.setLimit(nextLimit);
+  }, [settings?.download_concurrency, settings?.download_rate_limit_kbps]);
 
   const updateItems = useCallback(
     (updater: (prev: DownloadQueueItem[]) => DownloadQueueItem[]) => {
@@ -71,47 +105,61 @@ export function DownloadQueueProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const processQueue = useCallback(async () => {
-    if (processingRef.current) {
-      return;
-    }
-    processingRef.current = true;
+  const pumpQueue = useCallback(() => {
+    while (
+      shouldStartAnotherDownloadWorker(
+        itemsRef.current,
+        concurrencyRef.current,
+      )
+    ) {
+      const claimedResult = claimNextDownloadItem(itemsRef.current);
+      if (!claimedResult.claimed) {
+        break;
+      }
 
-    try {
-      while (true) {
-        const nextItem = itemsRef.current.find((item) => item.status === 'queued');
-        if (!nextItem) {
-          break;
-        }
+      itemsRef.current = claimedResult.items;
+      setItems(claimedResult.items);
 
-        const file = filesRef.current.get(nextItem.id);
-        if (!file) {
-          break;
-        }
+      const nextItem = claimedResult.claimed;
+      const file = filesRef.current.get(nextItem.id);
+      if (!file) {
+        continue;
+      }
 
-        const controller = new AbortController();
-        controllersRef.current.set(nextItem.id, controller);
+      activeWorkersRef.current += 1;
+      const controller = new AbortController();
+      controllersRef.current.set(nextItem.id, controller);
+      speedTrackRef.current.set(nextItem.id, {
+        loadedBytes: 0,
+        startedAt: Date.now(),
+        lastTickAt: Date.now(),
+      });
 
-        updateItems((prev) =>
-          prev.map((item) =>
-            item.id === nextItem.id
-              ? { ...item, status: 'downloading', progress: 0, error: undefined }
-              : item,
-          ),
-        );
-
+      void (async () => {
         try {
-          const { blob, filename } = await fetchFileBlob(
-            file,
-            (progress) => {
+          const { blob, filename } = await fetchFileBlob(file, {
+            signal: controller.signal,
+            throttle: (bytes) => rateLimiterRef.current.throttle(bytes),
+            onProgress: (progress, loadedBytes) => {
+              const tracker = speedTrackRef.current.get(nextItem.id);
+              let speed = 0;
+              if (tracker) {
+                tracker.loadedBytes = loadedBytes;
+                const elapsedSec = Math.max(
+                  (Date.now() - tracker.startedAt) / 1000,
+                  0.001,
+                );
+                speed = Math.round(tracker.loadedBytes / elapsedSec);
+              }
               updateItems((prev) =>
                 prev.map((item) =>
-                  item.id === nextItem.id ? { ...item, progress } : item,
+                  item.id === nextItem.id
+                    ? { ...item, progress, speed, error: undefined }
+                    : item,
                 ),
               );
             },
-            controller.signal,
-          );
+          });
 
           triggerBrowserDownload(blob, filename);
           updateItems((prev) =>
@@ -131,7 +179,7 @@ export function DownloadQueueProvider({ children }: { children: ReactNode }) {
             updateItems((prev) =>
               prev.map((item) =>
                 item.id === nextItem.id
-                  ? { ...item, status: 'cancelled', progress: 0 }
+                  ? { ...item, status: 'cancelled', progress: 0, speed: 0 }
                   : item,
               ),
             );
@@ -144,18 +192,20 @@ export function DownloadQueueProvider({ children }: { children: ReactNode }) {
                       ...item,
                       status: 'failed',
                       error: err.message || '下载失败',
+                      speed: 0,
                     }
                   : item,
               ),
             );
           }
           filesRef.current.delete(nextItem.id);
+        } finally {
+          controllersRef.current.delete(nextItem.id);
+          speedTrackRef.current.delete(nextItem.id);
+          activeWorkersRef.current = Math.max(0, activeWorkersRef.current - 1);
+          pumpQueue();
         }
-
-        controllersRef.current.delete(nextItem.id);
-      }
-    } finally {
-      processingRef.current = false;
+      })();
     }
   }, [updateItems]);
 
@@ -178,10 +228,14 @@ export function DownloadQueueProvider({ children }: { children: ReactNode }) {
         };
       });
 
-      updateItems((prev) => [...prev, ...newItems]);
-      void processQueue();
+      updateItems((prev) => {
+        const next = [...prev, ...newItems];
+        itemsRef.current = next;
+        return next;
+      });
+      pumpQueue();
     },
-    [processQueue, updateItems],
+    [pumpQueue, updateItems],
   );
 
   const cancelItem = useCallback(
@@ -189,21 +243,33 @@ export function DownloadQueueProvider({ children }: { children: ReactNode }) {
       controllersRef.current.get(id)?.abort();
       controllersRef.current.delete(id);
       filesRef.current.delete(id);
-      updateItems((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, status: 'cancelled', progress: 0 } : item,
-        ),
-      );
+      speedTrackRef.current.delete(id);
+      updateItems((prev) => {
+        const next = prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                status: 'cancelled' as DownloadItemStatus,
+                progress: 0,
+                speed: 0,
+              }
+            : item,
+        );
+        itemsRef.current = next;
+        return next;
+      });
     },
     [updateItems],
   );
 
   const clearCompleted = useCallback(() => {
-    updateItems((prev) =>
-      prev.filter(
+    updateItems((prev) => {
+      const next = prev.filter(
         (item) => item.status !== 'completed' && item.status !== 'cancelled',
-      ),
-    );
+      );
+      itemsRef.current = next;
+      return next;
+    });
   }, [updateItems]);
 
   const value = useMemo<DownloadQueueContextValue>(

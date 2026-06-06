@@ -48,6 +48,10 @@ const zhCN = {
     '根目录固定为 1，上传组件可读取此默认父目录',
   'settings.storage.autoClean.title': '自动清理临时文件',
   'settings.storage.autoClean.desc': '仅保存用户偏好，供上传和缓存策略读取',
+  'settings.storage.downloadConcurrency.title': '同时下载任务数',
+  'settings.storage.downloadConcurrency.desc': '一次最多并行下载 1-5 个文件',
+  'settings.storage.downloadRateLimit.title': '下载限速（KB/s）',
+  'settings.storage.downloadRateLimit.desc': '0 表示不限速，对所有下载任务共享总带宽',
 
   'settings.security.saved': '安全设置已保存',
   'settings.security.saveFailed': '安全设置保存失败',
@@ -166,6 +170,11 @@ const enUS: Record<keyof typeof zhCN, string> = {
   'settings.storage.autoClean.title': 'Auto clean temp files',
   'settings.storage.autoClean.desc':
     'Saved as preference for upload and cache policies',
+  'settings.storage.downloadConcurrency.title': 'Concurrent downloads',
+  'settings.storage.downloadConcurrency.desc': 'Run 1-5 file downloads in parallel',
+  'settings.storage.downloadRateLimit.title': 'Download rate limit (KB/s)',
+  'settings.storage.downloadRateLimit.desc':
+    '0 means unlimited; limit applies to total download bandwidth',
 
   'settings.security.saved': 'Security settings saved',
   'settings.security.saveFailed': 'Failed to save security settings',
@@ -287,6 +296,11 @@ const jaJP: Record<keyof typeof zhCN, string> = {
     'ルートは 1 固定。アップロードの既定親フォルダ',
   'settings.storage.autoClean.title': '一時ファイル自動削除',
   'settings.storage.autoClean.desc': 'アップロードとキャッシュ設定用の preference',
+  'settings.storage.downloadConcurrency.title': '同時ダウンロード数',
+  'settings.storage.downloadConcurrency.desc': '1〜5 件まで並列ダウンロード',
+  'settings.storage.downloadRateLimit.title': 'ダウンロード速度制限 (KB/s)',
+  'settings.storage.downloadRateLimit.desc':
+    '0 は無制限。全ダウンロードで合計帯域を共有',
 
   'settings.security.saved': 'セキュリティ設定を保存しました',
   'settings.security.saveFailed': 'セキュリティ設定の保存に失敗しました',

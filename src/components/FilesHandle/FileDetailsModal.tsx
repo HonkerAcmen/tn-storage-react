@@ -28,6 +28,7 @@ import { useFileData } from '@/contexts/FileDataContext';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { findPathToNode } from '@/utils/fileSystem/fileSystemUtils';
 import * as fileOperations from '@/features/files/services/fileOperations';
+import { useDownloadQueue } from '@/contexts/DownloadQueueContext';
 interface FileDetailsModalProps {
   open: boolean;
   file: FileSystemTreeNode | null;
@@ -46,6 +47,7 @@ export default function FileDetailsModal({
 }: FileDetailsModalProps) {
   const [messageApi, contextHolder] = message.useMessage();
   const { fileTree, openPreviewDialog, openTransferDialog } = useFileData();
+  const { enqueueDownloads } = useDownloadQueue();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
@@ -236,7 +238,7 @@ export default function FileDetailsModal({
               <Button
                 icon={<AiOutlineDownload />}
                 disabled={file.type === 'folder'}
-                onClick={() => void fileOperations.downloadFile(file)}
+                onClick={() => enqueueDownloads([file])}
               >
                 下载
               </Button>

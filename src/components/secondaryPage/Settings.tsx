@@ -204,6 +204,10 @@ function StorageSettings() {
       draft.default_upload_parent_id ?? settings?.default_upload_parent_id ?? 1,
     auto_clean_temp:
       draft.auto_clean_temp ?? settings?.auto_clean_temp ?? false,
+    download_concurrency:
+      draft.download_concurrency ?? settings?.download_concurrency ?? 1,
+    download_rate_limit_kbps:
+      draft.download_rate_limit_kbps ?? settings?.download_rate_limit_kbps ?? 0,
   };
 
   const usedBytes = storage?.usedBytes ?? 0;
@@ -264,6 +268,49 @@ function StorageSettings() {
             onChange={(checked) =>
               setDraft((prev) => ({ ...prev, auto_clean_temp: checked }))
             }
+          />
+        }
+      />
+
+      <SettingRow
+        title={t('settings.storage.downloadConcurrency.title')}
+        desc={t('settings.storage.downloadConcurrency.desc')}
+        control={
+          <select
+            value={currentDraft.download_concurrency}
+            onChange={(e) =>
+              setDraft((prev) => ({
+                ...prev,
+                download_concurrency: Number(e.target.value) || 1,
+              }))
+            }
+            className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
+          >
+            {[1, 2, 3, 4, 5].map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        }
+      />
+
+      <SettingRow
+        title={t('settings.storage.downloadRateLimit.title')}
+        desc={t('settings.storage.downloadRateLimit.desc')}
+        control={
+          <input
+            type="number"
+            min={0}
+            step={128}
+            value={currentDraft.download_rate_limit_kbps}
+            onChange={(e) =>
+              setDraft((prev) => ({
+                ...prev,
+                download_rate_limit_kbps: Math.max(0, Number(e.target.value) || 0),
+              }))
+            }
+            className="w-36 rounded-lg border border-gray-200 px-4 py-2 text-sm"
           />
         }
       />

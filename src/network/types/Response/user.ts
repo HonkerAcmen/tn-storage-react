@@ -37,6 +37,8 @@ export interface UserSettingsResponse {
   share_notification: boolean;
   account_status: 'active' | 'disabled';
   storage_quota_bytes: number;
+  download_concurrency: number;
+  download_rate_limit_kbps: number;
   updatedAt: string;
   createdAt: string;
 }

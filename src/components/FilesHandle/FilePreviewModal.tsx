@@ -5,10 +5,8 @@ import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { formatFileSize } from '@/utils/format/formatters';
 import { FILE_TYPE_MAP } from '@/utils/fileUtils';
 import { getFileIcon } from './FileIcon';
-import {
-  downloadFile,
-  fetchFileBlob,
-} from '@/features/files/services/fileOperations';
+import { fetchFileBlob } from '@/features/files/services/fileOperations';
+import { useDownloadQueue } from '@/contexts/DownloadQueueContext';
 
 interface FilePreviewModalProps {
   open: boolean;
@@ -57,6 +55,7 @@ export default function FilePreviewModal({
   file,
   onClose,
 }: FilePreviewModalProps) {
+  const { enqueueDownloads } = useDownloadQueue();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [preview, setPreview] = useState<PreviewState>({
@@ -261,7 +260,7 @@ export default function FilePreviewModal({
           <div className="flex justify-end">
             <Button
               icon={<AiOutlineDownload />}
-              onClick={() => void downloadFile(file)}
+              onClick={() => enqueueDownloads([file])}
             >
               下载文件
             </Button>

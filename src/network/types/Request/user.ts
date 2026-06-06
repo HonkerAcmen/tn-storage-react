@@ -15,6 +15,8 @@ export interface UpdateUserSettingsRequest {
   email_notification?: boolean;
   upload_notification?: boolean;
   share_notification?: boolean;
+  download_concurrency?: number;
+  download_rate_limit_kbps?: number;
 }
 
 export interface ChangePasswordRequest {

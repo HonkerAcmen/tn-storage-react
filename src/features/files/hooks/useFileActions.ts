@@ -6,6 +6,7 @@ import { useFavorites } from './useFavorites';
 import { useDeletedFiles } from './useDeletedFiles';
 import { useFileData } from '@/contexts/FileDataContext';
 import * as fileOperations from '@/features/files/services/fileOperations';
+import { useDownloadQueue } from '@/contexts/DownloadQueueContext';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 /**
  * 文件操作 Hook
@@ -17,6 +18,7 @@ export function useFileActions() {
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addDeletedFile } = useDeletedFiles();
   const { openRenameDialog, openTransferDialog } = useFileData();
+  const { enqueueDownloads } = useDownloadQueue();
 
   /**
    * 处理文件操作
@@ -32,7 +34,7 @@ export function useFileActions() {
     ) => {
       switch (action) {
         case 'download':
-          void fileOperations.downloadFile(item);
+          enqueueDownloads([item]);
           break;
         case 'share':
           void fileOperations
@@ -85,6 +87,7 @@ export function useFileActions() {
       openTransferDialog,
       appMessage,
       addDeletedFile,
+      enqueueDownloads,
       isFavorite,
       toggleFavorite,
     ]
