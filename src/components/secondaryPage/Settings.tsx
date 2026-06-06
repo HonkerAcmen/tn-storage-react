@@ -23,6 +23,7 @@ import { UpdateUserSettingsRequest } from '@/network/types/Request/user';
 import { formatFileSize } from '@/utils/format/formatters';
 import { buildSharePageUrl } from '@/utils/shareUrl';
 import PasswordStrengthBar from '@/components/auth/PasswordStrengthBar';
+import { validatePasswordConfirm } from '@/utils/passwordConfirm';
 
 interface SettingsProps {
   onClose: () => void;
@@ -38,6 +39,7 @@ type SettingsTab =
 type PasswordForm = {
   oldPassword: string;
   newPassword: string;
+  confirmNewPassword: string;
 };
 
 export default function Settings({ onClose }: SettingsProps) {
@@ -265,7 +267,9 @@ function SecuritySettings() {
   const [passwordForm, setPasswordForm] = useState<PasswordForm>({
     oldPassword: '',
     newPassword: '',
+    confirmNewPassword: '',
   });
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
   const currentTwoFactorEnabled =
     twoFactorEnabled ?? Boolean(settings?.two_factor_enabled);
@@ -282,13 +286,31 @@ function SecuritySettings() {
   };
 
   const submitPassword = async () => {
-    if (!passwordForm.oldPassword || !passwordForm.newPassword) {
+    if (
+      !passwordForm.oldPassword ||
+      !passwordForm.newPassword ||
+      !passwordForm.confirmNewPassword
+    ) {
       messageApi.error('请填写完整密码信息');
       return;
     }
+    const confirmError = validatePasswordConfirm(
+      passwordForm.newPassword,
+      passwordForm.confirmNewPassword,
+    );
+    if (confirmError) {
+      setConfirmPasswordError(confirmError);
+      messageApi.error(confirmError);
+      return;
+    }
+    setConfirmPasswordError('');
     try {
       await changePassword.mutateAsync(passwordForm);
-      setPasswordForm({ oldPassword: '', newPassword: '' });
+      setPasswordForm({
+        oldPassword: '',
+        newPassword: '',
+        confirmNewPassword: '',
+      });
       messageApi.success('密码已更新');
     } catch (err) {
       messageApi.error(getApiErrorMessage(err, '密码修改失败'));
@@ -312,21 +334,56 @@ function SecuritySettings() {
                 oldPassword: e.target.value,
               }))
             }
-            className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
+            className="rounded-lg border border-gray-200 px-4 py-2 text-sm md:col-span-2"
           />
           <input
             type="password"
             placeholder="新密码"
             value={passwordForm.newPassword}
-            onChange={(e) =>
+            onChange={(e) => {
+              const newPassword = e.target.value;
               setPasswordForm((prev) => ({
                 ...prev,
-                newPassword: e.target.value,
-              }))
-            }
+                newPassword,
+              }));
+              if (passwordForm.confirmNewPassword) {
+                setConfirmPasswordError(
+                  validatePasswordConfirm(
+                    newPassword,
+                    passwordForm.confirmNewPassword,
+                  ) ?? '',
+                );
+              }
+            }}
             className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
           />
+          <input
+            type="password"
+            placeholder="确认新密码"
+            value={passwordForm.confirmNewPassword}
+            onChange={(e) => {
+              const confirmNewPassword = e.target.value;
+              setPasswordForm((prev) => ({
+                ...prev,
+                confirmNewPassword,
+              }));
+              setConfirmPasswordError(
+                validatePasswordConfirm(
+                  passwordForm.newPassword,
+                  confirmNewPassword,
+                ) ?? '',
+              );
+            }}
+            className={`rounded-lg border px-4 py-2 text-sm ${
+              confirmPasswordError
+                ? 'border-red-300 focus:border-red-400'
+                : 'border-gray-200'
+            }`}
+          />
         </div>
+        {confirmPasswordError ? (
+          <p className="mt-2 text-sm text-red-500">{confirmPasswordError}</p>
+        ) : null}
         <PasswordStrengthBar
           password={passwordForm.newPassword}
           className="mt-3"
