@@ -24,6 +24,11 @@ import { formatFileSize } from '@/utils/format/formatters';
 import { buildSharePageUrl } from '@/utils/shareUrl';
 import PasswordStrengthBar from '@/components/auth/PasswordStrengthBar';
 import { validatePasswordConfirm } from '@/utils/passwordConfirm';
+import {
+  formatDateTimeByLanguage,
+  useLocale,
+} from '@/contexts/LocaleContext';
+import { normalizeLanguage } from '@/i18n/types';
 
 interface SettingsProps {
   onClose: () => void;
@@ -44,19 +49,28 @@ type PasswordForm = {
 
 export default function Settings({ onClose }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
+  const { t } = useLocale();
   const tabs = [
-    { id: 'general', label: '通用设置', icon: <AiFillFileText /> },
-    { id: 'storage', label: '存储设置', icon: <AiFillCloud /> },
-    { id: 'security', label: '安全设置', icon: <AiFillLock /> },
-    { id: 'notification', label: '通知设置', icon: <AiFillBell /> },
-    { id: 'permissions', label: '权限设置', icon: <AiFillSafetyCertificate /> },
+    { id: 'general', label: t('settings.tab.general'), icon: <AiFillFileText /> },
+    { id: 'storage', label: t('settings.tab.storage'), icon: <AiFillCloud /> },
+    { id: 'security', label: t('settings.tab.security'), icon: <AiFillLock /> },
+    {
+      id: 'notification',
+      label: t('settings.tab.notification'),
+      icon: <AiFillBell />,
+    },
+    {
+      id: 'permissions',
+      label: t('settings.tab.permissions'),
+      icon: <AiFillSafetyCertificate />,
+    },
   ] as const;
 
   return (
     <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-gray-400/50">
       <div className="relative flex h-[80vh] w-[90vw] max-w-5xl flex-col rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <h2 className="text-2xl font-semibold text-gray-800">设置</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">{t('settings.title')}</h2>
           <button
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-gray-100"
@@ -103,6 +117,7 @@ function GeneralSettings() {
   const [messageApi, contextHolder] = message.useMessage();
   const { data } = useGetMySettings();
   const updateSettings = useUpdateMySettings();
+  const { t, setLanguage } = useLocale();
   const settings = data?.data?.data;
   const [draft, setDraft] = useState<UpdateUserSettingsRequest>({});
 
@@ -114,15 +129,18 @@ function GeneralSettings() {
 
   const save = async () => {
     await updateSettings.mutateAsync(currentDraft);
-    messageApi.success('通用设置已保存');
+    if (currentDraft.language) {
+      setLanguage(normalizeLanguage(currentDraft.language));
+    }
+    messageApi.success(t('settings.general.saved'));
   };
 
   return (
-    <Section title="通用设置">
+    <Section title={t('settings.tab.general')}>
       {contextHolder}
       <SettingRow
-        title="语言设置"
-        desc="选择界面显示语言"
+        title={t('settings.general.language.title')}
+        desc={t('settings.general.language.desc')}
         control={
           <select
             value={currentDraft.language}
@@ -138,8 +156,8 @@ function GeneralSettings() {
         }
       />
       <SettingRow
-        title="主题设置"
-        desc="选择界面主题"
+        title={t('settings.general.theme.title')}
+        desc={t('settings.general.theme.desc')}
         control={
           <select
             value={currentDraft.theme}
@@ -148,15 +166,15 @@ function GeneralSettings() {
             }
             className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
           >
-            <option value="light">浅色模式</option>
-            <option value="dark">深色模式</option>
-            <option value="system">跟随系统</option>
+            <option value="light">{t('theme.light')}</option>
+            <option value="dark">{t('theme.dark')}</option>
+            <option value="system">{t('theme.system')}</option>
           </select>
         }
       />
       <SettingRow
-        title="自动保存"
-        desc="自动保存文件更改"
+        title={t('settings.general.autoSave.title')}
+        desc={t('settings.general.autoSave.desc')}
         control={
           <Toggle
             checked={Boolean(currentDraft.auto_save)}
@@ -176,6 +194,7 @@ function StorageSettings() {
   const { data: settingsResponse } = useGetMySettings();
   const { data: storageResponse } = useGetMyStorage();
   const updateSettings = useUpdateMySettings();
+  const { t } = useLocale();
   const settings = settingsResponse?.data?.data;
   const storage = storageResponse?.data?.data;
   const [draft, setDraft] = useState<UpdateUserSettingsRequest>({});
@@ -196,15 +215,15 @@ function StorageSettings() {
 
   const save = async () => {
     await updateSettings.mutateAsync(currentDraft);
-    messageApi.success('存储设置已保存');
+    messageApi.success(t('settings.storage.saved'));
   };
 
   return (
-    <Section title="存储设置">
+    <Section title={t('settings.tab.storage')}>
       {contextHolder}
       <div className="rounded-lg border border-gray-200 p-4">
         <div className="mb-2 flex items-center justify-between">
-          <p className="font-medium text-gray-800">存储空间使用情况</p>
+          <p className="font-medium text-gray-800">{t('settings.storage.usage')}</p>
           <span className="text-sm text-gray-500">
             {formatFileSize(usedBytes)} / {formatFileSize(totalBytes)}
           </span>
@@ -218,8 +237,8 @@ function StorageSettings() {
       </div>
 
       <SettingRow
-        title="默认上传位置"
-        desc="根目录固定为 1，上传组件可读取此默认父目录"
+        title={t('settings.storage.defaultUpload.title')}
+        desc={t('settings.storage.defaultUpload.desc')}
         control={
           <input
             type="number"
@@ -237,8 +256,8 @@ function StorageSettings() {
       />
 
       <SettingRow
-        title="自动清理临时文件"
-        desc="仅保存用户偏好，供上传和缓存策略读取"
+        title={t('settings.storage.autoClean.title')}
+        desc={t('settings.storage.autoClean.desc')}
         control={
           <Toggle
             checked={Boolean(currentDraft.auto_clean_temp)}
@@ -259,6 +278,7 @@ function SecuritySettings() {
   const { data: historyResponse } = useGetMyLoginHistory();
   const updateSettings = useUpdateMySettings();
   const changePassword = useChangeMyPassword();
+  const { t, language } = useLocale();
   const settings = settingsResponse?.data?.data;
   const history = historyResponse?.data?.data ?? [];
   const [twoFactorEnabled, setTwoFactorEnabled] = useState<boolean | null>(
@@ -279,9 +299,9 @@ function SecuritySettings() {
       await updateSettings.mutateAsync({
         two_factor_enabled: currentTwoFactorEnabled,
       });
-      messageApi.success('安全设置已保存');
+      messageApi.success(t('settings.security.saved'));
     } catch (err) {
-      messageApi.error(getApiErrorMessage(err, '安全设置保存失败'));
+      messageApi.error(getApiErrorMessage(err, t('settings.security.saveFailed')));
     }
   };
 
@@ -291,7 +311,7 @@ function SecuritySettings() {
       !passwordForm.newPassword ||
       !passwordForm.confirmNewPassword
     ) {
-      messageApi.error('请填写完整密码信息');
+      messageApi.error(t('settings.security.password.fillAll'));
       return;
     }
     const confirmError = validatePasswordConfirm(
@@ -311,22 +331,22 @@ function SecuritySettings() {
         newPassword: '',
         confirmNewPassword: '',
       });
-      messageApi.success('密码已更新');
+      messageApi.success(t('settings.security.password.updated'));
     } catch (err) {
-      messageApi.error(getApiErrorMessage(err, '密码修改失败'));
+      messageApi.error(getApiErrorMessage(err, t('settings.security.password.failed')));
     }
   };
 
   return (
-    <Section title="安全设置">
+    <Section title={t('settings.tab.security')}>
       {contextHolder}
       <div className="rounded-lg border border-gray-200 p-4">
-        <p className="font-medium text-gray-800">修改密码</p>
-        <p className="mb-4 text-sm text-gray-500">定期更改密码以保护账户安全</p>
+        <p className="font-medium text-gray-800">{t('settings.security.password.title')}</p>
+        <p className="mb-4 text-sm text-gray-500">{t('settings.security.password.desc')}</p>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <input
             type="password"
-            placeholder="旧密码"
+            placeholder={t('settings.security.password.old')}
             value={passwordForm.oldPassword}
             onChange={(e) =>
               setPasswordForm((prev) => ({
@@ -338,7 +358,7 @@ function SecuritySettings() {
           />
           <input
             type="password"
-            placeholder="新密码"
+            placeholder={t('settings.security.password.new')}
             value={passwordForm.newPassword}
             onChange={(e) => {
               const newPassword = e.target.value;
@@ -359,7 +379,7 @@ function SecuritySettings() {
           />
           <input
             type="password"
-            placeholder="确认新密码"
+            placeholder={t('settings.security.password.confirm')}
             value={passwordForm.confirmNewPassword}
             onChange={(e) => {
               const confirmNewPassword = e.target.value;
@@ -393,14 +413,14 @@ function SecuritySettings() {
             onClick={submitPassword}
             loading={changePassword.isPending}
           >
-            修改密码
+            {t('settings.security.password.submit')}
           </ActionButton>
         </div>
       </div>
 
       <SettingRow
-        title="两步验证"
-        desc="为账户添加额外的安全保护"
+        title={t('settings.security.twoFactor.title')}
+        desc={t('settings.security.twoFactor.desc')}
         control={
           <Toggle
             checked={currentTwoFactorEnabled}
@@ -413,12 +433,12 @@ function SecuritySettings() {
 
       <div className="rounded-lg border border-gray-200 p-4">
         <div className="mb-4">
-          <p className="font-medium text-gray-800">登录历史</p>
-          <p className="text-sm text-gray-500">最近 20 条登录记录</p>
+          <p className="font-medium text-gray-800">{t('settings.security.loginHistory.title')}</p>
+          <p className="text-sm text-gray-500">{t('settings.security.loginHistory.desc')}</p>
         </div>
         <div className="space-y-3">
           {history.length === 0 ? (
-            <p className="text-sm text-gray-500">暂无登录记录</p>
+            <p className="text-sm text-gray-500">{t('settings.security.loginHistory.empty')}</p>
           ) : (
             history.map((item) => (
               <div
@@ -427,14 +447,14 @@ function SecuritySettings() {
               >
                 <div>
                   <p className="text-sm font-medium text-gray-800">
-                    {item.ip || '未知 IP'}
+                    {item.ip || t('settings.security.unknownIp')}
                   </p>
                   <p className="max-w-[32rem] truncate text-xs text-gray-500">
-                    {item.user_agent || '未知设备'}
+                    {item.user_agent || t('settings.security.unknownDevice')}
                   </p>
                 </div>
                 <span className="text-xs text-gray-400">
-                  {new Date(item.loginAt).toLocaleString('zh-CN')}
+                  {formatDateTimeByLanguage(item.loginAt, language)}
                 </span>
               </div>
             ))
@@ -449,6 +469,7 @@ function NotificationSettings() {
   const [messageApi, contextHolder] = message.useMessage();
   const { data } = useGetMySettings();
   const updateSettings = useUpdateMySettings();
+  const { t } = useLocale();
   const settings = data?.data?.data;
   const [draft, setDraft] = useState<UpdateUserSettingsRequest>({});
 
@@ -463,15 +484,15 @@ function NotificationSettings() {
 
   const save = async () => {
     await updateSettings.mutateAsync(currentDraft);
-    messageApi.success('通知设置已保存');
+    messageApi.success(t('settings.notification.saved'));
   };
 
   return (
-    <Section title="通知设置">
+    <Section title={t('settings.tab.notification')}>
       {contextHolder}
       <SettingRow
-        title="邮件通知"
-        desc="接收重要更新和通知邮件"
+        title={t('settings.notification.email.title')}
+        desc={t('settings.notification.email.desc')}
         control={
           <Toggle
             checked={Boolean(currentDraft.email_notification)}
@@ -482,8 +503,8 @@ function NotificationSettings() {
         }
       />
       <SettingRow
-        title="文件上传完成通知"
-        desc="文件上传完成后发送通知"
+        title={t('settings.notification.upload.title')}
+        desc={t('settings.notification.upload.desc')}
         control={
           <Toggle
             checked={Boolean(currentDraft.upload_notification)}
@@ -494,8 +515,8 @@ function NotificationSettings() {
         }
       />
       <SettingRow
-        title="共享文件通知"
-        desc="当有人共享文件时通知你"
+        title={t('settings.notification.share.title')}
+        desc={t('settings.notification.share.desc')}
         control={
           <Toggle
             checked={Boolean(currentDraft.share_notification)}
@@ -517,6 +538,7 @@ function PermissionsSettings() {
   const updateSettings = useUpdateMySettings();
   const resetPermissions = useResetMyPermissions();
   const revokeShare = useRevokeShare();
+  const { t, language } = useLocale();
   const settings = data?.data?.data;
   const shares = sharesResponse?.data?.data ?? [];
   const [draft, setDraft] = useState<UpdateUserSettingsRequest>({});
@@ -534,35 +556,34 @@ function PermissionsSettings() {
 
   const save = async () => {
     await updateSettings.mutateAsync(currentDraft);
-    messageApi.success('权限设置已保存');
+    messageApi.success(t('settings.permissions.saved'));
   };
 
   const resetToRoleDefaults = async () => {
     await resetPermissions.mutateAsync();
     setDraft({});
-    messageApi.success('已恢复为角色默认权限');
+    messageApi.success(t('settings.permissions.resetDone'));
   };
 
   const roleLabel = useMemo(
     () =>
       settings?.role === 'admin'
-        ? '管理员'
+        ? t('role.admin')
         : settings?.role === 'viewer'
-          ? '访客'
-          : '普通用户',
-    [settings?.role]
+          ? t('role.viewer')
+          : t('role.user'),
+    [settings?.role, t],
   );
 
   return (
-    <Section title="权限设置">
+    <Section title={t('settings.tab.permissions')}>
       {contextHolder}
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
-            <p className="font-medium text-gray-800">我的权限</p>
+            <p className="font-medium text-gray-800">{t('settings.permissions.my.title')}</p>
             <p className="text-sm text-gray-500">
-              当前角色：{roleLabel}
-              。你可以在角色模板基础上做个性化调整。
+              {t('settings.permissions.my.desc', { role: roleLabel })}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -573,23 +594,25 @@ function PermissionsSettings() {
                   : 'bg-emerald-100 text-emerald-700'
               }`}
             >
-              {settings?.permissions_customized ? '已自定义权限' : '角色默认权限'}
+              {settings?.permissions_customized
+                ? t('settings.permissions.customized')
+                : t('settings.permissions.roleDefault')}
             </span>
             <ActionButton
               onClick={() => void resetToRoleDefaults()}
               loading={resetPermissions.isPending}
             >
-              恢复角色默认
+              {t('settings.permissions.resetRole')}
             </ActionButton>
           </div>
         </div>
         <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-          下列权限会直接影响上传、下载、删除、收藏和分享接口是否可用。
+          {t('settings.permissions.hint')}
         </div>
         <div className="space-y-4">
           <SettingRow
-            title="允许上传"
-            desc="控制初始化上传、上传分片和新建文件夹"
+            title={t('settings.permissions.upload.title')}
+            desc={t('settings.permissions.upload.desc')}
             control={
               <Toggle
                 checked={Boolean(currentDraft.allow_file_upload)}
@@ -600,8 +623,8 @@ function PermissionsSettings() {
             }
           />
           <SettingRow
-            title="允许下载"
-            desc="控制文件下载和分片读取"
+            title={t('settings.permissions.download.title')}
+            desc={t('settings.permissions.download.desc')}
             control={
               <Toggle
                 checked={Boolean(currentDraft.allow_file_download)}
@@ -615,8 +638,8 @@ function PermissionsSettings() {
             }
           />
           <SettingRow
-            title="允许删除"
-            desc="控制移入回收站、彻底删除和清空回收站"
+            title={t('settings.permissions.delete.title')}
+            desc={t('settings.permissions.delete.desc')}
             control={
               <Toggle
                 checked={Boolean(currentDraft.allow_file_delete)}
@@ -627,8 +650,8 @@ function PermissionsSettings() {
             }
           />
           <SettingRow
-            title="允许收藏"
-            desc="控制收藏和取消收藏接口"
+            title={t('settings.permissions.favorite.title')}
+            desc={t('settings.permissions.favorite.desc')}
             control={
               <Toggle
                 checked={Boolean(currentDraft.allow_favorite)}
@@ -639,8 +662,8 @@ function PermissionsSettings() {
             }
           />
           <SettingRow
-            title="允许共享"
-            desc="普通用户默认可分享文件"
+            title={t('settings.permissions.share.title')}
+            desc={t('settings.permissions.share.desc')}
             control={
               <Toggle
                 checked={Boolean(currentDraft.allow_share)}
@@ -658,14 +681,12 @@ function PermissionsSettings() {
 
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <div className="mb-4">
-          <p className="font-medium text-gray-800">分享管理</p>
-          <p className="text-sm text-gray-500">
-            查看已创建的分享链接，复制下载地址，或手动失效。
-          </p>
+          <p className="font-medium text-gray-800">{t('settings.share.title')}</p>
+          <p className="text-sm text-gray-500">{t('settings.share.desc')}</p>
         </div>
         <div className="space-y-3">
           {shares.length === 0 ? (
-            <p className="text-sm text-gray-500">暂无分享记录</p>
+            <p className="text-sm text-gray-500">{t('settings.share.empty')}</p>
           ) : (
             shares.map((share) => (
               <div
@@ -678,21 +699,36 @@ function PermissionsSettings() {
                       {share.file?.filename || share.file_uuid}
                     </p>
                     <p className="mt-1 text-xs text-gray-500">
-                      下载次数 {share.downloadCount} · 创建于{' '}
-                      {new Date(share.createdAt).toLocaleString('zh-CN')}
+                      {t('settings.share.downloadCount', {
+                        count: share.downloadCount,
+                        createdAt: formatDateTimeByLanguage(
+                          share.createdAt,
+                          language,
+                        ),
+                      })}
                     </p>
                     <p className="mt-1 text-xs text-gray-500">
                       {share.revokedAt
-                        ? `已失效：${new Date(share.revokedAt).toLocaleString('zh-CN')}`
+                        ? t('settings.share.revokedAt', {
+                            time: formatDateTimeByLanguage(
+                              share.revokedAt,
+                              language,
+                            ),
+                          })
                         : share.expiresAt
-                          ? `过期时间：${new Date(share.expiresAt).toLocaleString('zh-CN')}`
-                          : '长期有效'}
+                          ? t('settings.share.expiresAt', {
+                              time: formatDateTimeByLanguage(
+                                share.expiresAt,
+                                language,
+                              ),
+                            })
+                          : t('settings.share.permanent')}
                     </p>
                     <p className="mt-1 text-xs text-gray-500">
-                      最近访问：
+                      {t('settings.share.lastAccess')}
                       {share.lastAccessAt
-                        ? new Date(share.lastAccessAt).toLocaleString('zh-CN')
-                        : '暂无'}
+                        ? formatDateTimeByLanguage(share.lastAccessAt, language)
+                        : t('settings.share.noAccess')}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
@@ -700,21 +736,21 @@ function PermissionsSettings() {
                       onClick={async () => {
                         const shareUrl = buildSharePageUrl(share.token);
                         await navigator.clipboard.writeText(shareUrl);
-                        messageApi.success('链接已复制');
+                        messageApi.success(t('settings.share.linkCopied'));
                       }}
                       className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50"
                     >
-                      复制链接
+                      {t('settings.share.copyLink')}
                     </button>
                     {!share.revokedAt && (
                       <button
                         onClick={async () => {
                           await revokeShare.mutateAsync({ token: share.token });
-                          messageApi.success('分享链接已失效');
+                          messageApi.success(t('settings.share.revoked'));
                         }}
                         className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600 transition hover:bg-red-50"
                       >
-                        设为失效
+                        {t('settings.share.revoke')}
                       </button>
                     )}
                   </div>
@@ -727,15 +763,13 @@ function PermissionsSettings() {
 
       {settings?.role === 'admin' && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <p className="font-medium text-gray-800">云盘用户管理已迁移</p>
-          <p className="mt-1 text-sm text-gray-600">
-            用户与权限管理请使用独立管理后台，与云盘账号体系分离。
-          </p>
+          <p className="font-medium text-gray-800">{t('settings.adminMigrate.title')}</p>
+          <p className="mt-1 text-sm text-gray-600">{t('settings.adminMigrate.desc')}</p>
           <Link
             href="/admin/login"
             className="mt-3 inline-block rounded-lg bg-[#5542f6] px-4 py-2 text-sm text-white transition hover:bg-[#4535d4]"
           >
-            前往管理后台
+            {t('settings.adminMigrate.go')}
           </Link>
         </div>
       )}
@@ -805,10 +839,11 @@ function SaveBar({
   onSave: () => void | Promise<void>;
   loading?: boolean;
 }) {
+  const { t } = useLocale();
   return (
     <div className="flex justify-end">
       <ActionButton onClick={() => void onSave()} loading={loading}>
-        保存设置
+        {t('common.saveSettings')}
       </ActionButton>
     </div>
   );
@@ -823,13 +858,14 @@ function ActionButton({
   onClick: () => void;
   loading?: boolean;
 }) {
+  const { t } = useLocale();
   return (
     <button
       onClick={onClick}
       disabled={loading}
       className="rounded-lg bg-[#5542f6] px-4 py-2 text-sm text-white transition hover:bg-[#4532e6] disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {loading ? '处理中...' : children}
+      {loading ? t('common.processing') : children}
     </button>
   );
 }

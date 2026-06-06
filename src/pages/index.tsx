@@ -23,6 +23,7 @@ import Header from '../components/layout/Header';
 import UploadMenu from '@/components/secondaryPage/UploadMenu';
 import { useAuthed, useHydrated } from '@/utils/auth';
 import { message } from 'antd';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export default function Home() {
   const router = useRouter();
@@ -31,6 +32,7 @@ export default function Home() {
   const authed = useAuthed();
   const hydrated = useHydrated();
   const [messageApi, contextHolder] = message.useMessage();
+  const { t } = useLocale();
 
   useEffect(() => {
     if (hydrated && !authed) {
@@ -45,13 +47,16 @@ export default function Home() {
     return seleId;
   }, [router.query.view, seleId]);
 
-  const menuItems = [
-    { key: 'sub1', label: '我的云', icon: <AiFillCloud /> },
-    { key: 'sub2', label: '所有文件', icon: <AiFillFileText /> },
-    { key: 'sub3', label: '最近的', icon: <AiTwotoneClockCircle /> },
-    { key: 'sub4', label: '收藏', icon: <AiOutlineStar /> },
-    { key: 'sub5', label: '已删除文件', icon: <AiOutlineDelete /> },
-  ];
+  const menuItems = useMemo(
+    () => [
+      { key: 'sub1', label: t('nav.myCloud'), icon: <AiFillCloud /> },
+      { key: 'sub2', label: t('nav.allFiles'), icon: <AiFillFileText /> },
+      { key: 'sub3', label: t('nav.recent'), icon: <AiTwotoneClockCircle /> },
+      { key: 'sub4', label: t('nav.favorites'), icon: <AiOutlineStar /> },
+      { key: 'sub5', label: t('nav.trash'), icon: <AiOutlineDelete /> },
+    ],
+    [t],
+  );
 
   const onClick: MenuProps['onClick'] = (e) => {
     setSeleId(e.key);
@@ -99,7 +104,7 @@ export default function Home() {
           <div
             onClick={() => {
               if (!authed) {
-                messageApi.info('上传文件需要先登录为普通用户');
+                messageApi.info(t('nav.uploadNeedLogin'));
                 router.push('/login?tab=login');
                 return;
               }
@@ -108,7 +113,7 @@ export default function Home() {
             className="relative mt-6 mb-6 flex h-12 w-[90%] cursor-pointer items-center justify-center rounded-sm border border-gray-200 text-[16px] text-gray-600 transition duration-150 hover:bg-gray-100"
           >
             <AiOutlineCloudUpload className="mr-2 ml-2 flex h-5 w-5 flex-1" />
-            <p className="flex flex-2">上传文件</p>
+            <p className="flex flex-2">{t('nav.upload')}</p>
           </div>
 
           <Menu
@@ -120,7 +125,7 @@ export default function Home() {
         </aside>
 
         {/* 主内容区 */}
-        <main className="bg-white">{renderMap[currentView] ?? <div>未知选项</div>}</main>
+        <main className="bg-white">{renderMap[currentView] ?? <div>{t('nav.unknown')}</div>}</main>
       </div>
 
       {/* 上传模态框 */}

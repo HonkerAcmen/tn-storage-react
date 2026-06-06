@@ -1,6 +1,7 @@
 import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import { FileDataProvider } from '@/contexts/FileDataContext';
+import { LocaleProvider, useLocale } from '@/contexts/LocaleContext';
 import { ConfigProvider, App as AntApp, message } from 'antd';
 import { useEffect } from 'react';
 import { useAuthed } from '@/utils/auth';
@@ -14,16 +15,65 @@ function UserPreferenceBridge({ enabled }: { enabled: boolean }) {
 
   useEffect(() => {
     if (!enabled || !settings) {
-      document.documentElement.removeAttribute('lang');
       document.documentElement.removeAttribute('data-theme');
       return;
     }
 
-    document.documentElement.lang = settings.language || 'zh-CN';
     document.documentElement.dataset.theme = settings.theme || 'system';
   }, [enabled, settings]);
 
   return null;
+}
+
+function AppShell({
+  Component,
+  pageProps,
+  preferenceEnabled,
+  skipFileProvider,
+}: Pick<AppProps, 'Component' | 'pageProps'> & {
+  preferenceEnabled: boolean;
+  skipFileProvider: boolean;
+}) {
+  const { antdLocale } = useLocale();
+
+  const page = (
+    <>
+      <UserPreferenceBridge enabled={preferenceEnabled} />
+      <Component {...pageProps} />
+    </>
+  );
+
+  return (
+    <ConfigProvider
+      locale={antdLocale}
+      theme={{
+        token: {
+          colorPrimary: '#5542f6',
+          colorSuccess: '#52c41a',
+          colorWarning: '#faad14',
+          colorError: '#ff4d4f',
+          colorInfo: '#5542f6',
+          borderRadius: 6,
+        },
+        components: {
+          Button: {
+            primaryColor: '#ffffff',
+          },
+          Menu: {
+            itemSelectedBg: '#EBEBEB',
+            itemSelectedColor: '#3B3B3B',
+            itemActiveBg: '#DEDEDE',
+            itemHeight: 50,
+            itemColor: '#2e2c34',
+          },
+        },
+      }}
+    >
+      <AntApp>
+        {skipFileProvider ? page : <FileDataProvider>{page}</FileDataProvider>}
+      </AntApp>
+    </ConfigProvider>
+  );
 }
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -71,50 +121,20 @@ export default function App({ Component, pageProps }: AppProps) {
     authed,
   ]);
 
-  const skipFileProvider =
-    isAdminPage || isAdminLoginPage;
-
-  const page = (
-    <>
-      <UserPreferenceBridge
-        enabled={
-          !isLoginPage && !isVisitorPage && !skipFileProvider && authed
-        }
-      />
-      <Component {...pageProps} />
-    </>
-  );
+  const skipFileProvider = isAdminPage || isAdminLoginPage;
+  const localeEnabled =
+    !isLoginPage && !isVisitorPage && !skipFileProvider && authed;
 
   return (
     <QueryProvider>
-      <ConfigProvider
-        theme={{
-          token: {
-            colorPrimary: '#5542f6',
-            colorSuccess: '#52c41a',
-            colorWarning: '#faad14',
-            colorError: '#ff4d4f',
-            colorInfo: '#5542f6',
-            borderRadius: 6,
-          },
-          components: {
-            Button: {
-              primaryColor: '#ffffff',
-            },
-            Menu: {
-              itemSelectedBg: '#EBEBEB',
-              itemSelectedColor: '#3B3B3B',
-              itemActiveBg: '#DEDEDE',
-              itemHeight: 50,
-              itemColor: '#2e2c34',
-            },
-          },
-        }}
-      >
-        <AntApp>
-          {skipFileProvider ? page : <FileDataProvider>{page}</FileDataProvider>}
-        </AntApp>
-      </ConfigProvider>
+      <LocaleProvider enabled={localeEnabled}>
+        <AppShell
+          Component={Component}
+          pageProps={pageProps}
+          preferenceEnabled={localeEnabled}
+          skipFileProvider={skipFileProvider}
+        />
+      </LocaleProvider>
     </QueryProvider>
   );
 }

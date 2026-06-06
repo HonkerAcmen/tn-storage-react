@@ -14,6 +14,7 @@ import SearchResults from '../secondaryPage/SearchResults';
 import Settings from '../secondaryPage/Settings';
 import Link from 'next/link';
 import BrandTitle from '@/components/BrandTitle';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export default function Header() {
   const [clickProfile, setClickProfile] = useState(false);
@@ -25,6 +26,7 @@ export default function Header() {
   const { data: avatarResponse } = useGetMyAvatar();
   const { data: profileResponse } = useGetMyProfile();
   const username = profileResponse?.data?.data?.username ?? '';
+  const { t } = useLocale();
 
   // 将 Buffer 数据转换为图片 URL
   const avatarUrl = useMemo(() => {
@@ -113,7 +115,7 @@ export default function Header() {
                   }, 200);
                 }}
               >
-                <p className="mr-2 whitespace-nowrap">{username || '管理员'}</p>
+                <p className="mr-2 whitespace-nowrap">{username || t('header.adminFallback')}</p>
                 <AiFillCaretDown className="h-3 w-3 text-gray-500" />
               </div>
 
@@ -131,13 +133,13 @@ export default function Header() {
                   }}
                   className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100"
                 >
-                  个人主页
+                  {t('header.profile')}
                 </li>
                 <li
                   onClick={() => logout()}
                   className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100"
                 >
-                  退出系统
+                  {t('header.logout')}
                 </li>
               </Modal>
             </div>
@@ -147,7 +149,7 @@ export default function Header() {
             href="/login?tab=login"
             className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-700 transition hover:border-[#5542f6] hover:text-[#5542f6]"
           >
-            登录 / 注册
+            {t('header.loginRegister')}
           </Link>
         )}
       </div>
