@@ -60,7 +60,7 @@ export default function Favorites() {
   };
 
   return (
-    <div className="ml-4">
+    <div className="ml-4 min-w-0 overflow-x-hidden">
       <div className="mt-4 mb-6">
         <h1 className="text-3xl font-semibold text-[#2e2c34]">收藏</h1>
         <p className="mt-2 text-sm text-gray-500">
@@ -81,7 +81,7 @@ export default function Favorites() {
           className="py-12"
         />
       ) : (
-        <ul className="mr-8 flex flex-col space-y-2">
+        <ul className="mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
           {favoriteFiles.map((item) => (
             <FileListItem
               key={item.id}

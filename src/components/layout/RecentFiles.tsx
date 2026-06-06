@@ -99,7 +99,7 @@ export default function RecentFiles() {
         recentlyAccessed.length === 0 ? (
           <SectionEmptyState />
         ) : (
-          <ul className="flex flex-col space-y-2">
+          <ul className="mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
             {recentlyAccessed.map(({ file: item, time }) => (
               <FileListItem
                 key={item.id}
@@ -132,7 +132,7 @@ export default function RecentFiles() {
         recentlyCreated.length === 0 ? (
           <SectionEmptyState />
         ) : (
-          <ul className="flex flex-col space-y-2">
+          <ul className="mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
             {recentlyCreated.map(({ file: item, time }) => (
               <FileListItem
                 key={item.id}
@@ -172,7 +172,7 @@ export default function RecentFiles() {
         recentlyModified.length === 0 ? (
           <SectionEmptyState />
         ) : (
-          <ul className="flex flex-col space-y-2">
+          <ul className="mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
             {recentlyModified.map(({ file: item, time }) => (
               <FileListItem
                 key={item.id}
@@ -203,7 +203,7 @@ export default function RecentFiles() {
   ];
 
   return (
-    <div className="ml-4">
+    <div className="ml-4 min-w-0 overflow-x-hidden">
       <div className="mt-4 mb-6">
         <h1 className="text-3xl font-semibold text-[#2e2c34]">最近的</h1>
         <p className="mt-2 text-sm text-gray-500">

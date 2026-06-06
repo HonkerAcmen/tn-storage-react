@@ -47,9 +47,12 @@ export interface UploadTaskResponse {
 }
 
 export interface MultipartUploadInitResponse {
-  taskId: string;
+  mode: 'instant' | 'chunk';
+  taskId?: string;
   UUID: string;
-  totalChunks: number;
+  totalChunks?: number;
+  instantMode?: 'hit' | 'dedup';
+  filename?: string;
   message: string;
 }
 
@@ -64,8 +67,15 @@ export interface MultipartUploadChunkResponse {
 // 上传任务状态响应
 export interface UploadStatusResponse {
   taskId: string;
+  filename?: string;
+  mimetype?: string;
+  size?: number;
+  parentId?: number;
+  bucket?: string;
   fileNum: number;
   uploadedFiles: number;
+  totalChunks?: number;
+  receivedChunkIndexes?: number[];
   status: string;
 }
 
@@ -146,7 +156,7 @@ export type GetFilesTypeCountApiResponse = BaseResponse<
   Record<string, unknown>
 >;
 export type UploadFileApiResponse = BaseResponse<UploadTaskResponse>;
-export type GetUploadStatusApiResponse = UploadStatusResponse;
+export type GetUploadStatusApiResponse = BaseResponse<UploadStatusResponse>;
 export type InitMultipartUploadApiResponse =
   BaseResponse<MultipartUploadInitResponse>;
 export type UploadChunkApiResponse = BaseResponse<MultipartUploadChunkResponse>;

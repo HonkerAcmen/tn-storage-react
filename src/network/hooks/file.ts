@@ -131,7 +131,7 @@ export function useGetUploadStatus(taskId: string) {
       // query.state.data.data.data 是 UploadStatusResponse
       const response = query.state.data;
       if (!response) return 2000;
-      const status = response.data?.status;
+      const status = response.data?.data?.status;
       return status === 'completed' ? false : 2000;
     },
   });

@@ -1,6 +1,8 @@
 import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import { FileDataProvider } from '@/contexts/FileDataContext';
+import { UploadQueueProvider } from '@/contexts/UploadQueueContext';
+import UploadProgressPanel from '@/components/Upload/UploadProgressPanel';
 import { LocaleProvider, useLocale } from '@/contexts/LocaleContext';
 import { useResolvedTheme } from '@/hooks/useResolvedTheme';
 import { ConfigProvider, App as AntApp, message } from 'antd';
@@ -46,13 +48,20 @@ function AppShell({
     <>
       <UserPreferenceBridge enabled={preferenceEnabled} />
       <Component {...pageProps} />
+      {!skipFileProvider ? <UploadProgressPanel /> : null}
     </>
   );
 
   return (
     <ConfigProvider locale={antdLocale} theme={buildAntTheme(isDark)}>
       <AntApp>
-        {skipFileProvider ? page : <FileDataProvider>{page}</FileDataProvider>}
+        {skipFileProvider ? (
+          page
+        ) : (
+          <UploadQueueProvider>
+            <FileDataProvider>{page}</FileDataProvider>
+          </UploadQueueProvider>
+        )}
       </AntApp>
     </ConfigProvider>
   );

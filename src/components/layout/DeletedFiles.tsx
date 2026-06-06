@@ -187,7 +187,7 @@ export default function DeletedFiles() {
   };
 
   return (
-    <div className="ml-4">
+    <div className="ml-4 min-w-0 overflow-x-hidden">
       {messageContextHolder}
       {modalContextHolder}
       <div className="mt-4 mb-6 flex items-center justify-between">
@@ -222,7 +222,7 @@ export default function DeletedFiles() {
           className="py-12"
         />
       ) : (
-        <ul className="mr-8 flex flex-col space-y-2">
+        <ul className="mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
           {sortedDeletedFiles.map((deletedItem, index) => {
             const item = deletedItem;
             // 使用组合 key 确保唯一性：文件 ID + 删除时间戳 + 索引

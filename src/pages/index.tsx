@@ -125,7 +125,7 @@ export default function Home() {
         </aside>
 
         {/* 主内容区 */}
-        <main className="bg-white">
+        <main className="min-w-0 overflow-x-hidden bg-white">
           {renderMap[currentView] ?? <div>{t('nav.unknown')}</div>}
         </main>
       </div>

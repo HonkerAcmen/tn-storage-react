@@ -282,7 +282,10 @@ export default function AllFiles() {
   return (
     <>
       {contextHolder}
-      <div className="relative ml-4 h-screen" onContextMenu={handleContextMenu}>
+      <div
+        className="relative ml-4 min-h-0 min-w-0 overflow-x-hidden pb-8"
+        onContextMenu={handleContextMenu}
+      >
         {/* 头部 Header */}
         <div className="mt-4 mb-6 flex flex-row items-center justify-between">
           <div className="mb-4 flex flex-col">
@@ -388,7 +391,7 @@ export default function AllFiles() {
               className="py-12"
             />
           ) : (
-            <ul className="mt-2 mr-8 flex flex-col space-y-2">
+            <ul className="mt-2 mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
               {sortedFiles.map((item) => {
                 const convertedItem = item;
                 return (
@@ -455,11 +458,11 @@ export default function AllFiles() {
             className="py-12"
           />
         ) : (
-          <ul className="grid w-full grid-cols-2 gap-6 p-4 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+          <ul className="grid w-full min-w-0 grid-cols-2 gap-4 p-4 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
             {sortedFiles.map((item) => (
               <li
                 key={item.id}
-                className="group relative flex cursor-pointer flex-col items-center justify-start rounded-xl border border-transparent p-4 transition-all duration-200 hover:border-gray-200 hover:bg-gray-100"
+                className="group relative flex min-h-[132px] min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl border border-transparent p-3 transition-all duration-200 hover:border-gray-200 hover:bg-gray-100"
                 onClick={() => {
                   if (item.type === 'folder') {
                     handleFolderClick(item.id);
@@ -468,80 +471,72 @@ export default function AllFiles() {
                   }
                 }}
               >
-                {/* 上方图标文字 */}
-                <div className="mb-3 flex flex-col items-center justify-center">
+                <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col items-center overflow-hidden">
                   {item.type === 'folder' ? (
                     <AiFillFolder
-                      className={`${ICON_SIZE_LARGE} text-amber-400`}
+                      className={`${ICON_SIZE_LARGE} shrink-0 text-amber-400`}
                     />
                   ) : (
-                    <div className="text-gray-400">
+                    <div className="shrink-0 text-gray-400">
                       {getFileIcon(item.ext, 'large')}
                     </div>
                   )}
-                  <span className="line-clamp-2 text-center text-sm break-all text-gray-700">
+                  <span
+                    className="mt-2 line-clamp-2 w-full min-w-0 px-1 text-center text-sm break-all text-gray-700"
+                    title={item.filename}
+                  >
                     {item.filename}
                   </span>
                 </div>
 
-                {/* 下方收藏按钮和更多选项 */}
-                <div className="flex flex-row justify-between opacity-0 transition-opacity group-hover:opacity-100">
-                  <div className="w-full px-2">
-                    {/* 收藏按钮 */}
-                    <div className="mt-2 flex items-center justify-center">
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={
-                          isFavorite(item.UUID) ? (
-                            <AiFillStar className="h-4 w-4 text-amber-400" />
-                          ) : (
-                            <AiOutlineStar className="h-4 w-4 text-gray-400" />
-                          )
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const convertedItem = item;
-                          handleFileAction('favorite', convertedItem, {
-                            onDetailsOpen: () => {
-                              setSelectedFile(item);
-                              setShowDetails(true);
-                            },
-                            onFolderNavigate: handleFolderClick,
-                          });
-                        }}
-                        className="flex items-center justify-center"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 右下角功能按钮 */}
-                  <div className="mt-2">
-                    <Dropdown
-                      menu={{
-                        items: getFileMenuItems(item, {
-                          onDetailsOpen: () => {
-                            setSelectedFile(item);
-                            setShowDetails(true);
-                          },
-                          onFolderNavigate: handleFolderClick,
-                        }),
-                        onClick: (e) => e.domEvent.stopPropagation(),
-                      }}
-                      trigger={['click']}
-                      placement="bottomRight"
-                    >
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={
-                          <AiOutlineEllipsis className="h-4 w-4 text-gray-600" />
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex items-center justify-center bg-white shadow-md hover:bg-gray-50"
-                      />
-                    </Dropdown>
-                  </div>
+                <div className="mt-2 flex w-full shrink-0 items-center justify-between opacity-0 transition-opacity group-hover:opacity-100">
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={
+                      isFavorite(item.UUID) ? (
+                        <AiFillStar className="h-4 w-4 text-amber-400" />
+                      ) : (
+                        <AiOutlineStar className="h-4 w-4 text-gray-400" />
+                      )
+                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const convertedItem = item;
+                      handleFileAction('favorite', convertedItem, {
+                        onDetailsOpen: () => {
+                          setSelectedFile(item);
+                          setShowDetails(true);
+                        },
+                        onFolderNavigate: handleFolderClick,
+                      });
+                    }}
+                    className="flex items-center justify-center"
+                  />
+                  <Dropdown
+                    menu={{
+                      items: getFileMenuItems(item, {
+                        onDetailsOpen: () => {
+                          setSelectedFile(item);
+                          setShowDetails(true);
+                        },
+                        onFolderNavigate: handleFolderClick,
+                      }),
+                      onClick: (e) => e.domEvent.stopPropagation(),
+                    }}
+                    trigger={['click']}
+                    placement="bottomRight"
+                  >
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={
+                        <AiOutlineEllipsis className="h-4 w-4 text-gray-600" />
+                      }
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center justify-center bg-white shadow-md hover:bg-gray-50"
+                    />
+                  </Dropdown>
                 </div>
               </li>
             ))}
