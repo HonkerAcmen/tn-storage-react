@@ -30,8 +30,11 @@ codefiles/
 | 我的云 | `/` | 存储概览、最近文件 |
 | 所有文件 | `/`（文件 Tab） | 树形目录、面包屑、上传、移动/复制/重命名 |
 | 最近 / 收藏 / 回收站 | 侧栏 | 快捷访问与回收站操作 |
-| 设置 | 设置面板 | 资料、密码、主题、权限（云盘 admin 角色可管用户） |
+| 多任务下载 | 传输面板 | 并发 1–5、全局限速（KB/s），设置 → 存储 Tab 可调 |
+| 设置 | 设置面板 | 资料、密码、主题、下载并发/限速、权限（云盘 admin 角色可管用户） |
 | 分享 | 文件菜单 | 创建/撤销分享链接 |
+| 用户协议 | `/legal/agreement` | 读取后端 `GET /site-content` 中的协议正文 |
+| 访客页 Footer | 登录 / 访客布局 | 备案号、企业信息、品牌文案（`useSiteContent`） |
 
 ### 管理后台（`/admin/*`）
 
@@ -45,7 +48,12 @@ codefiles/
 | 全局文件 | `/admin/files` | 跨用户文件列表；**下载、预览、移入回收站、永久删除** |
 | 回收站 | `/admin/trash` | 恢复、永久删除 |
 | 分享 | `/admin/shares` | 列表、撤销 |
-| 存储 | `/admin/storage` | 全局与用户存储视图 |
+| 存储概览 | `/admin/storage` | 全局与用户存储视图 |
+| 存储大屏 | `/admin/storage-dashboard` | 用量趋势、磁盘探测、双写状态、维护模式 |
+| 存储配置 | `/admin/storage-backends` | 本机/OSS 后端、连通性测试 |
+| 数据迁移 | `/admin/storage-migration` | 一键迁移、checksum 对账、取消/重试/续跑 |
+| 站点内容 | `/admin/site-content` | 备案、企业、Footer、用户协议正文 |
+| 验证与安全 | `/admin/verification` | SMTP、验证策略、审计日志 |
 | 备份 | `/admin/backup` | 定时配置、手动备份、下载 ZIP、取消、**恢复** |
 | 运维 | `/admin/ops` | 缓存、MinIO、系统配置（脱敏展示） |
 | 审计日志 | `/admin/audit-logs` | 管理员操作记录 |
@@ -183,7 +191,13 @@ docker compose up -d --build
 | POST | `/user/avatar/upload/me` | `useAvatarUploadMe`（字段 `avatar`，≤1MB） |
 | GET | `/user/admin/users` | `useGetAdminUsers`（云盘 admin 角色） |
 
-**用户设置 body 可选字段**：`language`, `theme`, `auto_save`, `default_upload_parent_id`, `auto_clean_temp`, 各类 notification、`allow_file_upload/download/delete`, `allow_favorite`, `allow_share`。
+**用户设置 body 可选字段**：`language`, `theme`, `auto_save`, `default_upload_parent_id`, `auto_clean_temp`, 各类 notification、`allow_file_upload/download/delete`, `allow_favorite`, `allow_share`、`download_concurrency`（1–5）、`download_rate_limit_kbps`（0 不限速）。
+
+### 站点内容（公开，无需 Token）
+
+| 方法 | 路径 | Hook |
+|------|------|------|
+| GET | `/site-content` | `useSiteContent`（`siteContent.ts`） |
 
 ### 文件
 
@@ -269,6 +283,23 @@ docker compose up -d --build
 | POST | `/admin/backup/jobs/:id/cancel` | `useAdminCancelBackupJob` |
 | POST | `/admin/backup/jobs/:id/restore` | `useAdminRestoreBackupJob`（body: `{ includeMinio? }`） |
 
+### 存储运维 · `admin.ts` / 各 storage 页面
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/admin/storage/dashboard` | 存储大屏聚合 |
+| GET/PUT | `/admin/storage/policy` | 全站策略与维护模式 |
+| GET/POST/PUT | `/admin/storage/backends` | 后端配置与测连 |
+| GET/POST | `/admin/storage/disk-probe` | 磁盘探测 |
+| GET/PUT/POST | `/admin/storage/dual-write` | 双写与切流 |
+| GET/POST/PUT | `/admin/storage/migrations` | 迁移任务与 checksum 对账 |
+
+### 站点内容 · `adminSiteContent.ts`
+
+| 方法 | 路径 | Hook |
+|------|------|------|
+| GET/PUT | `/admin/site-content` | `useAdminSiteContent` / `useAdminUpdateSiteContent` |
+
 ### 运维 · 审计 · 员工
 
 | 方法 | 路径 | Hook |
@@ -295,9 +326,14 @@ src/
 │   ├── http.ts                    # 云盘 axios
 │   ├── adminHttp.ts               # 管理后台 axios
 │   └── hooks/                     # admin.ts, adminAuth.ts, adminOps.ts, adminStaff.ts, user.ts, file.ts
-├── features/files/                # 分片上传、文件操作
+├── features/files/                # 分片上传、下载调度与限速
+│   └── services/
+│       ├── chunkUpload.ts
+│       ├── download-queue.scheduler.ts
+│       └── download-rate-limiter.ts
 ├── components/admin/              # AdminLayout, AdminUserSelect 等
-├── contexts/                      # FileDataContext
+├── contexts/                      # FileDataContext, DownloadQueueContext
+├── pages/legal/agreement.tsx      # 用户协议展示页
 └── utils/auth/                    # token / adminSession
 ```
 
@@ -310,6 +346,7 @@ pnpm dev          # 开发（:3000）
 pnpm build        # 生产构建（standalone，供 Docker web 镜像）
 pnpm start        # 生产运行
 pnpm lint         # ESLint
+pnpm test:unit    # Vitest（下载调度、限速等单元测试）
 ```
 
 **后端联调验收**（在 `TNStorage` 目录）：
@@ -330,6 +367,8 @@ pnpm test:admin:files  # 活跃区文件操作
 | 管理后台 401 循环 | 清 `localStorage.adminToken`，重新 `/admin/login` |
 | 云盘与管理后台 Token 混用 | 两套会话独立，不可互换 |
 | Compose 构建失败 | 确认 `tn-storage-react` 与 `TNStorage` 同级 |
+| 下载无并发 / 不限速 | 设置 → 存储 Tab 检查 `download_concurrency`、`download_rate_limit_kbps` |
+| Footer / 协议空白 | 管理后台 `/admin/site-content` 填写并保存；公开接口 `GET /site-content` |
 
 ---
 
