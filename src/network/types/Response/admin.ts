@@ -100,6 +100,47 @@ export type RebalanceStorageQuotasApiResponse = BaseResponse<{
 }>;
 export type GetAdminStorageAlertsApiResponse = BaseResponse<StorageAlert[]>;
 
+export interface StorageBackendPublicView {
+  id: number;
+  name: string;
+  provider_type: 'minio' | 's3';
+  endpoint: string;
+  port: number | null;
+  region: string | null;
+  use_ssl: boolean;
+  force_path_style: boolean;
+  role: 'active' | 'standby' | 'readonly';
+  status: 'unknown' | 'connected' | 'error';
+  status_message: string | null;
+  is_builtin: boolean;
+  has_credentials: boolean;
+  last_tested_at: string | null;
+  updated_at?: string;
+}
+
+export interface StorageBackendTestResult {
+  success: boolean;
+  message: string;
+  bucketCount?: number;
+}
+
+export interface StorageBackendMutationResponse {
+  backend: StorageBackendPublicView;
+  test: StorageBackendTestResult;
+}
+
+export type GetAdminStorageBackendsApiResponse = BaseResponse<
+  StorageBackendPublicView[]
+>;
+export type CreateAdminStorageBackendApiResponse =
+  BaseResponse<StorageBackendMutationResponse>;
+export type UpdateAdminStorageBackendApiResponse =
+  BaseResponse<StorageBackendMutationResponse>;
+export type TestAdminStorageBackendApiResponse =
+  BaseResponse<StorageBackendMutationResponse>;
+export type ActivateAdminStorageBackendApiResponse =
+  BaseResponse<StorageBackendPublicView>;
+
 export interface AdminStorageUserItem {
   userId: number;
   username: string;
@@ -347,6 +388,29 @@ export interface AdminOpsMinioResponse {
   totalBytes: number;
   error?: string;
 }
+
+export interface OssStorageOverviewResponse {
+  backend: {
+    id: number;
+    name: string;
+    endpoint: string;
+    status: string;
+    last_tested_at: string | null;
+  };
+  overview: AdminOpsMinioResponse;
+}
+
+export interface OssStorageBucketsResponse {
+  backend: OssStorageOverviewResponse['backend'];
+  buckets: AdminOpsMinioBucket[];
+  totalObjects: number;
+  totalBytes: number;
+}
+
+export type GetOssStorageOverviewApiResponse =
+  BaseResponse<OssStorageOverviewResponse>;
+export type GetOssStorageBucketsApiResponse =
+  BaseResponse<OssStorageBucketsResponse>;
 
 export interface AdminOpsConfigResponse {
   nodeEnv: string;

@@ -16,6 +16,13 @@ import {
   UpdateAdminStoragePolicyApiResponse,
   RebalanceStorageQuotasApiResponse,
   GetAdminStorageAlertsApiResponse,
+  GetAdminStorageBackendsApiResponse,
+  CreateAdminStorageBackendApiResponse,
+  UpdateAdminStorageBackendApiResponse,
+  TestAdminStorageBackendApiResponse,
+  ActivateAdminStorageBackendApiResponse,
+  GetOssStorageOverviewApiResponse,
+  GetOssStorageBucketsApiResponse,
   GetAdminStorageUsersApiResponse,
   GetAdminUsersApiResponse,
   TriggerAdminBackupApiResponse,
@@ -137,6 +144,133 @@ export function useRebalanceStorageQuotas() {
     onSuccess: async () => {
       await invalidateStorageQueries(queryClient);
     },
+  });
+}
+
+async function invalidateBackendQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  await queryClient.invalidateQueries({
+    queryKey: [...adminKey, 'storage', 'backends'],
+  });
+}
+
+export function useAdminStorageBackends(enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'storage', 'backends'],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminStorageBackendsApiResponse>(
+        '/admin/storage/backends',
+      ),
+    enabled: authed && enabled,
+  });
+}
+
+export function useCreateAdminStorageBackend() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: {
+      name: string;
+      provider_type: 's3';
+      endpoint: string;
+      port?: number | null;
+      region?: string | null;
+      use_ssl: boolean;
+      force_path_style: boolean;
+      access_key: string;
+      secret_key: string;
+    }) =>
+      await adminHttp.post<CreateAdminStorageBackendApiResponse>(
+        '/admin/storage/backends',
+        body,
+      ),
+    onSuccess: async () => {
+      await invalidateBackendQueries(queryClient);
+    },
+  });
+}
+
+export function useUpdateAdminStorageBackend() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      body,
+    }: {
+      id: number;
+      body: {
+        name?: string;
+        provider_type?: 'minio' | 's3';
+        endpoint?: string;
+        port?: number | null;
+        region?: string | null;
+        use_ssl?: boolean;
+        force_path_style?: boolean;
+        access_key?: string;
+        secret_key?: string;
+      };
+    }) =>
+      await adminHttp.put<UpdateAdminStorageBackendApiResponse>(
+        `/admin/storage/backends/${id}`,
+        body,
+      ),
+    onSuccess: async () => {
+      await invalidateBackendQueries(queryClient);
+    },
+  });
+}
+
+export function useTestAdminStorageBackend() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) =>
+      await adminHttp.post<TestAdminStorageBackendApiResponse>(
+        `/admin/storage/backends/${id}/test`,
+      ),
+    onSuccess: async () => {
+      await invalidateBackendQueries(queryClient);
+    },
+  });
+}
+
+export function useActivateAdminStorageBackend() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) =>
+      await adminHttp.put<ActivateAdminStorageBackendApiResponse>(
+        `/admin/storage/backends/${id}/activate`,
+      ),
+    onSuccess: async () => {
+      await invalidateBackendQueries(queryClient);
+      await invalidateStorageQueries(queryClient);
+    },
+  });
+}
+
+export function useOssStorageOverview(backendId?: number, enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'storage', 'oss', 'overview', backendId],
+    queryFn: async () =>
+      await adminHttp.get<GetOssStorageOverviewApiResponse>(
+        '/admin/storage/oss/overview',
+        { params: { backendId } },
+      ),
+    enabled: authed && enabled && Boolean(backendId),
+  });
+}
+
+export function useOssStorageBuckets(backendId?: number, enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'storage', 'oss', 'buckets', backendId],
+    queryFn: async () =>
+      await adminHttp.get<GetOssStorageBucketsApiResponse>(
+        '/admin/storage/oss/buckets',
+        { params: { backendId } },
+      ),
+    enabled: authed && enabled && Boolean(backendId),
   });
 }
 

@@ -20,6 +20,8 @@ import {
   MdBlock,
   MdCloudUpload,
   MdSecurity,
+  MdSettings,
+  MdCloud,
 } from 'react-icons/md';
 import { HiOutlineCloud } from 'react-icons/hi';
 import AdminGuard from './AdminGuard';
@@ -43,6 +45,8 @@ const menuItems = [
   { key: '/admin/forbidden-words', label: '违禁词', icon: <MdBlock /> },
   { key: '/admin/audit-logs', label: '操作审计', icon: <MdFactCheck /> },
   { key: '/admin/storage', label: '存储分析', icon: <MdStorage /> },
+  { key: '/admin/storage-backends', label: '存储配置', icon: <MdSettings /> },
+  { key: '/admin/storage-oss', label: 'OSS 管理', icon: <MdCloud /> },
   { key: '/admin/backup', label: '数据备份', icon: <MdBackup /> },
   { key: '/admin/login-logs', label: '登录日志', icon: <MdHistory /> },
 ];
