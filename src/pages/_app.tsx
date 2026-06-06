@@ -2,6 +2,7 @@ import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { PRODUCT_NAME } from '@/config/brand';
+import { useSiteContent } from '@/network/hooks/siteContent';
 import { FileDataProvider } from '@/contexts/FileDataContext';
 import { UploadQueueProvider } from '@/contexts/UploadQueueContext';
 import { DownloadQueueProvider } from '@/contexts/DownloadQueueContext';
@@ -16,6 +17,15 @@ import { QueryProvider } from '@/providers/QueryProvider';
 import { useGetMySettings } from '@/network/hooks/user';
 import { applyThemeSetting } from '@/utils/theme';
 import { buildAntTheme } from '@/utils/antTheme';
+
+function DocumentTitle() {
+  const { data } = useSiteContent();
+  return (
+    <Head>
+      <title>{data?.product_name ?? PRODUCT_NAME}</title>
+    </Head>
+  );
+}
 
 function UserPreferenceBridge({ enabled }: { enabled: boolean }) {
   const { data } = useGetMySettings();
@@ -120,9 +130,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <QueryProvider>
-      <Head>
-        <title>{PRODUCT_NAME}</title>
-      </Head>
+      <DocumentTitle />
       <LocaleProvider enabled={localeEnabled}>
         <AppShell
           Component={Component}

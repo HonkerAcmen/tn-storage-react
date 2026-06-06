@@ -14,21 +14,30 @@ type BrandTitleProps = {
   /** 是否作为首页链接 */
   asLink?: boolean;
   className?: string;
+  mainText?: string;
+  accentText?: string;
+  ariaLabel?: string;
 };
 
 /**
  * 工作台品牌标题 — 本地展示字体 + 青紫渐变光效
  */
-export default function BrandTitle({ asLink = false, className = '' }: BrandTitleProps) {
+export default function BrandTitle({
+  asLink = false,
+  className = '',
+  mainText = '伏羲文化',
+  accentText = '数据云盘',
+  ariaLabel = PRODUCT_NAME,
+}: BrandTitleProps) {
   const content = (
     <span
       className={`brand-logo ${brandFont.className} ${className}`.trim()}
-      aria-label={PRODUCT_NAME}
+      aria-label={ariaLabel}
     >
       <span className="brand-logo__bar" aria-hidden />
       <span className="brand-logo__text">
-        <span className="brand-logo__main">伏羲文化</span>
-        <span className="brand-logo__accent">数据云盘</span>
+        <span className="brand-logo__main">{mainText}</span>
+        <span className="brand-logo__accent">{accentText}</span>
       </span>
     </span>
   );

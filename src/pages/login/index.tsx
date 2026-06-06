@@ -345,7 +345,12 @@ export default function Login() {
           >
             <Checkbox>
               我已阅读并同意
-              <a className="text-[#5542f6] hover:text-[#4532e6]" href="#">
+              <a
+                className="text-[#5542f6] hover:text-[#4532e6]"
+                href="/legal/agreement"
+                target="_blank"
+                rel="noreferrer"
+              >
                 {' '}
                 用户协议
               </a>

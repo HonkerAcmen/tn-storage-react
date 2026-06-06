@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { useSiteContent } from '@/network/hooks/siteContent';
+import { DEFAULT_SITE_CONTENT } from '@/config/siteContentDefaults';
 import {
   AiFillCloud,
   AiFillFolder,
@@ -36,6 +38,9 @@ const quickHighlights = [
 ] as const;
 
 export default function VisitorPanel() {
+  const { data: siteContentRes } = useSiteContent();
+  const site = siteContentRes ?? DEFAULT_SITE_CONTENT;
+
   return (
     <div className="bg-white">
       <section className="visitor-hero relative overflow-hidden px-6 pt-10 pb-16 md:px-10">
@@ -192,13 +197,18 @@ export default function VisitorPanel() {
         <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.15fr_0.8fr_0.8fr_0.9fr]">
           <div>
             <p className="text-sm font-medium tracking-[0.24em] text-white/45 uppercase">
-              伏羲文化数据云盘
+              {site.product_name}
             </p>
-            <h4 className="mt-4 text-3xl font-semibold">访客入口</h4>
+            <h4 className="mt-4 text-3xl font-semibold">{site.footer.title}</h4>
             <p className="mt-4 max-w-xl text-sm leading-7 text-white/68">
-              这里是独立的访客页面。你可以先了解系统界面、存储能力和产品结构，真正需要上传、
-              收藏、最近记录和个人空间时，再进入登录或注册流程。
+              {site.footer.description}
             </p>
+            {site.enterprise.name ? (
+              <p className="mt-4 text-sm text-white/60">
+                {site.enterprise.name}
+                {site.enterprise.address ? ` · ${site.enterprise.address}` : ''}
+              </p>
+            ) : null}
             <div className="mt-6 flex flex-wrap gap-3 text-xs text-white/55">
               <span className="rounded-full border border-white/10 px-3 py-1">
                 Visitor Preview
@@ -215,21 +225,15 @@ export default function VisitorPanel() {
           <div>
             <p className="text-sm font-medium text-white/45">快速入口</p>
             <div className="mt-4 flex flex-col gap-3 text-sm text-white/82">
-              <Link
-                href="/login?tab=login"
-                className="transition hover:text-white"
-              >
-                登录账户
-              </Link>
-              <Link
-                href="/login?tab=register"
-                className="transition hover:text-white"
-              >
-                注册账户
-              </Link>
-              <Link href="/visitor" className="transition hover:text-white">
-                访客首页
-              </Link>
+              {site.footer.links.map((item) => (
+                <Link
+                  key={`${item.label}-${item.href}`}
+                  href={item.href}
+                  className="transition hover:text-white"
+                >
+                  {item.label}
+                </Link>
+              ))}
             </div>
           </div>
 
@@ -253,10 +257,26 @@ export default function VisitorPanel() {
         </div>
 
         <div className="mx-auto mt-10 flex max-w-6xl flex-col gap-3 border-t border-white/10 pt-6 text-sm text-white/45 md:flex-row md:items-center md:justify-between">
-          <p>© 2026 伏羲文化数据云盘. All rights reserved.</p>
-          <p>
-            Cloud workspace for storage, organization and account-based access.
-          </p>
+          <div className="flex flex-col gap-2">
+            <p>{site.footer.copyright}</p>
+            {site.icp.number ? (
+              <p>
+                {site.icp.link ? (
+                  <a
+                    href={site.icp.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="transition hover:text-white/70"
+                  >
+                    {site.icp.number}
+                  </a>
+                ) : (
+                  site.icp.number
+                )}
+              </p>
+            ) : null}
+          </div>
+          <p>{site.footer.tagline}</p>
         </div>
       </footer>
 
