@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, Card, Input, Popconfirm, Select, Space, Table } from 'antd';
+import type { TableRowSelection } from 'antd/es/table/interface';
 import { MdDelete, MdDownload, MdVisibility } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
@@ -9,9 +10,11 @@ import { useAdminFeedback } from '@/hooks/useAdminFeedback';
 import {
   downloadAdminFile,
   previewAdminFile,
+  useAdminBatchDeleteFiles,
   useAdminDeleteFile,
   useAdminFiles,
 } from '@/network/hooks/admin';
+import { AdminFileItem } from '@/network/types/Response/admin';
 import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { formatDateTime, formatFileSize } from '@/utils/format/formatters';
 
@@ -21,10 +24,12 @@ export default function AdminFilesPage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'file' | 'folder' | undefined>();
   const [userIdFilter, setUserIdFilter] = useState<number | undefined>();
+  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const limit = 15;
   const feedback = useAdminFeedback();
   const canWrite = useAdminCanWrite();
   const deleteFile = useAdminDeleteFile();
+  const batchDelete = useAdminBatchDeleteFiles();
 
   const { data, isLoading, isError, refetch } = useAdminFiles({
     page,
@@ -37,6 +42,34 @@ export default function AdminFilesPage() {
   const result = data?.data?.data;
   const items = result?.items ?? [];
   const total = result?.pagination.total ?? 0;
+
+  const rowSelection: TableRowSelection<AdminFileItem> | undefined = canWrite
+    ? {
+        selectedRowKeys,
+        onChange: (keys) => setSelectedRowKeys(keys as number[]),
+      }
+    : undefined;
+
+  const handleBatchDelete = async (mode: 'trash' | 'purge') => {
+    if (selectedRowKeys.length === 0) {
+      return;
+    }
+    try {
+      const res = await batchDelete.mutateAsync({
+        ids: selectedRowKeys,
+        mode,
+      });
+      const succeeded = res.data.data.succeeded;
+      feedback.success(
+        mode === 'trash'
+          ? `已将 ${succeeded} 项移入回收站`
+          : `已永久删除 ${succeeded} 项`,
+      );
+      setSelectedRowKeys([]);
+    } catch (err) {
+      feedback.error(err, '批量操作失败');
+    }
+  };
 
   return (
     <AdminLayout title="全局文件">
@@ -79,16 +112,37 @@ export default function AdminFilesPage() {
               { value: 'folder', label: '文件夹' },
             ]}
           />
+          {canWrite && selectedRowKeys.length > 0 ? (
+            <Space>
+              <Popconfirm
+                title={`将选中的 ${selectedRowKeys.length} 项移入回收站？`}
+                onConfirm={() => handleBatchDelete('trash')}
+              >
+                <Button danger loading={batchDelete.isPending}>
+                  批量移入回收站
+                </Button>
+              </Popconfirm>
+              <Popconfirm
+                title={`永久删除选中的 ${selectedRowKeys.length} 项？此操作不可恢复`}
+                onConfirm={() => handleBatchDelete('purge')}
+              >
+                <Button danger loading={batchDelete.isPending}>
+                  批量永久删除
+                </Button>
+              </Popconfirm>
+            </Space>
+          ) : null}
         </Space>
         <AdminQueryAlert
           isError={isError}
           message="无法加载文件列表，请确认后端服务正常"
           onRetry={() => refetch()}
         />
-        <Table
+        <Table<AdminFileItem>
           rowKey="id"
           loading={isLoading}
           dataSource={items}
+          rowSelection={rowSelection}
           scroll={{ x: 1200 }}
           pagination={{
             current: page,

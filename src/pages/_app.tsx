@@ -2,6 +2,7 @@ import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import { FileDataProvider } from '@/contexts/FileDataContext';
 import { UploadQueueProvider } from '@/contexts/UploadQueueContext';
+import { DownloadQueueProvider } from '@/contexts/DownloadQueueContext';
 import UploadProgressPanel from '@/components/Upload/UploadProgressPanel';
 import { LocaleProvider, useLocale } from '@/contexts/LocaleContext';
 import { useResolvedTheme } from '@/hooks/useResolvedTheme';
@@ -59,7 +60,9 @@ function AppShell({
           page
         ) : (
           <UploadQueueProvider>
-            <FileDataProvider>{page}</FileDataProvider>
+            <DownloadQueueProvider>
+              <FileDataProvider>{page}</FileDataProvider>
+            </DownloadQueueProvider>
           </UploadQueueProvider>
         )}
       </AntApp>

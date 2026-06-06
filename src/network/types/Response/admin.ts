@@ -184,6 +184,45 @@ export type GetAdminFilesApiResponse = BaseResponse<
 export type GetAdminTrashApiResponse = BaseResponse<
   AdminPaginatedResponse<AdminTrashItem>
 >;
+
+export interface AdminUploadTaskItem {
+  taskId: string;
+  userId: number;
+  username: string;
+  filename: string;
+  mimetype: string;
+  size: number;
+  parentId: string;
+  totalChunks: number;
+  receivedChunkIndexes: number[];
+  progress: number;
+  resumable: boolean;
+  status: string;
+  lastActivityAt: string;
+}
+
+export interface AdminUploadTasksResponse {
+  total: number;
+  items: AdminUploadTaskItem[];
+}
+
+export type GetAdminUploadTasksApiResponse = BaseResponse<AdminUploadTasksResponse>;
+
+export interface AdminBatchCancelUploadResponse {
+  total: number;
+  cancelled: number;
+  results: Array<{
+    taskId: string;
+    status: string;
+    cancelled: boolean;
+  }>;
+}
+
+export interface AdminBatchFileDeleteResponse {
+  total: number;
+  succeeded: number;
+  results: Array<{ id: number; ok: boolean; reason?: string }>;
+}
 export type GetAdminSharesApiResponse = BaseResponse<
   AdminPaginatedResponse<AdminShareItem>
 >;

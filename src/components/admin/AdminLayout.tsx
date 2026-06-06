@@ -18,6 +18,7 @@ import {
   MdBuild,
   MdFactCheck,
   MdBlock,
+  MdCloudUpload,
 } from 'react-icons/md';
 import { HiOutlineCloud } from 'react-icons/hi';
 import AdminGuard from './AdminGuard';
@@ -33,6 +34,7 @@ const menuItems = [
   { key: '/admin/staff', label: '管理员账号', icon: <MdAdminPanelSettings /> },
   { key: '/admin/users', label: '云盘用户', icon: <MdPeople /> },
   { key: '/admin/files', label: '全局文件', icon: <MdFolder /> },
+  { key: '/admin/uploads', label: '上传监控', icon: <MdCloudUpload /> },
   { key: '/admin/trash', label: '回收站', icon: <MdDeleteOutline /> },
   { key: '/admin/shares', label: '分享链接', icon: <MdLink /> },
   { key: '/admin/ops', label: '运维中心', icon: <MdBuild /> },

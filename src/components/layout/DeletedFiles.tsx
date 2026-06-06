@@ -9,7 +9,9 @@ import {
 } from 'react-icons/ai';
 
 import FileListItem from '@/components/FileListItem';
-import { useDeletedFiles } from '@/features/files/hooks';
+import FileBatchToolbar from '@/components/FilesHandle/FileBatchToolbar';
+import { useDeletedFiles, useBatchFileActions } from '@/features/files/hooks';
+import { useFileSelection } from '@/hooks/useFileSelection';
 import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
@@ -59,6 +61,42 @@ export default function DeletedFiles() {
         new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime()
     );
   }, [deletedFiles]);
+
+  const selection = useFileSelection(sortedDeletedFiles);
+  const {
+    modalContextHolder: batchModalHolder,
+    confirmBatchDeleteTrash,
+  } = useBatchFileActions();
+
+  const handleBatchRestore = () => {
+    const items = selection.selectedItems;
+    if (items.length === 0) {
+      return;
+    }
+    modal.confirm({
+      title: '批量恢复',
+      content: `确定恢复选中的 ${items.length} 项吗？`,
+      okText: '恢复',
+      cancelText: '取消',
+      onOk: async () => {
+        let ok = 0;
+        for (const item of items) {
+          try {
+            await restoreFn(item.UUID, item.type);
+            ok += 1;
+          } catch {
+            // 单条失败继续
+          }
+        }
+        selection.clearSelection();
+        if (ok > 0) {
+          messageApi.success(`已恢复 ${ok} 项`);
+        } else {
+          messageApi.error('恢复失败');
+        }
+      },
+    });
+  };
 
   // 处理文件更新
   const handleFileUpdate = async (
@@ -190,6 +228,7 @@ export default function DeletedFiles() {
     <div className="ml-4 min-w-0 overflow-x-hidden">
       {messageContextHolder}
       {modalContextHolder}
+      {batchModalHolder}
       <div className="mt-4 mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-semibold text-[#2e2c34]">已删除文件</h1>
@@ -222,7 +261,21 @@ export default function DeletedFiles() {
           className="py-12"
         />
       ) : (
-        <ul className="mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
+        <>
+          <FileBatchToolbar
+            selectedCount={selection.selectedCount}
+            totalCount={sortedDeletedFiles.length}
+            onSelectAll={selection.selectAll}
+            onClear={selection.clearSelection}
+            onRestore={handleBatchRestore}
+            onPermanentDelete={() =>
+              confirmBatchDeleteTrash(
+                selection.selectedItems,
+                selection.clearSelection,
+              )
+            }
+          />
+          <ul className="mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
           {sortedDeletedFiles.map((deletedItem, index) => {
             const item = deletedItem;
             // 使用组合 key 确保唯一性：文件 ID + 删除时间戳 + 索引
@@ -231,6 +284,9 @@ export default function DeletedFiles() {
               <FileListItem
                 key={uniqueKey}
                 file={item}
+                selectable
+                selected={selection.isSelected(item.id)}
+                onToggleSelect={() => selection.toggleItem(item.id)}
                 menuItems={getFileMenuItems(item)}
                 showSize
                 showType
@@ -263,7 +319,8 @@ export default function DeletedFiles() {
               />
             );
           })}
-        </ul>
+          </ul>
+        </>
       )}
 
       {/* 文件详情模态框 */}

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { Empty, Button, message, Dropdown, Modal } from 'antd';
+import { Empty, Button, message, Dropdown, Modal, Checkbox } from 'antd';
 import { getApiErrorMessage } from '@/utils/apiError';
 import type { MenuProps } from 'antd';
 
@@ -20,8 +20,14 @@ import {
 } from '@/utils/fileSystem/fileSystemUtils';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import FileListItem from '@/components/FileListItem';
+import FileBatchToolbar from '@/components/FilesHandle/FileBatchToolbar';
 
-import { useFileActions, useFileMenu } from '@/features/files/hooks';
+import {
+  useFileActions,
+  useFileMenu,
+  useBatchFileActions,
+} from '@/features/files/hooks';
+import { useFileSelection } from '@/hooks/useFileSelection';
 import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 import {
@@ -179,6 +185,17 @@ export default function AllFiles() {
     }
   }, [currentFiles, MenuItemName.key]);
 
+  const selection = useFileSelection(sortedFiles);
+  const {
+    modalContextHolder: batchModalHolder,
+    confirmBatchMoveToTrash,
+    batchDownload,
+  } = useBatchFileActions();
+
+  useEffect(() => {
+    selection.clearSelection();
+  }, [currentFolderId]);
+
   // 处理文件更新
   const handleFileUpdate = async (
     fileId: string,
@@ -282,6 +299,7 @@ export default function AllFiles() {
   return (
     <>
       {contextHolder}
+      {batchModalHolder}
       <div
         className="relative ml-4 min-h-0 min-w-0 overflow-x-hidden pb-8"
         onContextMenu={handleContextMenu}
@@ -375,6 +393,20 @@ export default function AllFiles() {
           />
         )}
 
+        <FileBatchToolbar
+          selectedCount={selection.selectedCount}
+          totalCount={sortedFiles.length}
+          onSelectAll={selection.selectAll}
+          onClear={selection.clearSelection}
+          onDelete={() =>
+            confirmBatchMoveToTrash(
+              selection.selectedItems,
+              selection.clearSelection,
+            )
+          }
+          onDownload={() => batchDownload(selection.selectedItems)}
+        />
+
         {/* 内容区域 */}
         {seleRadioItem === 0 ? (
           // 列表模式
@@ -398,6 +430,9 @@ export default function AllFiles() {
                   <FileListItem
                     key={item.id}
                     file={convertedItem}
+                    selectable
+                    selected={selection.isSelected(item.id)}
+                    onToggleSelect={() => selection.toggleItem(item.id)}
                     menuItems={getFileMenuItems(convertedItem, {
                       onDetailsOpen: () => {
                         setSelectedFile(item);
@@ -462,7 +497,11 @@ export default function AllFiles() {
             {sortedFiles.map((item) => (
               <li
                 key={item.id}
-                className="group relative flex min-h-[132px] min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl border border-transparent p-3 transition-all duration-200 hover:border-gray-200 hover:bg-gray-100"
+                className={`group relative flex min-h-[132px] min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl border p-3 transition-all duration-200 hover:border-gray-200 hover:bg-gray-100 ${
+                  selection.isSelected(item.id)
+                    ? 'border-blue-300 bg-blue-50/40'
+                    : 'border-transparent'
+                }`}
                 onClick={() => {
                   if (item.type === 'folder') {
                     handleFolderClick(item.id);
@@ -471,6 +510,12 @@ export default function AllFiles() {
                   }
                 }}
               >
+                <Checkbox
+                  checked={selection.isSelected(item.id)}
+                  className="absolute top-2 left-2 z-10"
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={() => selection.toggleItem(item.id)}
+                />
                 <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col items-center overflow-hidden">
                   {item.type === 'folder' ? (
                     <AiFillFolder

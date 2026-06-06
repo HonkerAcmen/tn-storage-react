@@ -1,12 +1,19 @@
 import { useState } from 'react';
 import { Button, Card, Input, Popconfirm, Space, Table } from 'antd';
+import type { TableRowSelection } from 'antd/es/table/interface';
 import { MdDelete, MdRestore } from 'react-icons/md';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { AdminUserSelect } from '@/components/admin/AdminUserSelect';
 import { adminCardProps } from '@/components/admin/AdminPanel';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
-import { useAdminPurgeTrash, useAdminRestoreTrash, useAdminTrash } from '@/network/hooks/admin';
+import {
+  useAdminBatchPurgeTrash,
+  useAdminPurgeTrash,
+  useAdminRestoreTrash,
+  useAdminTrash,
+} from '@/network/hooks/admin';
+import { AdminTrashItem } from '@/network/types/Response/admin';
 import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { formatDateTime, formatFileSize } from '@/utils/format/formatters';
 
@@ -15,11 +22,13 @@ export default function AdminTrashPage() {
   const [keyword, setKeyword] = useState('');
   const [search, setSearch] = useState('');
   const [userIdFilter, setUserIdFilter] = useState<number | undefined>();
+  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const limit = 15;
   const feedback = useAdminFeedback();
   const canWrite = useAdminCanWrite();
   const purgeTrash = useAdminPurgeTrash();
   const restoreTrash = useAdminRestoreTrash();
+  const batchPurge = useAdminBatchPurgeTrash();
 
   const { data, isLoading, isError, refetch } = useAdminTrash({
     page,
@@ -31,6 +40,27 @@ export default function AdminTrashPage() {
   const result = data?.data?.data;
   const items = result?.items ?? [];
   const total = result?.pagination.total ?? 0;
+
+  const rowSelection: TableRowSelection<AdminTrashItem> | undefined = canWrite
+    ? {
+        selectedRowKeys,
+        onChange: (keys) => setSelectedRowKeys(keys as number[]),
+      }
+    : undefined;
+
+  const handleBatchPurge = async () => {
+    if (selectedRowKeys.length === 0) {
+      return;
+    }
+    try {
+      const res = await batchPurge.mutateAsync(selectedRowKeys);
+      const succeeded = res.data.data.succeeded;
+      feedback.success(`已永久删除 ${succeeded} 项`);
+      setSelectedRowKeys([]);
+    } catch (err) {
+      feedback.error(err, '批量删除失败');
+    }
+  };
 
   return (
     <AdminLayout title="回收站">
@@ -59,16 +89,27 @@ export default function AdminTrashPage() {
               setPage(1);
             }}
           />
+          {canWrite && selectedRowKeys.length > 0 ? (
+            <Popconfirm
+              title={`永久删除选中的 ${selectedRowKeys.length} 项？此操作不可恢复`}
+              onConfirm={handleBatchPurge}
+            >
+              <Button danger loading={batchPurge.isPending}>
+                批量永久删除
+              </Button>
+            </Popconfirm>
+          ) : null}
         </Space>
         <AdminQueryAlert
           isError={isError}
           message="无法加载回收站列表"
           onRetry={() => refetch()}
         />
-        <Table
+        <Table<AdminTrashItem>
           rowKey="id"
           loading={isLoading}
           dataSource={items}
+          rowSelection={rowSelection}
           scroll={{ x: 1000 }}
           pagination={{
             current: page,

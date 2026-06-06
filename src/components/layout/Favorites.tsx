@@ -3,11 +3,14 @@ import { Empty, Button, message } from 'antd';
 import { AiFillStar } from 'react-icons/ai';
 
 import FileListItem from '@/components/FileListItem';
+import FileBatchToolbar from '@/components/FilesHandle/FileBatchToolbar';
 import {
   useFileActions,
   useFileMenu,
   useFavorites,
+  useBatchFileActions,
 } from '@/features/files/hooks';
+import { useFileSelection } from '@/hooks/useFileSelection';
 import { formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
@@ -36,6 +39,13 @@ export default function Favorites() {
     return allFiles.filter((file) => favoriteIds.includes(file.UUID));
   }, [allFiles, favoriteIds]);
 
+  const selection = useFileSelection(favoriteFiles);
+  const {
+    modalContextHolder: batchModalHolder,
+    confirmBatchMoveToTrash,
+    batchDownload,
+  } = useBatchFileActions();
+
   // 处理文件更新
   const handleFileUpdate = async (
     fileId: string,
@@ -61,6 +71,7 @@ export default function Favorites() {
 
   return (
     <div className="ml-4 min-w-0 overflow-x-hidden">
+      {batchModalHolder}
       <div className="mt-4 mb-6">
         <h1 className="text-3xl font-semibold text-[#2e2c34]">收藏</h1>
         <p className="mt-2 text-sm text-gray-500">
@@ -81,11 +92,28 @@ export default function Favorites() {
           className="py-12"
         />
       ) : (
-        <ul className="mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
+        <>
+          <FileBatchToolbar
+            selectedCount={selection.selectedCount}
+            totalCount={favoriteFiles.length}
+            onSelectAll={selection.selectAll}
+            onClear={selection.clearSelection}
+            onDelete={() =>
+              confirmBatchMoveToTrash(
+                selection.selectedItems,
+                selection.clearSelection,
+              )
+            }
+            onDownload={() => batchDownload(selection.selectedItems)}
+          />
+          <ul className="mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
           {favoriteFiles.map((item) => (
             <FileListItem
               key={item.id}
               file={item}
+              selectable
+              selected={selection.isSelected(item.id)}
+              onToggleSelect={() => selection.toggleItem(item.id)}
               menuItems={getFileMenuItems(item, {
                 onDetailsOpen: (file: FileSystemTreeNode) => {
                   setSelectedFile(file);
@@ -117,7 +145,8 @@ export default function Favorites() {
               }}
             />
           ))}
-        </ul>
+          </ul>
+        </>
       )}
 
       {/* 文件详情模态框 */}

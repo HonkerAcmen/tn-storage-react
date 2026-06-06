@@ -1,12 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Empty, Tabs, Tag } from 'antd';
 import type { TabsProps } from 'antd';
 import { AiOutlineClockCircle } from 'react-icons/ai';
 import FileListItem from '@/components/FileListItem';
+import FileBatchToolbar from '@/components/FilesHandle/FileBatchToolbar';
 import { formatRelativeTime, formatDate } from '@/utils/format/formatters';
 import { useFileData } from '@/contexts/FileDataContext';
 import { useGetRecents } from '@/network/hooks/file';
+import { useBatchFileActions } from '@/features/files/hooks';
+import { useFileSelection } from '@/hooks/useFileSelection';
+import { FileSystemTreeNode } from '@/network/types/Response/file';
 
 function SectionEmptyState() {
   return (
@@ -86,6 +90,76 @@ export default function RecentFiles() {
       .slice(0, 20);
   }, [fileByUUID, recentsData]);
 
+  const currentTabFiles = useMemo(() => {
+    const source =
+      activeTab === 'recent'
+        ? recentlyAccessed
+        : activeTab === 'created'
+          ? recentlyCreated
+          : recentlyModified;
+    return source.map((entry) => entry.file);
+  }, [activeTab, recentlyAccessed, recentlyCreated, recentlyModified]);
+
+  const selection = useFileSelection(currentTabFiles);
+  const {
+    modalContextHolder: batchModalHolder,
+    confirmBatchMoveToTrash,
+    batchDownload,
+  } = useBatchFileActions();
+
+  useEffect(() => {
+    selection.clearSelection();
+  }, [activeTab]);
+
+  const renderFileList = (
+    items: Array<{ file: FileSystemTreeNode; time: string | null }>,
+    timeLabel: (item: FileSystemTreeNode, time: string | null) => React.ReactNode,
+    extraActions?: (item: FileSystemTreeNode) => React.ReactNode,
+  ) => {
+    if (items.length === 0) {
+      return <SectionEmptyState />;
+    }
+    return (
+      <>
+        <FileBatchToolbar
+          selectedCount={selection.selectedCount}
+          totalCount={items.length}
+          onSelectAll={selection.selectAll}
+          onClear={selection.clearSelection}
+          onDelete={() =>
+            confirmBatchMoveToTrash(
+              selection.selectedItems,
+              selection.clearSelection,
+            )
+          }
+          onDownload={() => batchDownload(selection.selectedItems)}
+        />
+        <ul className="mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
+          {items.map(({ file: item, time }) => (
+            <FileListItem
+              key={item.id}
+              file={item}
+              selectable
+              selected={selection.isSelected(item.id)}
+              onToggleSelect={() => selection.toggleItem(item.id)}
+              showSize
+              showTime
+              timeValue={timeLabel(item, time)}
+              actions={extraActions?.(item)}
+              onClick={() => {
+                if (item.type === 'folder') {
+                  handleFolderClick(item.id);
+                } else {
+                  openPreviewDialog(item);
+                }
+              }}
+            />
+          ))}
+        </ul>
+      </>
+    );
+  };
+
   const tabItems: TabsProps['items'] = [
     {
       key: 'recent',
@@ -95,29 +169,10 @@ export default function RecentFiles() {
           <span>最近访问</span>
         </span>
       ),
-      children: (
-        recentlyAccessed.length === 0 ? (
-          <SectionEmptyState />
-        ) : (
-          <ul className="mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
-            {recentlyAccessed.map(({ file: item, time }) => (
-              <FileListItem
-                key={item.id}
-                file={item}
-                showSize
-                showTime
-                timeValue={`${formatRelativeTime(new Date(time || item.updatedAt))} • 访问于 ${formatDate(new Date(time || item.updatedAt))}`}
-                onClick={() => {
-                  if (item.type === 'folder') {
-                    handleFolderClick(item.id);
-                  } else {
-                    openPreviewDialog(item);
-                  }
-                }}
-              />
-            ))}
-          </ul>
-        )
+      children: renderFileList(
+        recentlyAccessed,
+        (item, time) =>
+          `${formatRelativeTime(new Date(time || item.updatedAt))} • 访问于 ${formatDate(new Date(time || item.updatedAt))}`,
       ),
     },
     {
@@ -128,36 +183,16 @@ export default function RecentFiles() {
           <span>最近上传</span>
         </span>
       ),
-      children: (
-        recentlyCreated.length === 0 ? (
-          <SectionEmptyState />
-        ) : (
-          <ul className="mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
-            {recentlyCreated.map(({ file: item, time }) => (
-              <FileListItem
-                key={item.id}
-                file={item}
-                showSize
-                showTime
-                timeValue={`${formatRelativeTime(new Date(time || item.createdAt))} • 上传于 ${formatDate(new Date(time || item.createdAt))}`}
-                actions={
-                  item.type === 'file' && (
-                    <Tag color="green" className="mr-2">
-                      新上传
-                    </Tag>
-                  )
-                }
-                onClick={() => {
-                  if (item.type === 'folder') {
-                    handleFolderClick(item.id);
-                  } else {
-                    openPreviewDialog(item);
-                  }
-                }}
-              />
-            ))}
-          </ul>
-        )
+      children: renderFileList(
+        recentlyCreated,
+        (item, time) =>
+          `${formatRelativeTime(new Date(time || item.createdAt))} • 上传于 ${formatDate(new Date(time || item.createdAt))}`,
+        (item) =>
+          item.type === 'file' ? (
+            <Tag color="green" className="mr-2">
+              新上传
+            </Tag>
+          ) : undefined,
       ),
     },
     {
@@ -168,42 +203,23 @@ export default function RecentFiles() {
           <span>最近修改</span>
         </span>
       ),
-      children: (
-        recentlyModified.length === 0 ? (
-          <SectionEmptyState />
-        ) : (
-          <ul className="mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
-            {recentlyModified.map(({ file: item, time }) => (
-              <FileListItem
-                key={item.id}
-                file={item}
-                showSize
-                showTime
-                timeValue={`${formatRelativeTime(new Date(time || item.updatedAt))} • 修改于 ${formatDate(new Date(time || item.updatedAt))}`}
-                actions={
-                  item.type === 'file' && (
-                    <Tag color="orange" className="mr-2">
-                      已修改
-                    </Tag>
-                  )
-                }
-                onClick={() => {
-                  if (item.type === 'folder') {
-                    handleFolderClick(item.id);
-                  } else {
-                    openPreviewDialog(item);
-                  }
-                }}
-              />
-            ))}
-          </ul>
-        )
+      children: renderFileList(
+        recentlyModified,
+        (item, time) =>
+          `${formatRelativeTime(new Date(time || item.updatedAt))} • 修改于 ${formatDate(new Date(time || item.updatedAt))}`,
+        (item) =>
+          item.type === 'file' ? (
+            <Tag color="orange" className="mr-2">
+              已修改
+            </Tag>
+          ) : undefined,
       ),
     },
   ];
 
   return (
     <div className="ml-4 min-w-0 overflow-x-hidden">
+      {batchModalHolder}
       <div className="mt-4 mb-6">
         <h1 className="text-3xl font-semibold text-[#2e2c34]">最近的</h1>
         <p className="mt-2 text-sm text-gray-500">

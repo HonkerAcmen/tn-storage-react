@@ -1,4 +1,4 @@
-import { Typography, Tag, Button, Dropdown } from 'antd';
+import { Typography, Tag, Button, Dropdown, Checkbox } from 'antd';
 import type { MenuProps } from 'antd';
 import { AiFillFolder, AiOutlineEllipsis } from 'react-icons/ai';
 import { getFileIcon, ICON_SIZE_MEDIUM } from './FilesHandle/FileIcon';
@@ -17,6 +17,9 @@ interface FileListItemProps {
   timeLabel?: string;
   timeValue?: React.ReactNode;
   onClick?: () => void;
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 /**
@@ -32,6 +35,9 @@ export default function FileListItem({
   timeLabel,
   timeValue,
   onClick,
+  selectable = false,
+  selected = false,
+  onToggleSelect,
 }: FileListItemProps) {
   const ext = file.filename
     .split('.')
@@ -40,9 +46,18 @@ export default function FileListItem({
 
   return (
     <li
-      className="mb-2 flex min-w-0 items-center gap-3 overflow-hidden rounded-lg border border-gray-100 px-4 py-3 transition hover:bg-gray-50"
+      className={`mb-2 flex min-w-0 items-center gap-3 overflow-hidden rounded-lg border px-4 py-3 transition hover:bg-gray-50 ${
+        selected ? 'border-blue-300 bg-blue-50/40' : 'border-gray-100'
+      }`}
       onClick={onClick}
     >
+      {selectable ? (
+        <Checkbox
+          checked={selected}
+          onClick={(event) => event.stopPropagation()}
+          onChange={() => onToggleSelect?.()}
+        />
+      ) : null}
       <div className="shrink-0">
         {file.type === 'folder' ? (
           <AiFillFolder className={`${ICON_SIZE_MEDIUM} text-amber-400`} />

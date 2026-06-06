@@ -40,21 +40,30 @@ export async function copyShareLinkForFile(
 
 export async function fetchFileBlob(
   file: FileSystemTreeNode,
+  onProgress?: (progress: number) => void,
+  signal?: AbortSignal,
 ): Promise<{ blob: Blob; filename: string; mimetype: string }> {
   const manifestRes = await http.get<GetFileChunkManifestApiResponse>(
     `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunks`,
+    { signal },
   );
   const manifest = manifestRes.data.data;
   const chunkBuffers: BlobPart[] = [];
+  const totalChunks = Math.max(1, manifest.totalChunks);
 
-  for (let chunkIndex = 1; chunkIndex <= manifest.totalChunks; chunkIndex++) {
+  for (let chunkIndex = 1; chunkIndex <= totalChunks; chunkIndex++) {
+    if (signal?.aborted) {
+      throw new DOMException('下载已取消', 'AbortError');
+    }
     const chunkRes = await http.get<Blob>(
       `${getFilePath}/${DEFAULT_BUCKET}/${file.UUID}/chunk/${chunkIndex}`,
       {
         responseType: 'blob',
+        signal,
       },
     );
     chunkBuffers.push(chunkRes.data);
+    onProgress?.(Math.round((chunkIndex / totalChunks) * 100));
   }
 
   return {

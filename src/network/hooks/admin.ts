@@ -18,6 +18,9 @@ import {
   RestoreAdminBackupApiResponse,
   GetAdminForbiddenWordsApiResponse,
   UpdateAdminForbiddenWordsApiResponse,
+  GetAdminUploadTasksApiResponse,
+  AdminBatchCancelUploadResponse,
+  AdminBatchFileDeleteResponse,
 } from '@/network/types/Response/admin';
 import { AdminUserRoleResponse } from '@/network/types/Response/user';
 import { isAdminAuthed } from '@/utils/auth/adminSession';
@@ -349,6 +352,84 @@ export async function previewAdminFile(id: number): Promise<void> {
   );
   window.open(url, '_blank', 'noopener,noreferrer');
   window.setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
+}
+
+export function useAdminUploadTasks(params?: { userId?: number }, enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'upload', 'tasks', params],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminUploadTasksApiResponse>('/admin/upload/tasks', {
+        params,
+      }),
+    enabled: authed && enabled,
+    refetchInterval: 5_000,
+  });
+}
+
+export function useAdminCancelUploadTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (taskId: string) =>
+      await adminHttp.delete(`/admin/upload/${taskId}`),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'upload', 'tasks'],
+      });
+    },
+  });
+}
+
+export function useAdminBatchCancelUploadTasks() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (taskIds: string[]) =>
+      await adminHttp.post<{ data: AdminBatchCancelUploadResponse }>(
+        '/admin/upload/cancel-batch',
+        { taskIds },
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'upload', 'tasks'],
+      });
+    },
+  });
+}
+
+export function useAdminBatchDeleteFiles() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      ids,
+      mode,
+    }: {
+      ids: number[];
+      mode: 'trash' | 'purge';
+    }) =>
+      await adminHttp.post<{ data: AdminBatchFileDeleteResponse }>(
+        '/admin/files/batch-delete',
+        { ids, mode },
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'files'] });
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'trash'] });
+    },
+  });
+}
+
+export function useAdminBatchPurgeTrash() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: number[]) =>
+      await adminHttp.post<{ data: AdminBatchFileDeleteResponse }>(
+        '/admin/trash/batch-purge',
+        { ids },
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'trash'] });
+      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'files'] });
+    },
+  });
 }
 
 export function useAdminDeleteFile() {
