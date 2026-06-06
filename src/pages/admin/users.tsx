@@ -25,6 +25,12 @@ import {
   MdHistory,
   MdStorage,
 } from 'react-icons/md';
+import PasswordStrengthBar from '@/components/auth/PasswordStrengthBar';
+import {
+  USERNAME_HINT,
+  USERNAME_MAX_LENGTH,
+  usernameFormRule,
+} from '@/utils/usernameRules';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { AdminQueryAlert } from '@/components/admin/AdminQueryAlert';
 import { adminCardProps } from '@/components/admin/AdminPanel';
@@ -133,6 +139,7 @@ export default function AdminUsersPage() {
   const loginLogLimit = 10;
   const [form] = Form.useForm<UserFormValues>();
   const [resetForm] = Form.useForm<{ password: string }>();
+  const resetPasswordValue = Form.useWatch('password', resetForm) ?? '';
   const [permForm] = Form.useForm<PermissionFormValues>();
   const [quotaForm] = Form.useForm<{ quotaGb: number }>();
 
@@ -500,10 +507,11 @@ export default function AdminUsersPage() {
         <Form form={form} layout="vertical" className="mt-4">
           <Form.Item
             name="username"
-            label="用户名"
-            rules={[{ required: true, min: 3 }]}
+            label="昵称"
+            rules={[{ required: true, message: '请输入昵称' }, usernameFormRule()]}
+            extra={<span className="text-xs text-gray-400">{USERNAME_HINT}</span>}
           >
-            <Input />
+            <Input maxLength={USERNAME_MAX_LENGTH} />
           </Form.Item>
           <Form.Item
             name="email"
@@ -559,6 +567,7 @@ export default function AdminUsersPage() {
           >
             <Input.Password />
           </Form.Item>
+          <PasswordStrengthBar password={resetPasswordValue} className="mb-2" />
         </Form>
       </Modal>
 

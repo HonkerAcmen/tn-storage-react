@@ -22,6 +22,7 @@ import { useGetShares, useRevokeShare } from '@/network/hooks/file';
 import { UpdateUserSettingsRequest } from '@/network/types/Request/user';
 import { formatFileSize } from '@/utils/format/formatters';
 import { buildSharePageUrl } from '@/utils/shareUrl';
+import PasswordStrengthBar from '@/components/auth/PasswordStrengthBar';
 
 interface SettingsProps {
   onClose: () => void;
@@ -326,6 +327,10 @@ function SecuritySettings() {
             className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
           />
         </div>
+        <PasswordStrengthBar
+          password={passwordForm.newPassword}
+          className="mt-3"
+        />
         <div className="mt-4">
           <ActionButton
             onClick={submitPassword}

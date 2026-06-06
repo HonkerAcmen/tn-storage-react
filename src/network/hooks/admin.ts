@@ -16,6 +16,8 @@ import {
   GetAdminUsersApiResponse,
   TriggerAdminBackupApiResponse,
   RestoreAdminBackupApiResponse,
+  GetAdminForbiddenWordsApiResponse,
+  UpdateAdminForbiddenWordsApiResponse,
 } from '@/network/types/Response/admin';
 import { AdminUserRoleResponse } from '@/network/types/Response/user';
 import { isAdminAuthed } from '@/utils/auth/adminSession';
@@ -481,6 +483,34 @@ export function useAdminUpdateUserQuota() {
       await queryClient.invalidateQueries({ queryKey: [...adminKey, 'users'] });
       await queryClient.invalidateQueries({
         queryKey: [...adminKey, 'users', id, 'detail'],
+      });
+    },
+  });
+}
+
+export function useAdminForbiddenWords(enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'config', 'forbidden-words'],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminForbiddenWordsApiResponse>(
+        '/admin/config/forbidden-words',
+      ),
+    enabled: authed && enabled,
+  });
+}
+
+export function useAdminUpdateForbiddenWords() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (words: string[]) =>
+      await adminHttp.put<UpdateAdminForbiddenWordsApiResponse>(
+        '/admin/config/forbidden-words',
+        { words },
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'config', 'forbidden-words'],
       });
     },
   });

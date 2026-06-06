@@ -19,6 +19,12 @@ import {
 } from '@/network/types/Request/auth';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { useRouter } from 'next/router';
+import {
+  USERNAME_HINT,
+  USERNAME_MAX_LENGTH,
+  usernameFormRule,
+} from '@/utils/usernameRules';
+import PasswordStrengthBar from '@/components/auth/PasswordStrengthBar';
 
 export default function Login() {
   const [messageApi, contextHolder] = message.useMessage();
@@ -99,6 +105,11 @@ export default function Login() {
   };
 
   const [activeTab, setActiveTab] = useState('login');
+  const [registerForm] = Form.useForm();
+  const registerPassword = Form.useWatch('password', registerForm) ?? '';
+  const [resetPasswordForm] = Form.useForm();
+  const resetNewPassword =
+    Form.useWatch('newPassword', resetPasswordForm) ?? '';
 
   useEffect(() => {
     if (!router.isReady) {
@@ -182,6 +193,7 @@ export default function Login() {
       label: '注册',
       children: (
         <Form
+          form={registerForm}
           name="register"
           onFinish={onRegisterFinish}
           autoComplete="off"
@@ -190,15 +202,15 @@ export default function Login() {
         >
           <Form.Item
             name="username"
-            rules={[
-              { required: true, message: '请输入用户名' },
-              { min: 3, message: '用户名至少3个字符' },
-              { max: 20, message: '用户名最多20个字符' },
-            ]}
+            rules={[usernameFormRule()]}
+            extra={
+              <span className="text-xs text-gray-400">{USERNAME_HINT}</span>
+            }
           >
             <Input
               prefix={<AiOutlineUser className="text-gray-400" />}
-              placeholder="用户名"
+              placeholder="昵称"
+              maxLength={USERNAME_MAX_LENGTH}
             />
           </Form.Item>
 
@@ -240,6 +252,10 @@ export default function Login() {
               placeholder="密码"
             />
           </Form.Item>
+          <PasswordStrengthBar
+            password={registerPassword}
+            className="-mt-2 mb-4"
+          />
 
           <Form.Item
             name="confirmPassword"
@@ -302,9 +318,8 @@ export default function Login() {
       label: '忘记密码',
       children: (
         <div>
-          {/* 说明文字 */}
           <div className="mt-6 mb-6 rounded-lg bg-blue-50 p-4 text-sm text-gray-600">
-            <p>请输入您的邮箱地址，我们将向您发送重置密码的链接。</p>
+            <p>请输入邮箱，我们将向您发送重置密码链接。</p>
           </div>
 
           <Form
@@ -337,17 +352,75 @@ export default function Login() {
                 发送重置链接
               </Button>
             </Form.Item>
+          </Form>
 
-            <Form.Item className="mb-0 text-center">
-              <a
-                onClick={() => setActiveTab('login')}
-                className="inline-flex cursor-pointer items-center gap-2 text-[#5542f6] hover:text-[#4532e6]"
-              >
-                <AiOutlineArrowLeft />
-                返回登录
-              </a>
+          <div className="my-6 border-t border-gray-100" />
+
+          <div className="mb-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+            <p className="font-medium text-gray-700">设置新密码</p>
+            <p className="mt-1">
+              若您已通过邮件验证，或需要在登录后修改密码，请在此设置新密码（登录后也可在「设置
+              → 安全设置」中修改）。
+            </p>
+          </div>
+
+          <Form
+            form={resetPasswordForm}
+            name="reset-password"
+            layout="vertical"
+            autoComplete="off"
+            size="large"
+            onFinish={() => {
+              messageApi.info(
+                '邮件重置链接功能即将上线；已登录用户请前往「设置 → 安全设置」修改密码'
+              );
+            }}
+          >
+            <Form.Item
+              name="newPassword"
+              label="新密码"
+              rules={[
+                { required: true, message: '请输入新密码' },
+                { min: 6, message: '密码至少6个字符' },
+              ]}
+            >
+              <Input.Password placeholder="新密码" />
+            </Form.Item>
+            <PasswordStrengthBar password={resetNewPassword} className="mb-4" />
+            <Form.Item
+              name="confirmPassword"
+              label="确认新密码"
+              dependencies={['newPassword']}
+              rules={[
+                { required: true, message: '请确认新密码' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('newPassword') === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error('两次输入的密码不一致'));
+                  },
+                }),
+              ]}
+            >
+              <Input.Password placeholder="确认新密码" />
+            </Form.Item>
+            <Form.Item className="mb-0">
+              <Button block htmlType="submit" className="h-11">
+                保存新密码
+              </Button>
             </Form.Item>
           </Form>
+
+          <div className="mt-4 text-center">
+            <a
+              onClick={() => setActiveTab('login')}
+              className="inline-flex cursor-pointer items-center gap-2 text-[#5542f6] hover:text-[#4532e6]"
+            >
+              <AiOutlineArrowLeft />
+              返回登录
+            </a>
+          </div>
         </div>
       ),
     },
@@ -360,7 +433,9 @@ export default function Login() {
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
           {/* Logo 和标题 */}
           <div className="mb-8 text-center">
-            <h1 className="mb-2 text-3xl font-bold text-gray-800">伏羲文化数据云盘</h1>
+            <h1 className="mb-2 text-3xl font-bold text-gray-800">
+              伏羲文化数据云盘
+            </h1>
             <p className="text-gray-500">欢迎使用云存储服务</p>
           </div>
 

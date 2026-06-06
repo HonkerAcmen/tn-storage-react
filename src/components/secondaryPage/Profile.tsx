@@ -22,6 +22,11 @@ import {
   AiOutlineCheck,
 } from 'react-icons/ai';
 import { formatFileSize } from '@/utils/format/formatters';
+import {
+  USERNAME_HINT,
+  USERNAME_MAX_LENGTH,
+  validateUsername,
+} from '@/utils/usernameRules';
 import { useFileData } from '@/contexts/FileDataContext';
 import { isVirtualRoot } from '@/utils/fileSystem/fileSystemUtils';
 import { useFavorites } from '@/features/files/hooks';
@@ -233,6 +238,12 @@ function OverviewTab() {
       return;
     }
 
+    const usernameError = validateUsername(normalizedForm.nickname);
+    if (usernameError) {
+      messageApi.error(usernameError);
+      return;
+    }
+
     if (!normalizedForm.email) {
       messageApi.error('邮箱不能为空');
       return;
@@ -439,12 +450,14 @@ function OverviewTab() {
                     <input
                       type="text"
                       value={editForm.nickname}
+                      maxLength={USERNAME_MAX_LENGTH}
                       onChange={(e) =>
                         setEditForm({ ...editForm, nickname: e.target.value })
                       }
                       className="w-full rounded-lg border border-white/30 bg-white/20 px-3 py-2 text-white placeholder-white/50 backdrop-blur-sm focus:border-white/50 focus:ring-2 focus:ring-white/30 focus:outline-none"
                       placeholder="请输入昵称"
                     />
+                    <p className="mt-1 text-xs text-white/70">{USERNAME_HINT}</p>
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-medium text-white/90">

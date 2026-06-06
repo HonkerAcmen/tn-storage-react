@@ -1,6 +1,7 @@
 import { Form, Input, Modal } from 'antd';
 import { useAdminChangePassword } from '@/network/hooks/adminStaff';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
+import PasswordStrengthBar from '@/components/auth/PasswordStrengthBar';
 
 export default function ChangePasswordModal({
   open,
@@ -14,6 +15,7 @@ export default function ChangePasswordModal({
     newPassword: string;
     confirmPassword: string;
   }>();
+  const newPassword = Form.useWatch('newPassword', form) ?? '';
   const changePassword = useAdminChangePassword();
   const feedback = useAdminFeedback();
 
@@ -62,6 +64,7 @@ export default function ChangePasswordModal({
         >
           <Input.Password />
         </Form.Item>
+        <PasswordStrengthBar password={newPassword} className="mb-4" />
         <Form.Item
           name="confirmPassword"
           label="确认新密码"

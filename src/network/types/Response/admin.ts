@@ -314,3 +314,14 @@ export type ClearAdminCacheApiResponse = BaseResponse<{ cleared: number }>;
 export type GetAdminAuditLogsApiResponse = BaseResponse<
   AdminPaginatedResponse<AdminAuditLogItem>
 >;
+
+export interface AdminForbiddenWordsResponse {
+  words: string[];
+  updatedAt: string;
+  configPath: string;
+}
+
+export type GetAdminForbiddenWordsApiResponse =
+  BaseResponse<AdminForbiddenWordsResponse>;
+export type UpdateAdminForbiddenWordsApiResponse =
+  BaseResponse<AdminForbiddenWordsResponse>;
