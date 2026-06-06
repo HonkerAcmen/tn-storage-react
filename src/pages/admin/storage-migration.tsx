@@ -3,10 +3,14 @@ import {
   Alert,
   Button,
   Card,
+  Checkbox,
+  Descriptions,
   Form,
   Modal,
+  Popconfirm,
   Progress,
   Select,
+  Space,
   Table,
   Tag,
 } from 'antd';
@@ -22,8 +26,14 @@ import {
   useAdminStorageBackends,
   useAdminStorageMigrations,
   useAdminStorageRetentions,
+  useCancelAdminStorageMigration,
   useCreateAdminStorageMigration,
+  useMigrateAndActivateAdminStorage,
   usePurgeAdminStorageRetention,
+  useResumeAdminStorageMigration,
+  useRetryAdminStorageMigration,
+  useReconcileMigrationChecksum,
+  useRollbackAdminStorageBackend,
 } from '@/network/hooks/admin';
 import {
   StorageBackendPublicView,
@@ -47,12 +57,14 @@ const jobStatusMap: Record<
 const modeLabels: Record<StorageMigrationJobView['mode'], string> = {
   migrate: '迁移并切换',
   backup: '仅备份',
-  sync: '同步',
+  sync: '增量同步',
 };
 
 type CreateFormValues = {
+  source_backend_id: number;
   target_backend_id: number;
-  mode: 'migrate' | 'backup';
+  mode: 'migrate' | 'backup' | 'sync';
+  auto_activate: boolean;
 };
 
 function backendLabel(
@@ -82,30 +94,41 @@ export default function AdminStorageMigrationPage() {
     refetch: refetchRetentions,
   } = useAdminStorageRetentions();
   const createMigration = useCreateAdminStorageMigration();
+  const migrateAndActivate = useMigrateAndActivateAdminStorage();
+  const cancelMigration = useCancelAdminStorageMigration();
+  const retryMigration = useRetryAdminStorageMigration();
+  const resumeMigration = useResumeAdminStorageMigration();
   const activateBackend = useActivateAdminStorageBackend();
+  const rollbackBackend = useRollbackAdminStorageBackend();
+  const reconcileChecksum = useReconcileMigrationChecksum();
   const purgeRetention = usePurgeAdminStorageRetention();
   const [createOpen, setCreateOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [reportJob, setReportJob] = useState<StorageMigrationJobView | null>(
+    null,
+  );
   const [purgeOpen, setPurgeOpen] = useState(false);
   const [purgeRetentionId, setPurgeRetentionId] = useState<number | null>(null);
   const [form] = Form.useForm<CreateFormValues>();
+  const [wizardForm] = Form.useForm<{
+    source_backend_id: number;
+    target_backend_id: number;
+  }>();
 
   const backends = backendsRes?.data?.data ?? [];
   const jobs = migrationsRes?.data?.data ?? [];
   const retentions = retentionsRes?.data?.data ?? [];
 
-  const activeSource = useMemo(
-    () => backends.find((item) => item.role === 'active'),
+  const connectedSources = useMemo(
+    () => backends.filter((item) => item.status === 'connected'),
     [backends],
   );
   const connectedTargets = useMemo(
     () =>
       backends.filter(
-        (item) =>
-          !item.is_builtin &&
-          item.status === 'connected' &&
-          item.id !== activeSource?.id,
+        (item) => item.status === 'connected' && item.role !== 'active',
       ),
-    [backends, activeSource],
+    [backends],
   );
   const hasRunningJob = jobs.some(
     (job) => job.status === 'pending' || job.status === 'running',
@@ -120,32 +143,49 @@ export default function AdminStorageMigrationPage() {
     [jobs],
   );
   const activeBackendId = backends.find((item) => item.role === 'active')?.id;
+  const readonlyBackends = backends.filter((item) => item.role === 'readonly');
 
   const openCreate = () => {
     form.resetFields();
-    form.setFieldsValue({ mode: 'migrate' });
-    if (connectedTargets.length === 1) {
-      form.setFieldValue('target_backend_id', connectedTargets[0].id);
-    }
+    const defaultSource =
+      backends.find((item) => item.role === 'active') ?? connectedSources[0];
+    form.setFieldsValue({
+      mode: 'migrate',
+      source_backend_id: defaultSource?.id,
+      auto_activate: false,
+    });
     setCreateOpen(true);
   };
 
   const handleCreate = async () => {
-    if (!activeSource) {
-      feedback.error('未找到主存储后端');
+    const values = await form.validateFields();
+    if (values.source_backend_id === values.target_backend_id) {
+      feedback.error('源与目标不能相同');
       return;
     }
-    const values = await form.validateFields();
     try {
       await createMigration.mutateAsync({
-        source_backend_id: activeSource.id,
+        source_backend_id: values.source_backend_id,
         target_backend_id: values.target_backend_id,
         mode: values.mode,
+        auto_activate:
+          values.mode === 'migrate' ? values.auto_activate : false,
       });
       feedback.success('迁移任务已创建');
       setCreateOpen(false);
     } catch (err) {
       feedback.error(err, '创建迁移任务失败');
+    }
+  };
+
+  const handleWizard = async () => {
+    const values = await wizardForm.validateFields();
+    try {
+      await migrateAndActivate.mutateAsync(values);
+      feedback.success('一键迁移并切换任务已创建');
+      setWizardOpen(false);
+    } catch (err) {
+      feedback.error(err, '创建失败');
     }
   };
 
@@ -155,6 +195,15 @@ export default function AdminStorageMigrationPage() {
       feedback.success('已切换为主存储');
     } catch (err) {
       feedback.error(err, '切换失败');
+    }
+  };
+
+  const handleRollback = async (backendId: number) => {
+    try {
+      await rollbackBackend.mutateAsync(backendId);
+      feedback.success('已回滚至源存储（请确认新写入数据位置）');
+    } catch (err) {
+      feedback.error(err, '回滚失败');
     }
   };
 
@@ -194,44 +243,41 @@ export default function AdminStorageMigrationPage() {
         <Alert
           type="info"
           showIcon
-          message="一键迁移至外部 OSS"
-          description="「迁移并切换」会将本机 MinIO 数据复制到目标 OSS，完成后源端进入只读并保留 7 天。「仅备份」只复制数据，不切换主存储。迁移完成后可在下方或「存储配置」页切换主存储。"
+          message="跨后端迁移（本机 MinIO / OSS A → OSS B）"
+          description="支持 migrate、backup、sync 三种模式。migrate 完成后源端只读并保留 7 天；可使用一键向导自动切换主存储，或在保留期内回滚。"
         />
-
-        {!activeSource && !backendsLoading && (
-          <Alert
-            type="warning"
-            showIcon
-            message="未检测到主存储后端，请检查存储配置"
-          />
-        )}
-
-        {connectedTargets.length === 0 && !backendsLoading && (
-          <Alert
-            type="warning"
-            showIcon
-            message="暂无可用的目标 OSS"
-            description="请先在「存储配置」添加外部 OSS 并完成测连。"
-          />
-        )}
 
         <Card
           {...adminCardProps}
           title="迁移任务"
           extra={
             canWrite ? (
-              <Button
-                type="primary"
-                icon={<MdSwapHoriz />}
-                disabled={
-                  !activeSource ||
-                  connectedTargets.length === 0 ||
-                  hasRunningJob
-                }
-                onClick={openCreate}
-              >
-                创建迁移
-              </Button>
+              <Space>
+                <Button
+                  type="primary"
+                  icon={<MdSwapHoriz />}
+                  disabled={connectedSources.length < 1 || hasRunningJob}
+                  onClick={openCreate}
+                >
+                  创建迁移
+                </Button>
+                <Button
+                  disabled={
+                    connectedSources.length < 1 ||
+                    connectedTargets.length < 1 ||
+                    hasRunningJob
+                  }
+                  loading={migrateAndActivate.isPending}
+                  onClick={() => {
+                    wizardForm.resetFields();
+                    const src = backends.find((item) => item.role === 'active');
+                    if (src) wizardForm.setFieldValue('source_backend_id', src.id);
+                    setWizardOpen(true);
+                  }}
+                >
+                  一键迁移并切换
+                </Button>
+              </Space>
             ) : null
           }
         >
@@ -251,8 +297,16 @@ export default function AdminStorageMigrationPage() {
               {
                 title: '模式',
                 dataIndex: 'mode',
-                render: (mode: StorageMigrationJobView['mode']) =>
-                  modeLabels[mode],
+                render: (mode: StorageMigrationJobView['mode'], record) => (
+                  <span>
+                    {modeLabels[mode]}
+                    {record.auto_activate && (
+                      <Tag className="ml-1" color="purple">
+                        自动切换
+                      </Tag>
+                    )}
+                  </span>
+                ),
               },
               {
                 title: '源 → 目标',
@@ -283,7 +337,7 @@ export default function AdminStorageMigrationPage() {
                       }
                     />
                     <p className="mt-1 text-xs text-gray-500">
-                      {record.copied_objects}/{record.total_objects} 对象 ·{' '}
+                      {record.copied_objects}/{record.total_objects} ·{' '}
                       {formatFileSize(record.copied_bytes)}
                       {record.failed_objects > 0
                         ? ` · 失败 ${record.failed_objects}`
@@ -293,41 +347,136 @@ export default function AdminStorageMigrationPage() {
                 ),
               },
               {
-                title: '创建时间',
-                dataIndex: 'created_at',
-                render: (value: string) => new Date(value).toLocaleString(),
-              },
-              {
                 title: '操作',
-                render: (_, record) => {
-                  if (
-                    record.mode !== 'migrate' ||
-                    record.status !== 'completed' ||
-                    record.target_backend_id === activeBackendId
-                  ) {
-                    return '—';
-                  }
-                  if (!completedMigrateTargets.has(record.target_backend_id)) {
-                    return '—';
-                  }
-                  return canWrite ? (
-                    <Button
-                      size="small"
-                      type="primary"
-                      loading={activateBackend.isPending}
-                      onClick={() => handleActivate(record.target_backend_id)}
-                    >
-                      切换为主存储
-                    </Button>
-                  ) : (
-                    '—'
-                  );
-                },
+                render: (_, record) => (
+                  <Space wrap size="small">
+                    {record.report && (
+                      <Button size="small" onClick={() => setReportJob(record)}>
+                        报告
+                      </Button>
+                    )}
+                    {canWrite &&
+                      (record.status === 'completed' ||
+                        record.status === 'failed') && (
+                        <Button
+                          size="small"
+                          loading={reconcileChecksum.isPending}
+                          onClick={async () => {
+                            try {
+                              const res = await reconcileChecksum.mutateAsync(
+                                record.id,
+                              );
+                              feedback.success(
+                                `checksum 对账完成：${res.data?.data?.checksum_success_rate_percent ?? 0}%`,
+                              );
+                              await refetchMigrations();
+                            } catch (err) {
+                              feedback.error(err, '对账失败');
+                            }
+                          }}
+                        >
+                          checksum 对账
+                        </Button>
+                      )}
+                    {canWrite && record.status === 'running' && (
+                      <Popconfirm
+                        title="确认取消此任务？"
+                        onConfirm={async () => {
+                          try {
+                            await cancelMigration.mutateAsync(record.id);
+                            feedback.success('已取消');
+                          } catch (err) {
+                            feedback.error(err, '取消失败');
+                          }
+                        }}
+                      >
+                        <Button size="small" danger>
+                          取消
+                        </Button>
+                      </Popconfirm>
+                    )}
+                    {canWrite && record.status === 'failed' && (
+                      <Button
+                        size="small"
+                        onClick={async () => {
+                          try {
+                            await retryMigration.mutateAsync(record.id);
+                            feedback.success('已重试');
+                          } catch (err) {
+                            feedback.error(err, '重试失败');
+                          }
+                        }}
+                      >
+                        重试
+                      </Button>
+                    )}
+                    {canWrite &&
+                      (record.status === 'failed' ||
+                        record.status === 'cancelled') && (
+                        <Button
+                          size="small"
+                          onClick={async () => {
+                            try {
+                              await resumeMigration.mutateAsync(record.id);
+                              feedback.success('已续跑');
+                            } catch (err) {
+                              feedback.error(err, '续跑失败');
+                            }
+                          }}
+                        >
+                          续跑
+                        </Button>
+                      )}
+                    {canWrite &&
+                      record.mode === 'migrate' &&
+                      record.status === 'completed' &&
+                      record.target_backend_id !== activeBackendId &&
+                      completedMigrateTargets.has(record.target_backend_id) && (
+                        <Button
+                          size="small"
+                          type="primary"
+                          onClick={() => handleActivate(record.target_backend_id)}
+                        >
+                          切换
+                        </Button>
+                      )}
+                  </Space>
+                ),
               },
             ]}
           />
-          {recordErrorMessage(jobs)}
         </Card>
+
+        {readonlyBackends.length > 0 && (
+          <Card {...adminCardProps} title="可回滚的只读源端">
+            <Table
+              rowKey="id"
+              size="small"
+              pagination={false}
+              dataSource={readonlyBackends}
+              columns={[
+                { title: '后端', dataIndex: 'name' },
+                { title: 'Endpoint', dataIndex: 'endpoint' },
+                {
+                  title: '操作',
+                  render: (_, record) =>
+                    canWrite ? (
+                      <Popconfirm
+                        title="回滚后新上传数据可能仍在当前主存储，确认继续？"
+                        onConfirm={() => handleRollback(record.id)}
+                      >
+                        <Button size="small" danger>
+                          回滚切换
+                        </Button>
+                      </Popconfirm>
+                    ) : (
+                      '—'
+                    ),
+                },
+              ]}
+            />
+          </Card>
+        )}
 
         <Card {...adminCardProps} title="源端保留（7 天）">
           <AdminQueryAlert
@@ -348,25 +497,18 @@ export default function AdminStorageMigrationPage() {
                 render: (id: number) => backendLabel(backends, id),
               },
               {
-                title: '迁移任务',
-                dataIndex: 'migration_job_id',
-                render: (id: number | null) => (id ? `#${id}` : '—'),
-              },
-              {
-                title: '迁移完成',
-                dataIndex: 'migrated_at',
-                render: (value: string) => new Date(value).toLocaleString(),
-              },
-              {
-                title: '计划清理',
-                dataIndex: 'purge_at',
-                render: (value: string) => new Date(value).toLocaleString(),
-              },
-              {
                 title: '剩余',
                 dataIndex: 'remaining_label',
                 render: (label: string, record) => (
-                  <Tag color={record.purged_at ? 'default' : record.expired ? 'warning' : 'blue'}>
+                  <Tag
+                    color={
+                      record.purged_at
+                        ? 'default'
+                        : record.expired
+                          ? 'warning'
+                          : 'blue'
+                    }
+                  >
                     {label}
                   </Tag>
                 ),
@@ -402,66 +544,144 @@ export default function AdminStorageMigrationPage() {
         onCancel={() => setCreateOpen(false)}
         onOk={handleCreate}
         confirmLoading={createMigration.isPending}
-        okText="开始迁移"
+        okText="开始"
         destroyOnClose
       >
         <Form form={form} layout="vertical" className="mt-4">
-          <Form.Item label="源存储">
-            <span>
-              {activeSource
-                ? `${activeSource.name}（主存储）`
-                : '未检测到主存储'}
-            </span>
+          <Form.Item
+            name="source_backend_id"
+            label="源存储"
+            rules={[{ required: true, message: '请选择源存储' }]}
+          >
+            <Select
+              loading={backendsLoading}
+              options={connectedSources.map((item) => ({
+                value: item.id,
+                label: `${item.name} (${item.role})`,
+              }))}
+            />
           </Form.Item>
           <Form.Item
             name="target_backend_id"
             label="目标 OSS"
-            rules={[{ required: true, message: '请选择目标 OSS' }]}
+            rules={[{ required: true, message: '请选择目标' }]}
           >
             <Select
-              placeholder="选择已连通的外部 OSS"
               options={connectedTargets.map((item) => ({
                 value: item.id,
                 label: `${item.name} (${item.endpoint})`,
               }))}
             />
           </Form.Item>
-          <Form.Item
-            name="mode"
-            label="迁移模式"
-            rules={[{ required: true, message: '请选择模式' }]}
-          >
+          <Form.Item name="mode" label="模式" rules={[{ required: true }]}>
             <Select
               options={[
-                {
-                  value: 'migrate',
-                  label: '迁移并切换 — 复制后源端只读，保留 7 天',
-                },
-                {
-                  value: 'backup',
-                  label: '仅备份 — 复制到 OSS，不切换主存储',
-                },
+                { value: 'migrate', label: '迁移 — 源端只读 + 7 天保留' },
+                { value: 'backup', label: '备份 — 不切主存储' },
+                { value: 'sync', label: '增量同步 — 仅复制差异对象' },
               ]}
+            />
+          </Form.Item>
+          <Form.Item noStyle shouldUpdate>
+            {() =>
+              form.getFieldValue('mode') === 'migrate' ? (
+                <Form.Item
+                  name="auto_activate"
+                  valuePropName="checked"
+                  initialValue={false}
+                >
+                  <Checkbox>完成后自动切换为主存储</Checkbox>
+                </Form.Item>
+              ) : null
+            }
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="一键迁移并切换"
+        open={wizardOpen}
+        onCancel={() => setWizardOpen(false)}
+        onOk={handleWizard}
+        confirmLoading={migrateAndActivate.isPending}
+        okText="开始"
+        destroyOnClose
+      >
+        <Alert
+          className="mb-4"
+          type="warning"
+          showIcon
+          message="将创建 migrate 任务并在校验通过后自动切换主存储"
+        />
+        <Form form={wizardForm} layout="vertical">
+          <Form.Item
+            name="source_backend_id"
+            label="源存储"
+            rules={[{ required: true }]}
+          >
+            <Select
+              options={connectedSources.map((item) => ({
+                value: item.id,
+                label: item.name,
+              }))}
+            />
+          </Form.Item>
+          <Form.Item
+            name="target_backend_id"
+            label="目标 OSS"
+            rules={[{ required: true }]}
+          >
+            <Select
+              options={connectedTargets.map((item) => ({
+                value: item.id,
+                label: item.name,
+              }))}
             />
           </Form.Item>
         </Form>
       </Modal>
-    </AdminLayout>
-  );
-}
 
-function recordErrorMessage(jobs: StorageMigrationJobView[]) {
-  const failed = jobs.find((job) => job.status === 'failed' && job.error_message);
-  if (!failed?.error_message) {
-    return null;
-  }
-  return (
-    <Alert
-      className="mt-3"
-      type="error"
-      showIcon
-      message={`任务 #${failed.id} 失败`}
-      description={failed.error_message}
-    />
+      <Modal
+        title={`迁移报告 #${reportJob?.id ?? ''}`}
+        open={Boolean(reportJob)}
+        footer={null}
+        onCancel={() => setReportJob(null)}
+      >
+        {reportJob?.report && (
+          <Descriptions column={1} bordered size="small">
+            <Descriptions.Item label="成功率">
+              {reportJob.report.success_rate_percent}%
+            </Descriptions.Item>
+            <Descriptions.Item label="校验通过">
+              {reportJob.report.verified_objects}
+            </Descriptions.Item>
+            <Descriptions.Item label="不一致">
+              {reportJob.report.mismatch_objects}
+            </Descriptions.Item>
+            <Descriptions.Item label="失败对象">
+              {reportJob.report.failed_object_keys.length > 0
+                ? reportJob.report.failed_object_keys.join(', ')
+                : '无'}
+            </Descriptions.Item>
+            <Descriptions.Item label="checksum 一致">
+              {reportJob.report.checksum_verified_objects}
+            </Descriptions.Item>
+            <Descriptions.Item label="checksum 不一致">
+              {reportJob.report.checksum_mismatch_objects}
+            </Descriptions.Item>
+            <Descriptions.Item label="checksum 成功率">
+              {reportJob.report.checksum_success_rate_percent}%
+            </Descriptions.Item>
+            <Descriptions.Item label="健康">
+              {reportJob.report.is_healthy ? (
+                <Tag color="success">通过</Tag>
+              ) : (
+                <Tag color="error">需处理</Tag>
+              )}
+            </Descriptions.Item>
+          </Descriptions>
+        )}
+      </Modal>
+    </AdminLayout>
   );
 }

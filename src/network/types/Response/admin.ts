@@ -56,6 +56,7 @@ export interface SiteStoragePolicy {
   allocation_mode: string;
   warn_min_quota_bytes: number;
   warn_pool_usage_ratio: number;
+  maintenance_mode?: boolean;
   updated_at?: string;
 }
 
@@ -149,6 +150,36 @@ export type StorageMigrationJobStatus =
   | 'failed'
   | 'cancelled';
 
+export interface StorageMigrationReportView {
+  total_objects: number;
+  copied_objects: number;
+  failed_objects: number;
+  verified_objects: number;
+  mismatch_objects: number;
+  checksum_verified_objects: number;
+  checksum_mismatch_objects: number;
+  failed_object_keys: string[];
+  success_rate_percent: number;
+  checksum_success_rate_percent: number;
+  is_healthy: boolean;
+}
+
+export interface StorageDiskProbeView {
+  configured_bytes: number;
+  probed_bytes: number | null;
+  probed_at: string | null;
+  drift_ratio: number | null;
+  tolerance_ratio: number;
+  status: 'within_tolerance' | 'drift_high' | 'not_probed';
+  should_alert: boolean;
+}
+
+export interface StorageDualWriteConfigView {
+  enabled: boolean;
+  backend_id: number | null;
+  backend_name: string | null;
+}
+
 export interface StorageMigrationJobView {
   id: number;
   source_backend_id: number;
@@ -159,13 +190,53 @@ export interface StorageMigrationJobView {
   copied_objects: number;
   copied_bytes: number;
   failed_objects: number;
+  verified_objects: number;
+  mismatch_objects: number;
+  failed_object_keys: string[];
+  auto_activate: boolean;
   progress_percent: number;
   error_message: string | null;
   retention_expire_at: string | null;
   started_at: string | null;
   finished_at: string | null;
   created_at: string;
+  report?: StorageMigrationReportView;
 }
+
+export interface StorageTrendPoint {
+  date: string;
+  site_used_bytes: number;
+  user_pool_bytes: number;
+  disk_total_bytes: number;
+}
+
+export interface StorageDashboardView {
+  pool: AdminStoragePolicyView['pool'];
+  policy: AdminStoragePolicyView['policy'] & { maintenance_mode?: boolean };
+  alerts: StorageAlert[];
+  maintenance_mode: boolean;
+  totals: {
+    totalFiles: number;
+    totalFolders: number;
+    usedBytes: number;
+  };
+  active_backend: StorageBackendPublicView | null;
+  backends: Array<StorageBackendPublicView & { connected: boolean }>;
+  top_users: Array<{ userId: number; username: string; usedBytes: number }>;
+  trends: StorageTrendPoint[];
+  disk_probe?: StorageDiskProbeView;
+  dual_write?: StorageDualWriteConfigView;
+}
+
+export type GetStorageDiskProbeApiResponse = BaseResponse<StorageDiskProbeView>;
+export type SyncStorageDiskProbeApiResponse = BaseResponse<{
+  probe: StorageDiskProbeView;
+  policy: AdminStoragePolicyView;
+}>;
+export type GetStorageDualWriteApiResponse =
+  BaseResponse<StorageDualWriteConfigView>;
+export type ReconcileMigrationChecksumApiResponse =
+  BaseResponse<StorageMigrationReportView>;
 
 export interface StorageRetentionView {
   id: number;
@@ -193,6 +264,16 @@ export type PurgeAdminStorageRetentionApiResponse = BaseResponse<{
   retention: StorageRetentionView;
   deletedObjects: number;
 }>;
+export type GetStorageMigrationReportApiResponse =
+  BaseResponse<StorageMigrationReportView>;
+export type GetAdminStorageDashboardApiResponse =
+  BaseResponse<StorageDashboardView>;
+export type GetAdminStorageTrendsApiResponse = BaseResponse<StorageTrendPoint[]>;
+export type SetAdminStorageMaintenanceApiResponse = BaseResponse<{
+  maintenance_mode: boolean;
+}>;
+export type RollbackAdminStorageBackendApiResponse =
+  BaseResponse<StorageBackendPublicView>;
 
 export interface AdminStorageUserItem {
   userId: number;

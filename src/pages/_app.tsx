@@ -1,5 +1,7 @@
 import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
+import Head from 'next/head';
+import { PRODUCT_NAME } from '@/config/brand';
 import { FileDataProvider } from '@/contexts/FileDataContext';
 import { UploadQueueProvider } from '@/contexts/UploadQueueContext';
 import { DownloadQueueProvider } from '@/contexts/DownloadQueueContext';
@@ -118,6 +120,9 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <QueryProvider>
+      <Head>
+        <title>{PRODUCT_NAME}</title>
+      </Head>
       <LocaleProvider enabled={localeEnabled}>
         <AppShell
           Component={Component}

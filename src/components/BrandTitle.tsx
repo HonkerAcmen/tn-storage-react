@@ -1,5 +1,6 @@
 import localFont from 'next/font/local';
 import Link from 'next/link';
+import { PRODUCT_NAME } from '@/config/brand';
 
 /** 本地字体：站酷庆科黄油体（src/fonts） */
 const brandFont = localFont({
@@ -22,7 +23,7 @@ export default function BrandTitle({ asLink = false, className = '' }: BrandTitl
   const content = (
     <span
       className={`brand-logo ${brandFont.className} ${className}`.trim()}
-      aria-label="伏羲文化数据云盘"
+      aria-label={PRODUCT_NAME}
     >
       <span className="brand-logo__bar" aria-hidden />
       <span className="brand-logo__text">

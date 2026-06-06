@@ -195,7 +195,7 @@ export default function AdminStoragePage() {
   };
 
   return (
-    <AdminLayout title="存储分析">
+    <AdminLayout title="存储策略">
       {alerts.length > 0 && (
         <div className="mb-4 space-y-2">
           {alerts.map((alert) => (

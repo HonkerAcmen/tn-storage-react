@@ -25,6 +25,15 @@ import {
   CreateAdminStorageMigrationApiResponse,
   GetAdminStorageRetentionsApiResponse,
   PurgeAdminStorageRetentionApiResponse,
+  GetStorageMigrationReportApiResponse,
+  GetAdminStorageDashboardApiResponse,
+  GetAdminStorageTrendsApiResponse,
+  SetAdminStorageMaintenanceApiResponse,
+  RollbackAdminStorageBackendApiResponse,
+  GetStorageDiskProbeApiResponse,
+  SyncStorageDiskProbeApiResponse,
+  GetStorageDualWriteApiResponse,
+  ReconcileMigrationChecksumApiResponse,
   GetOssStorageOverviewApiResponse,
   GetOssStorageBucketsApiResponse,
   GetAdminStorageUsersApiResponse,
@@ -289,7 +298,8 @@ export function useCreateAdminStorageMigration() {
     mutationFn: async (body: {
       source_backend_id: number;
       target_backend_id: number;
-      mode: 'migrate' | 'backup';
+      mode: 'migrate' | 'backup' | 'sync';
+      auto_activate?: boolean;
     }) =>
       await adminHttp.post<CreateAdminStorageMigrationApiResponse>(
         '/admin/storage/migrations',
@@ -297,6 +307,269 @@ export function useCreateAdminStorageMigration() {
       ),
     onSuccess: async () => {
       await invalidateMigrationQueries(queryClient);
+      await invalidateBackendQueries(queryClient);
+    },
+  });
+}
+
+export function useMigrateAndActivateAdminStorage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: {
+      source_backend_id: number;
+      target_backend_id: number;
+    }) =>
+      await adminHttp.post<CreateAdminStorageMigrationApiResponse>(
+        '/admin/storage/migrations/migrate-and-activate',
+        body,
+      ),
+    onSuccess: async () => {
+      await invalidateMigrationQueries(queryClient);
+      await invalidateBackendQueries(queryClient);
+      await invalidateStorageQueries(queryClient);
+    },
+  });
+}
+
+export function useCancelAdminStorageMigration() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) =>
+      await adminHttp.post<CreateAdminStorageMigrationApiResponse>(
+        `/admin/storage/migrations/${id}/cancel`,
+      ),
+    onSuccess: async () => {
+      await invalidateMigrationQueries(queryClient);
+    },
+  });
+}
+
+export function useRetryAdminStorageMigration() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) =>
+      await adminHttp.post<CreateAdminStorageMigrationApiResponse>(
+        `/admin/storage/migrations/${id}/retry`,
+      ),
+    onSuccess: async () => {
+      await invalidateMigrationQueries(queryClient);
+    },
+  });
+}
+
+export function useResumeAdminStorageMigration() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) =>
+      await adminHttp.post<CreateAdminStorageMigrationApiResponse>(
+        `/admin/storage/migrations/${id}/resume`,
+      ),
+    onSuccess: async () => {
+      await invalidateMigrationQueries(queryClient);
+    },
+  });
+}
+
+export function useAdminStorageMigrationReport(id?: number) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'storage', 'migrations', 'report', id],
+    queryFn: async () =>
+      await adminHttp.get<GetStorageMigrationReportApiResponse>(
+        `/admin/storage/migrations/${id}/report`,
+      ),
+    enabled: authed && Boolean(id),
+  });
+}
+
+export function useRollbackAdminStorageBackend() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) =>
+      await adminHttp.put<RollbackAdminStorageBackendApiResponse>(
+        `/admin/storage/backends/${id}/rollback`,
+      ),
+    onSuccess: async () => {
+      await invalidateBackendQueries(queryClient);
+      await invalidateStorageQueries(queryClient);
+      await invalidateMigrationQueries(queryClient);
+    },
+  });
+}
+
+export function useAdminStorageDashboard(enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'storage', 'dashboard'],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminStorageDashboardApiResponse>(
+        '/admin/storage/dashboard',
+      ),
+    enabled: authed && enabled,
+    refetchInterval: 60_000,
+  });
+}
+
+export function useAdminStorageTrends(days = 30, enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'storage', 'trends', days],
+    queryFn: async () =>
+      await adminHttp.get<GetAdminStorageTrendsApiResponse>(
+        '/admin/storage/trends',
+        { params: { days } },
+      ),
+    enabled: authed && enabled,
+  });
+}
+
+export function useStorageDiskProbe(enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'storage', 'disk-probe'],
+    queryFn: async () =>
+      await adminHttp.get<GetStorageDiskProbeApiResponse>(
+        '/admin/storage/disk-probe',
+      ),
+    enabled: authed && enabled,
+  });
+}
+
+export function useProbeStorageDisk() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () =>
+      await adminHttp.post<GetStorageDiskProbeApiResponse>(
+        '/admin/storage/disk-probe',
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'storage', 'disk-probe'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'storage', 'dashboard'],
+      });
+      await invalidateStorageQueries(queryClient);
+    },
+  });
+}
+
+export function useSyncStorageDiskFromProbe() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () =>
+      await adminHttp.post<SyncStorageDiskProbeApiResponse>(
+        '/admin/storage/disk-probe/sync',
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'storage', 'disk-probe'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'storage', 'dashboard'],
+      });
+      await invalidateStorageQueries(queryClient);
+    },
+  });
+}
+
+export function useStorageDualWriteConfig(enabled = true) {
+  const authed = isAdminAuthed();
+  return useQuery({
+    queryKey: [...adminKey, 'storage', 'dual-write'],
+    queryFn: async () =>
+      await adminHttp.get<GetStorageDualWriteApiResponse>(
+        '/admin/storage/dual-write',
+      ),
+    enabled: authed && enabled,
+  });
+}
+
+export function useEnableStorageDualWrite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (backendId: number) =>
+      await adminHttp.put<GetStorageDualWriteApiResponse>(
+        '/admin/storage/dual-write',
+        { backend_id: backendId },
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'storage', 'dual-write'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'storage', 'dashboard'],
+      });
+    },
+  });
+}
+
+export function useDisableStorageDualWrite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () =>
+      await adminHttp.delete<GetStorageDualWriteApiResponse>(
+        '/admin/storage/dual-write',
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'storage', 'dual-write'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'storage', 'dashboard'],
+      });
+    },
+  });
+}
+
+export function useCutoverStorageDualWrite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () =>
+      await adminHttp.post<GetStorageDualWriteApiResponse>(
+        '/admin/storage/dual-write/cutover',
+      ),
+    onSuccess: async () => {
+      await invalidateBackendQueries(queryClient);
+      await invalidateStorageQueries(queryClient);
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'storage', 'dual-write'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'storage', 'dashboard'],
+      });
+    },
+  });
+}
+
+export function useReconcileMigrationChecksum() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) =>
+      await adminHttp.post<ReconcileMigrationChecksumApiResponse>(
+        `/admin/storage/migrations/${id}/reconcile-checksum`,
+      ),
+    onSuccess: async () => {
+      await invalidateMigrationQueries(queryClient);
+    },
+  });
+}
+
+export function useSetAdminStorageMaintenance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (enabled: boolean) =>
+      await adminHttp.put<SetAdminStorageMaintenanceApiResponse>(
+        '/admin/storage/maintenance',
+        { enabled },
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'storage', 'dashboard'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKey, 'storage', 'policy'],
+      });
     },
   });
 }
