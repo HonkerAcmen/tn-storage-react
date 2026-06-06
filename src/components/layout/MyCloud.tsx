@@ -11,6 +11,7 @@ import {
   AiOutlineEllipsis,
 } from 'react-icons/ai';
 import EChart from '@/components/Echart';
+import { useResolvedTheme } from '@/hooks/useResolvedTheme';
 import { useFileData } from '@/contexts/FileDataContext';
 import { useFileActions, useFileMenu } from '@/features/files/hooks';
 import { formatDate, formatFileSize } from '@/utils/format/formatters';
@@ -18,17 +19,22 @@ import { getFileIcon } from '@/components/FilesHandle/FileIcon';
 import { useGetRecents } from '@/network/hooks/file';
 
 import type { FileSystemTreeNode } from '@/network/types/Response/file';
+import type { EChartsOption } from 'echarts';
 import type { TopLevelFormatterParams } from 'echarts/types/dist/shared';
 import FileDetailsModal from '../FilesHandle/FileDetailsModal';
 import { FILE_TYPE_MAP } from '@/utils/fileUtils';
 
+type StorageCategory = 'document' | 'image' | 'video' | 'audio' | 'other';
+
 function SectionEmptyState({ description }: { description: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 px-6 py-10">
+    <div className="section-empty-state rounded-2xl border border-dashed border-gray-200 px-6 py-10">
       <Empty
         image={Empty.PRESENTED_IMAGE_SIMPLE}
         description={
-          <span className="text-sm text-gray-500">{description}</span>
+          <span className="section-empty-state__desc text-sm text-gray-500">
+            {description}
+          </span>
         }
       />
     </div>
@@ -37,6 +43,8 @@ function SectionEmptyState({ description }: { description: string }) {
 
 export default function MyCloud() {
   const [messageApi, contextHolder] = message.useMessage();
+  const resolvedTheme = useResolvedTheme();
+  const isDark = resolvedTheme === 'dark';
   const { allFiles, updateFile, openPreviewDialog } = useFileData();
   const { handleFolderNavigation, isFavorite } = useFileActions();
   const { getFileMenuItems } = useFileMenu();
@@ -132,43 +140,43 @@ export default function MyCloud() {
     return [
       {
         key: 1,
+        category: 'document' as StorageCategory,
         name: '文件',
         fileNumber: stats.document.count,
         fileSize: stats.document.size,
-        iconBg: '#e5f6ff',
-        icon: <AiFillFileText className="scale-125 text-[#00a5ff]" />,
+        icon: <AiFillFileText className="scale-125" />,
       },
       {
         key: 2,
+        category: 'image' as StorageCategory,
         name: '图片',
         fileNumber: stats.image.count,
         fileSize: stats.image.size,
-        iconBg: '#eeecfe',
-        icon: <AiFillPicture className="scale-125 text-[#5542f6]" />,
+        icon: <AiFillPicture className="scale-125" />,
       },
       {
         key: 3,
+        category: 'video' as StorageCategory,
         name: '视频',
         fileNumber: stats.video.count,
         fileSize: stats.video.size,
-        iconBg: '#e8f9f6',
-        icon: <AiFillPlaySquare className="scale-125 text-[#22c9ad]" />,
+        icon: <AiFillPlaySquare className="scale-125" />,
       },
       {
         key: 4,
+        category: 'audio' as StorageCategory,
         name: '音频',
         fileNumber: stats.audio.count,
         fileSize: stats.audio.size,
-        iconBg: '#fef0f5',
-        icon: <AiFillCustomerService className="scale-125 text-[#fa699d]" />,
+        icon: <AiFillCustomerService className="scale-125" />,
       },
       {
         key: 5,
+        category: 'other' as StorageCategory,
         name: '其他',
         fileNumber: stats.other.count,
         fileSize: stats.other.size,
-        iconBg: '#fff5ec',
-        icon: <AiFillFile className="scale-125 text-[#ffa043]" />,
+        icon: <AiFillFile className="scale-125" />,
       },
     ];
   }, [allFiles]);
@@ -177,6 +185,69 @@ export default function MyCloud() {
     () => saveData.some((item) => item.fileSize > 0),
     [saveData]
   );
+
+  const storageChartOption = useMemo((): EChartsOption => {
+    const labelColor = isDark ? '#e8eaf0' : '#374151';
+    const labelLineColor = isDark ? '#747b8f' : '#9ca3af';
+
+    return {
+      backgroundColor: 'transparent',
+      textStyle: {
+        color: labelColor,
+      },
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: isDark ? '#283040' : '#ffffff',
+        borderColor: isDark ? '#313a4d' : '#e5e7eb',
+        textStyle: { color: labelColor },
+        formatter: (params: TopLevelFormatterParams) => {
+          const param = Array.isArray(params) ? params[0] : params;
+          const item = saveData.find((d) => d.name === param.name);
+          if (item) {
+            return `${param.name}<br/>${item.fileNumber} 个文件<br/>${formatFileSize(item.fileSize)}`;
+          }
+          return `${param.name}: ${param.value}`;
+        },
+      },
+      series: [
+        {
+          name: '存储大小',
+          type: 'pie',
+          radius: ['40%', '50%'],
+          center: ['50%', '70%'],
+          startAngle: 180,
+          endAngle: 360,
+          label: {
+            color: labelColor,
+            textBorderWidth: 0,
+            textBorderColor: 'transparent',
+            textShadowBlur: 0,
+            textShadowColor: 'transparent',
+          },
+          emphasis: {
+            label: {
+              color: labelColor,
+              textBorderWidth: 0,
+              textBorderColor: 'transparent',
+              textShadowBlur: 0,
+              textShadowColor: 'transparent',
+            },
+          },
+          labelLine: {
+            lineStyle: {
+              color: labelLineColor,
+            },
+          },
+          data: saveData
+            .filter((item) => item.fileSize > 0)
+            .map((item) => ({
+              value: item.fileSize,
+              name: item.name,
+            })),
+        },
+      ],
+    };
+  }, [isDark, saveData]);
 
   return (
     <>
@@ -415,40 +486,9 @@ export default function MyCloud() {
           <h2 className="mb-4 text-lg font-semibold text-gray-800">存储大小</h2>
           {hasStorageData ? (
             <div
-              className="flex h-50 items-center justify-center rounded-xl text-gray-400"
-              style={{ boxShadow: '0px 0px 5px #eaeaea' }}
+              className={`storage-chart-panel flex items-center justify-center rounded-xl ${isDark ? 'storage-chart-panel--dark' : 'storage-chart-panel--light'}`}
             >
-              <EChart
-                option={{
-                  tooltip: {
-                    trigger: 'item',
-                    formatter: (params: TopLevelFormatterParams) => {
-                      const param = Array.isArray(params) ? params[0] : params;
-                      const item = saveData.find((d) => d.name === param.name);
-                      if (item) {
-                        return `${param.name}<br/>${item.fileNumber} 个文件<br/>${formatFileSize(item.fileSize)}`;
-                      }
-                      return `${param.name}: ${param.value}`;
-                    },
-                  },
-                  series: [
-                    {
-                      name: '存储大小',
-                      type: 'pie',
-                      radius: ['40%', '50%'],
-                      center: ['50%', '70%'],
-                      startAngle: 180,
-                      endAngle: 360,
-                      data: saveData
-                        .filter((item) => item.fileSize > 0)
-                        .map((item) => ({
-                          value: item.fileSize,
-                          name: item.name,
-                        })),
-                    },
-                  ],
-                }}
-              />
+              <EChart option={storageChartOption} />
             </div>
           ) : (
             <SectionEmptyState description="无数据" />
@@ -461,8 +501,7 @@ export default function MyCloud() {
               >
                 <div className="flex">
                   <div
-                    className={`mr-4 flex h-14 w-14 items-center justify-center rounded-lg`}
-                    style={{ backgroundColor: item.iconBg }}
+                    className={`storage-category-icon storage-category-icon--${item.category} mr-4 flex h-14 w-14 items-center justify-center rounded-lg`}
                   >
                     {item.icon}
                   </div>

@@ -535,8 +535,8 @@ function OverviewTab() {
                 {storage?.totalFiles ?? 0}
               </p>
             </div>
-            <div className="rounded-lg bg-blue-100 p-3">
-              <AiFillFileText className="h-6 w-6 text-blue-600" />
+            <div className="profile-stat-icon profile-stat-icon--files rounded-lg p-3">
+              <AiFillFileText className="h-6 w-6" />
             </div>
           </div>
         </div>
@@ -549,8 +549,8 @@ function OverviewTab() {
                 {formatFileSize(storage?.usedBytes ?? 0)}
               </p>
             </div>
-            <div className="rounded-lg bg-purple-100 p-3">
-              <AiFillCloud className="h-6 w-6 text-purple-600" />
+            <div className="profile-stat-icon profile-stat-icon--storage rounded-lg p-3">
+              <AiFillCloud className="h-6 w-6" />
             </div>
           </div>
         </div>
@@ -563,8 +563,8 @@ function OverviewTab() {
                 {favoriteUUIDs.length || storage?.favoriteCount || 0}
               </p>
             </div>
-            <div className="rounded-lg bg-amber-100 p-3">
-              <AiFillStar className="h-6 w-6 text-amber-600" />
+            <div className="profile-stat-icon profile-stat-icon--favorites rounded-lg p-3">
+              <AiFillStar className="h-6 w-6" />
             </div>
           </div>
         </div>

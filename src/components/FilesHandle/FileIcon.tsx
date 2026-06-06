@@ -16,75 +16,113 @@ import {
   ICON_SIZE_LARGE,
 } from '@/utils/constants/fileConstants';
 
-/**
- * 文件图标组件
- */
+type FileIconKind =
+  | 'pdf'
+  | 'doc'
+  | 'xlsx'
+  | 'zip'
+  | 'image'
+  | 'video'
+  | 'audio'
+  | 'default';
 
-/**
- * 文件图标映射（小尺寸）
- */
-const FILE_ICON_MAP_SMALL: Record<string, JSX.Element> = {
-  txt: <AiFillFileText className={`${ICON_SIZE_SMALL} text-gray-400`} />,
-  pdf: <AiFillFilePdf className={`${ICON_SIZE_SMALL} text-red-400`} />,
-  jpg: <AiOutlineFileJpg className={`${ICON_SIZE_SMALL} text-gray-400`} />,
-  png: <AiOutlineFileImage className={`${ICON_SIZE_SMALL} text-gray-400`} />,
-  mp4: <AiFillPlaySquare className={`${ICON_SIZE_SMALL} text-gray-400`} />,
-  mp3: <AiFillMuted className={`${ICON_SIZE_SMALL} text-gray-400`} />,
-  json: <AiFillFileText className={`${ICON_SIZE_SMALL} text-gray-400`} />,
-  zip: <AiFillFileZip className={`${ICON_SIZE_SMALL} text-amber-400`} />,
-  doc: <AiFillFileText className={`${ICON_SIZE_SMALL} text-blue-400`} />,
-  docx: <AiFillFileText className={`${ICON_SIZE_SMALL} text-blue-400`} />,
-  xlsx: <AiFillFileExcel className={`${ICON_SIZE_SMALL} text-green-400`} />,
-  other: <AiFillFileUnknown className={`${ICON_SIZE_SMALL} text-gray-400`} />,
+const EXT_TO_KIND: Record<string, FileIconKind> = {
+  pdf: 'pdf',
+  doc: 'doc',
+  docx: 'doc',
+  xlsx: 'xlsx',
+  zip: 'zip',
+  jpg: 'image',
+  jpeg: 'image',
+  png: 'image',
+  gif: 'image',
+  webp: 'image',
+  mp4: 'video',
+  mov: 'video',
+  mp3: 'audio',
+  wav: 'audio',
 };
 
-const FILE_ICON_MAP_MEDIUM: Record<string, JSX.Element> = {
-  txt: <AiFillFileText className={`${ICON_SIZE_MEDIUM} text-gray-400`} />,
-  pdf: <AiFillFilePdf className={`${ICON_SIZE_MEDIUM} text-red-400`} />,
-  jpg: <AiOutlineFileJpg className={`${ICON_SIZE_MEDIUM} text-gray-400`} />,
-  png: <AiOutlineFileImage className={`${ICON_SIZE_MEDIUM} text-gray-400`} />,
-  mp4: <AiFillPlaySquare className={`${ICON_SIZE_MEDIUM} text-gray-400`} />,
-  mp3: <AiFillMuted className={`${ICON_SIZE_MEDIUM} text-gray-400`} />,
-  json: <AiFillFileText className={`${ICON_SIZE_MEDIUM} text-gray-400`} />,
-  zip: <AiFillFileZip className={`${ICON_SIZE_MEDIUM} text-amber-400`} />,
-  doc: <AiFillFileText className={`${ICON_SIZE_MEDIUM} text-blue-400`} />,
-  docx: <AiFillFileText className={`${ICON_SIZE_MEDIUM} text-blue-400`} />,
-  xlsx: <AiFillFileExcel className={`${ICON_SIZE_MEDIUM} text-green-400`} />,
-  other: <AiFillFileUnknown className={`${ICON_SIZE_MEDIUM} text-gray-400`} />,
-};
+function resolveFileIconKind(ext?: string): FileIconKind {
+  if (!ext) {
+    return 'default';
+  }
+  return EXT_TO_KIND[ext.toLowerCase()] ?? 'default';
+}
 
-/**
- * 文件图标映射（大尺寸）
- */
-const FILE_ICON_MAP_LARGE: Record<string, JSX.Element> = {
-  txt: <AiFillFileText className={`${ICON_SIZE_LARGE} text-gray-400`} />,
-  pdf: <AiFillFilePdf className={`${ICON_SIZE_LARGE} text-red-400`} />,
-  jpg: <AiOutlineFileJpg className={`${ICON_SIZE_LARGE} text-gray-400`} />,
-  png: <AiOutlineFileImage className={`${ICON_SIZE_LARGE} text-gray-400`} />,
-  mp4: <AiFillPlaySquare className={`${ICON_SIZE_LARGE} text-gray-400`} />,
-  mp3: <AiFillMuted className={`${ICON_SIZE_LARGE} text-gray-400`} />,
-  json: <AiFillFileText className={`${ICON_SIZE_LARGE} text-gray-400`} />,
-  zip: <AiFillFileZip className={`${ICON_SIZE_LARGE} text-amber-400`} />,
-  doc: <AiFillFileText className={`${ICON_SIZE_LARGE} text-blue-400`} />,
-  docx: <AiFillFileText className={`${ICON_SIZE_LARGE} text-blue-400`} />,
-  xlsx: <AiFillFileExcel className={`${ICON_SIZE_LARGE} text-green-400`} />,
-  other: <AiFillFileUnknown className={`${ICON_SIZE_LARGE} text-gray-400`} />,
-};
+function FileIconGlyph({
+  kind,
+  sizeClass,
+}: {
+  kind: FileIconKind;
+  sizeClass: string;
+}) {
+  const className = `file-type-icon file-type-icon--${kind} ${sizeClass}`;
+
+  switch (kind) {
+    case 'pdf':
+      return <AiFillFilePdf className={className} />;
+    case 'doc':
+      return <AiFillFileText className={className} />;
+    case 'xlsx':
+      return <AiFillFileExcel className={className} />;
+    case 'zip':
+      return <AiFillFileZip className={className} />;
+    case 'image':
+      return <AiOutlineFileImage className={className} />;
+    case 'video':
+      return <AiFillPlaySquare className={className} />;
+    case 'audio':
+      return <AiFillMuted className={className} />;
+    default:
+      return <AiFillFileUnknown className={className} />;
+  }
+}
+
+/** jpg 扩展名沿用专用图标 */
+function FileIconByExt({
+  ext,
+  sizeClass,
+}: {
+  ext?: string;
+  sizeClass: string;
+}) {
+  const normalized = ext?.toLowerCase();
+  if (normalized === 'jpg' || normalized === 'jpeg') {
+    return (
+      <AiOutlineFileJpg
+        className={`file-type-icon file-type-icon--image ${sizeClass}`}
+      />
+    );
+  }
+  if (normalized === 'txt' || normalized === 'json') {
+    return (
+      <AiFillFileText
+        className={`file-type-icon file-type-icon--default ${sizeClass}`}
+      />
+    );
+  }
+
+  return (
+    <FileIconGlyph kind={resolveFileIconKind(ext)} sizeClass={sizeClass} />
+  );
+}
 
 /**
  * 获取文件图标
  */
 export function getFileIcon(
   ext: string | undefined,
-  size: 'small' | 'medium' | 'large'
+  size: 'small' | 'medium' | 'large',
 ): JSX.Element {
-  if (size === 'large') {
-    return FILE_ICON_MAP_LARGE[ext || ''] || FILE_ICON_MAP_LARGE['other'];
-  } else if (size === 'medium') {
-    return FILE_ICON_MAP_MEDIUM[ext || ''] || FILE_ICON_MAP_LARGE['other'];
-  }
-  return FILE_ICON_MAP_SMALL[ext || ''] || FILE_ICON_MAP_SMALL['other'];
+  const sizeClass =
+    size === 'large'
+      ? ICON_SIZE_LARGE
+      : size === 'medium'
+        ? ICON_SIZE_MEDIUM
+        : ICON_SIZE_SMALL;
+
+  return <FileIconByExt ext={ext} sizeClass={sizeClass} />;
 }
 
-// 导出常量供其他组件使用
 export { ICON_SIZE_SMALL, ICON_SIZE_MEDIUM, ICON_SIZE_LARGE };

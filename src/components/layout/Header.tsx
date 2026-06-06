@@ -85,7 +85,7 @@ export default function Header() {
           <>
             <AiFillSetting
               onClick={() => setShowSettings(true)}
-              className="mr-6 h-6 w-6 cursor-pointer transition-transform duration-500 hover:rotate-360 hover:text-[#5542f6] hover:drop-shadow-md"
+              className="mr-6 h-6 w-6 cursor-pointer text-gray-600 transition-transform duration-500 hover:rotate-360 hover:text-[#5542f6] hover:drop-shadow-md"
             />
 
             <div className="relative flex items-center">
@@ -115,7 +115,9 @@ export default function Header() {
                   }, 200);
                 }}
               >
-                <p className="mr-2 whitespace-nowrap">{username || t('header.adminFallback')}</p>
+                <p className="mr-2 whitespace-nowrap text-gray-800">
+                  {username || t('header.adminFallback')}
+                </p>
                 <AiFillCaretDown className="h-3 w-3 text-gray-500" />
               </div>
 
@@ -131,13 +133,13 @@ export default function Header() {
                     setClickProfile(false);
                     setShowProfile(true);
                   }}
-                  className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100"
+                  className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 text-gray-800 transition hover:bg-gray-100"
                 >
                   {t('header.profile')}
                 </li>
                 <li
                   onClick={() => logout()}
-                  className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 transition hover:bg-gray-100"
+                  className="flex cursor-pointer items-center justify-center rounded-lg px-1 py-2 text-gray-800 transition hover:bg-gray-100"
                 >
                   {t('header.logout')}
                 </li>

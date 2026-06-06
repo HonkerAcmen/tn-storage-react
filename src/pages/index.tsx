@@ -55,7 +55,7 @@ export default function Home() {
       { key: 'sub4', label: t('nav.favorites'), icon: <AiOutlineStar /> },
       { key: 'sub5', label: t('nav.trash'), icon: <AiOutlineDelete /> },
     ],
-    [t],
+    [t]
   );
 
   const onClick: MenuProps['onClick'] = (e) => {
@@ -125,7 +125,9 @@ export default function Home() {
         </aside>
 
         {/* 主内容区 */}
-        <main className="bg-white">{renderMap[currentView] ?? <div>{t('nav.unknown')}</div>}</main>
+        <main className="bg-white">
+          {renderMap[currentView] ?? <div>{t('nav.unknown')}</div>}
+        </main>
       </div>
 
       {/* 上传模态框 */}

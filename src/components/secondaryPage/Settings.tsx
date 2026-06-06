@@ -29,6 +29,7 @@ import {
   useLocale,
 } from '@/contexts/LocaleContext';
 import { normalizeLanguage } from '@/i18n/types';
+import { normalizeThemeSetting } from '@/utils/theme';
 
 interface SettingsProps {
   onClose: () => void;
@@ -123,7 +124,7 @@ function GeneralSettings() {
 
   const currentDraft = {
     language: draft.language ?? settings?.language ?? 'zh-CN',
-    theme: draft.theme ?? settings?.theme ?? 'system',
+    theme: normalizeThemeSetting(draft.theme ?? settings?.theme),
     auto_save: draft.auto_save ?? settings?.auto_save ?? true,
   };
 
@@ -168,7 +169,6 @@ function GeneralSettings() {
           >
             <option value="light">{t('theme.light')}</option>
             <option value="dark">{t('theme.dark')}</option>
-            <option value="system">{t('theme.system')}</option>
           </select>
         }
       />

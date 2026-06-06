@@ -2,12 +2,15 @@ import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import { FileDataProvider } from '@/contexts/FileDataContext';
 import { LocaleProvider, useLocale } from '@/contexts/LocaleContext';
+import { useResolvedTheme } from '@/hooks/useResolvedTheme';
 import { ConfigProvider, App as AntApp, message } from 'antd';
 import { useEffect } from 'react';
 import { useAuthed } from '@/utils/auth';
 import { useRouter } from 'next/router';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { useGetMySettings } from '@/network/hooks/user';
+import { applyThemeSetting } from '@/utils/theme';
+import { buildAntTheme } from '@/utils/antTheme';
 
 function UserPreferenceBridge({ enabled }: { enabled: boolean }) {
   const { data } = useGetMySettings();
@@ -19,7 +22,8 @@ function UserPreferenceBridge({ enabled }: { enabled: boolean }) {
       return;
     }
 
-    document.documentElement.dataset.theme = settings.theme || 'system';
+    const setting = settings.theme || 'light';
+    applyThemeSetting(setting);
   }, [enabled, settings]);
 
   return null;
@@ -35,6 +39,8 @@ function AppShell({
   skipFileProvider: boolean;
 }) {
   const { antdLocale } = useLocale();
+  const resolvedTheme = useResolvedTheme();
+  const isDark = resolvedTheme === 'dark';
 
   const page = (
     <>
@@ -44,31 +50,7 @@ function AppShell({
   );
 
   return (
-    <ConfigProvider
-      locale={antdLocale}
-      theme={{
-        token: {
-          colorPrimary: '#5542f6',
-          colorSuccess: '#52c41a',
-          colorWarning: '#faad14',
-          colorError: '#ff4d4f',
-          colorInfo: '#5542f6',
-          borderRadius: 6,
-        },
-        components: {
-          Button: {
-            primaryColor: '#ffffff',
-          },
-          Menu: {
-            itemSelectedBg: '#EBEBEB',
-            itemSelectedColor: '#3B3B3B',
-            itemActiveBg: '#DEDEDE',
-            itemHeight: 50,
-            itemColor: '#2e2c34',
-          },
-        },
-      }}
-    >
+    <ConfigProvider locale={antdLocale} theme={buildAntTheme(isDark)}>
       <AntApp>
         {skipFileProvider ? page : <FileDataProvider>{page}</FileDataProvider>}
       </AntApp>
@@ -81,8 +63,7 @@ export default function App({ Component, pageProps }: AppProps) {
   const isLoginPage = router.pathname === '/login';
   const isVisitorPage = router.pathname === '/visitor';
   const isAdminLoginPage = router.pathname === '/admin/login';
-  const isAdminPage =
-    router.pathname.startsWith('/admin') && !isAdminLoginPage;
+  const isAdminPage = router.pathname.startsWith('/admin') && !isAdminLoginPage;
   const authed = useAuthed();
 
   // 配置 message
@@ -100,9 +81,7 @@ export default function App({ Component, pageProps }: AppProps) {
     if (isAdminPage || isAdminLoginPage) return;
     if (isLoginPage && authed) {
       const redirect =
-        typeof router.query.redirect === 'string'
-          ? router.query.redirect
-          : '/';
+        typeof router.query.redirect === 'string' ? router.query.redirect : '/';
       if (redirect.startsWith('/admin')) {
         router.replace('/admin');
         return;

@@ -245,12 +245,12 @@ export default function DeletedFiles() {
                 actions={
                   <Button
                     type="text"
-                    icon={<AiOutlineRest className="h-5 w-5 text-blue-500" />}
+                    icon={<AiOutlineRest className="h-5 w-5 text-blue-400" />}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleRestore(item.UUID, item.type);
                     }}
-                    className="flex items-center justify-center"
+                    className="flex items-center justify-center !text-gray-800"
                   >
                     恢复
                   </Button>

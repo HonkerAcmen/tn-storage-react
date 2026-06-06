@@ -611,8 +611,9 @@ export default function AllFiles() {
           {/* 中间 */}
 
           <input
-            className="w-full rounded-lg border border-gray-200 p-2 text-sm tracking-wider text-gray-800"
+            className="theme-input w-full rounded-lg border border-gray-200 p-2 text-sm tracking-wider text-gray-800"
             type="text"
+            placeholder="请输入文件夹名称"
             ref={folderInputRef}
           />
           {/* 足部 */}

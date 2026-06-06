@@ -1,0 +1,101 @@
+/**
+ * 语义化主题色板
+ * 浅色：白灰中性域
+ * 深色：蓝紫域 + 品牌紫 accent
+ */
+
+:root {
+  /* 品牌原色 */
+  --brand-600: #4535d4;
+  --brand-500: #5542f6;
+  --brand-400: #6d5cf7;
+  --brand-300: #8575f9;
+  --brand-200: #a594fa;
+  --brand-glow: rgba(85, 66, 246, 0.22);
+
+  /* 浅色 · 白灰表面 */
+  --color-surface-base: #f4f5f7;
+  --color-surface-raised: #ffffff;
+  --color-surface-muted: #f9fafb;
+  --color-surface-soft: #f3f4f6;
+  --color-surface-overlay: #ffffff;
+  --color-surface-sunken: #eceef2;
+
+  --color-border-default: #e5e7eb;
+  --color-border-subtle: #eceef2;
+  --color-border-strong: #d1d5db;
+
+  --color-text-primary: #1a1d26;
+  --color-text-secondary: #5c6370;
+  --color-text-tertiary: #8b919d;
+  --color-text-disabled: #b0b5bf;
+  --color-text-inverse: #ffffff;
+
+  --color-accent: var(--brand-500);
+  --color-accent-hover: var(--brand-600);
+  --color-accent-text: var(--brand-500);
+  --color-accent-muted: rgba(85, 66, 246, 0.1);
+
+  --color-info: #3b82f6;
+  --color-info-muted: rgba(59, 130, 246, 0.12);
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+  --color-danger-muted: rgba(220, 38, 38, 0.1);
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.12);
+  --shadow-overlay: 0 16px 48px rgba(15, 23, 42, 0.18);
+
+  --background: var(--color-surface-base);
+  --foreground: var(--color-text-primary);
+  --panel-bg: var(--color-surface-raised);
+  --panel-muted: var(--color-surface-muted);
+  --panel-soft: var(--color-surface-soft);
+  --border-color: var(--color-border-default);
+}
+
+:root[data-theme='dark'] {
+  --color-surface-base: #0e1018;
+  --color-surface-raised: #141824;
+  --color-surface-muted: #1a2030;
+  --color-surface-soft: #222838;
+  --color-surface-overlay: #283040;
+  --color-surface-sunken: #0a0c12;
+
+  --color-border-default: #313a4d;
+  --color-border-subtle: #283040;
+  --color-border-strong: #3d4660;
+
+  --color-text-primary: #e8eaf0;
+  --color-text-secondary: #a8afc0;
+  --color-text-tertiary: #747b8f;
+  --color-text-disabled: #565d72;
+  --color-text-inverse: #0e1018;
+
+  --color-accent: var(--brand-400);
+  --color-accent-hover: var(--brand-300);
+  --color-accent-text: var(--brand-200);
+  --color-accent-muted: rgba(109, 92, 247, 0.16);
+
+  --color-info: #7cb3ff;
+  --color-info-muted: rgba(124, 179, 255, 0.14);
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-danger-muted: rgba(248, 113, 113, 0.14);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --shadow-overlay: 0 24px 64px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+
+  --background: var(--color-surface-base);
+  --foreground: var(--color-text-primary);
+  --panel-bg: var(--color-surface-raised);
+  --panel-muted: var(--color-surface-muted);
+  --panel-soft: var(--color-surface-soft);
+  --border-color: var(--color-border-default);
+}

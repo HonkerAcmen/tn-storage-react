@@ -1,13 +1,5 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --panel-bg: #ffffff;
-  --panel-muted: #f9fafb;
-  --panel-soft: #f3f4f6;
-  --border-color: #e5e7eb;
-}
+@import "./theme-tokens.css";
 
 body {
   background: var(--background);
@@ -18,51 +10,345 @@ body {
     color 0.2s ease;
 }
 
-:root[data-theme='dark'] {
-  --background: #0f172a;
-  --foreground: #e5e7eb;
-  --panel-bg: #111827;
-  --panel-muted: #1f2937;
-  --panel-soft: #374151;
-  --border-color: #334155;
+/* ── 浅色：白灰 · Tailwind 映射 ── */
+:root:not([data-theme='dark']) .bg-white {
+  background-color: var(--color-surface-raised) !important;
 }
 
-:root[data-theme='dark'] body {
-  background: var(--background);
-  color: var(--foreground);
+:root:not([data-theme='dark']) .bg-gray-50,
+:root:not([data-theme='dark']) .bg-gray-50\/50,
+:root:not([data-theme='dark']) .bg-gray-50\/70 {
+  background-color: var(--color-surface-muted) !important;
 }
 
+:root:not([data-theme='dark']) .bg-gray-100 {
+  background-color: var(--color-surface-soft) !important;
+}
+
+:root:not([data-theme='dark']) .bg-gray-200 {
+  background-color: var(--color-surface-sunken) !important;
+}
+
+:root:not([data-theme='dark']) .border-gray-200,
+:root:not([data-theme='dark']) .border-gray-100 {
+  border-color: var(--color-border-subtle) !important;
+}
+
+:root:not([data-theme='dark']) .text-gray-800,
+:root:not([data-theme='dark']) .text-gray-900,
+:root:not([data-theme='dark']) .text-\[\#2e2c34\] {
+  color: var(--color-text-primary) !important;
+}
+
+:root:not([data-theme='dark']) .text-gray-700,
+:root:not([data-theme='dark']) .text-gray-600 {
+  color: var(--color-text-secondary) !important;
+}
+
+:root:not([data-theme='dark']) .text-gray-500,
+:root:not([data-theme='dark']) .text-gray-400 {
+  color: var(--color-text-tertiary) !important;
+}
+
+:root:not([data-theme='dark']) .text-\[\#5542f6\] {
+  color: var(--color-accent) !important;
+}
+
+:root:not([data-theme='dark']) .hover\:bg-gray-50:hover {
+  background-color: var(--color-surface-muted) !important;
+}
+
+:root:not([data-theme='dark']) .hover\:bg-gray-100:hover {
+  background-color: var(--color-surface-soft) !important;
+}
+
+:root:not([data-theme='dark']) .hover\:bg-gray-200:hover {
+  background-color: var(--color-surface-sunken) !important;
+}
+
+:root:not([data-theme='dark']) .bg-gray-400\/50 {
+  background-color: rgba(17, 24, 39, 0.32) !important;
+}
+
+:root:not([data-theme='dark']) .shadow-sm {
+  box-shadow: var(--shadow-sm) !important;
+}
+
+:root:not([data-theme='dark']) .shadow-lg,
+:root:not([data-theme='dark']) .shadow-2xl {
+  box-shadow: var(--shadow-overlay) !important;
+}
+
+:root:not([data-theme='dark']) .bg-white.text-\[\#5542f6\].shadow-sm,
+:root:not([data-theme='dark']) .bg-white.shadow-sm.text-\[\#5542f6\] {
+  background-color: var(--color-surface-raised) !important;
+  color: var(--color-accent) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+:root:not([data-theme='dark']) .ant-menu {
+  background: transparent !important;
+}
+
+:root:not([data-theme='dark']) .ant-menu-item,
+:root:not([data-theme='dark']) .ant-menu-item .ant-menu-title-content {
+  color: var(--color-text-secondary) !important;
+}
+
+:root:not([data-theme='dark']) .ant-menu-item-selected,
+:root:not([data-theme='dark']) .ant-menu-item-selected .ant-menu-title-content {
+  color: var(--color-accent) !important;
+  background-color: transparent !important;
+}
+
+:root:not([data-theme='dark']) .ant-menu-item-selected::after {
+  display: none !important;
+}
+
+:root:not([data-theme='dark']) .ant-menu-item:hover,
+:root:not([data-theme='dark']) .ant-menu-item-active {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-surface-soft) !important;
+}
+
+:root:not([data-theme='dark']) .theme-input,
+:root:not([data-theme='dark']) input[type='text'],
+:root:not([data-theme='dark']) input[type='number'],
+:root:not([data-theme='dark']) input[type='password'],
+:root:not([data-theme='dark']) input[type='search'],
+:root:not([data-theme='dark']) input:not([type]),
+:root:not([data-theme='dark']) textarea,
+:root:not([data-theme='dark']) select {
+  background-color: var(--color-surface-raised) !important;
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-default) !important;
+}
+
+:root:not([data-theme='dark']) .theme-input:focus,
+:root:not([data-theme='dark']) input:focus,
+:root:not([data-theme='dark']) textarea:focus,
+:root:not([data-theme='dark']) select:focus {
+  border-color: var(--color-accent) !important;
+  box-shadow: 0 0 0 2px var(--color-accent-muted);
+  outline: none;
+}
+
+/* ── 深色：Tailwind 映射 ── */
 :root[data-theme='dark'] .bg-white {
-  background-color: var(--panel-bg) !important;
+  background-color: var(--color-surface-raised) !important;
 }
 
 :root[data-theme='dark'] .bg-gray-50,
 :root[data-theme='dark'] .bg-gray-50\/50 {
-  background-color: var(--panel-muted) !important;
+  background-color: var(--color-surface-muted) !important;
 }
 
 :root[data-theme='dark'] .bg-gray-100 {
-  background-color: var(--panel-soft) !important;
+  background-color: var(--color-surface-soft) !important;
+}
+
+:root[data-theme='dark'] .bg-gray-200 {
+  background-color: var(--color-surface-soft) !important;
 }
 
 :root[data-theme='dark'] .border-gray-200,
 :root[data-theme='dark'] .border-gray-100 {
-  border-color: var(--border-color) !important;
+  border-color: var(--color-border-subtle) !important;
 }
 
+/* ── 文字层级 ── */
 :root[data-theme='dark'] .text-gray-800,
+:root[data-theme='dark'] .text-gray-900,
 :root[data-theme='dark'] .text-\[\#2e2c34\] {
-  color: #f3f4f6 !important;
+  color: var(--color-text-primary) !important;
 }
 
 :root[data-theme='dark'] .text-gray-700,
 :root[data-theme='dark'] .text-gray-600 {
-  color: #d1d5db !important;
+  color: var(--color-text-secondary) !important;
 }
 
 :root[data-theme='dark'] .text-gray-500,
 :root[data-theme='dark'] .text-gray-400 {
-  color: #9ca3af !important;
+  color: var(--color-text-tertiary) !important;
+}
+
+/* ── 品牌色 / 交互色 ── */
+:root[data-theme='dark'] .text-\[\#5542f6\] {
+  color: var(--color-accent-text) !important;
+}
+
+:root[data-theme='dark'] .hover\:text-\[\#5542f6\]:hover {
+  color: var(--color-accent-hover) !important;
+}
+
+:root[data-theme='dark'] .hover\:border-\[\#5542f6\]:hover {
+  border-color: var(--color-accent) !important;
+}
+
+:root[data-theme='dark'] .bg-\[\#5542f6\] {
+  background-color: var(--color-accent) !important;
+}
+
+:root[data-theme='dark'] .hover\:bg-\[\#4535d4\]:hover,
+:root[data-theme='dark'] .hover\:bg-\[\#4532e6\]:hover {
+  background-color: var(--brand-600) !important;
+}
+
+:root[data-theme='dark'] .text-blue-400,
+:root[data-theme='dark'] .text-blue-500 {
+  color: var(--color-info) !important;
+}
+
+/* ── 悬停表面（与文字层级协调） ── */
+:root[data-theme='dark'] .hover\:bg-gray-50:hover {
+  background-color: var(--color-surface-muted) !important;
+}
+
+:root[data-theme='dark'] .hover\:bg-gray-100:hover {
+  background-color: var(--color-surface-soft) !important;
+}
+
+:root[data-theme='dark'] .hover\:bg-gray-200:hover {
+  background-color: var(--color-surface-overlay) !important;
+}
+
+/* ── 遮罩 / 阴影 ── */
+:root[data-theme='dark'] .bg-gray-400\/50 {
+  background-color: rgba(8, 10, 16, 0.72) !important;
+}
+
+:root[data-theme='dark'] .shadow-sm {
+  box-shadow: var(--shadow-sm) !important;
+}
+
+:root[data-theme='dark'] .shadow-lg,
+:root[data-theme='dark'] .shadow-2xl {
+  box-shadow: var(--shadow-overlay) !important;
+}
+
+/* 设置弹窗：选中 tab 在暗色下用 accent 底而非白底 */
+:root[data-theme='dark'] .bg-white.text-\[\#5542f6\].shadow-sm,
+:root[data-theme='dark'] .bg-white.shadow-sm.text-\[\#5542f6\] {
+  background-color: var(--color-accent-muted) !important;
+  color: var(--color-accent-text) !important;
+  box-shadow: inset 0 0 0 1px rgba(109, 92, 247, 0.25) !important;
+}
+
+/* ── Ant Design 组件 ── */
+:root[data-theme='dark'] .ant-btn-text:not(:disabled),
+:root[data-theme='dark'] .ant-btn-text:not(:disabled) > span {
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme='dark'] .ant-btn-text:not(:disabled):hover,
+:root[data-theme='dark'] .ant-btn-text:not(:disabled):focus-visible {
+  background-color: var(--color-surface-soft) !important;
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme='dark'] .ant-menu {
+  background: transparent !important;
+}
+
+:root[data-theme='dark'] .ant-menu-item,
+:root[data-theme='dark'] .ant-menu-item .ant-menu-title-content {
+  color: var(--color-text-secondary) !important;
+}
+
+:root[data-theme='dark'] .ant-menu-item-selected,
+:root[data-theme='dark'] .ant-menu-item-selected .ant-menu-title-content {
+  color: var(--color-accent-text) !important;
+  background-color: transparent !important;
+}
+
+:root[data-theme='dark'] .ant-menu-item-selected::after {
+  display: none !important;
+}
+
+:root[data-theme='dark'] .ant-menu-item:hover,
+:root[data-theme='dark'] .ant-menu-item-active {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-surface-soft) !important;
+}
+
+:root[data-theme='dark'] .ant-dropdown-menu-item,
+:root[data-theme='dark'] .ant-dropdown-menu-item .ant-dropdown-menu-title-content {
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme='dark'] .ant-dropdown-menu-item:hover,
+:root[data-theme='dark'] .ant-dropdown-menu-item-active {
+  background-color: var(--color-surface-soft) !important;
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme='dark'] .ant-dropdown-menu-item-danger,
+:root[data-theme='dark'] .ant-dropdown-menu-item-danger .ant-dropdown-menu-title-content {
+  color: var(--color-danger) !important;
+}
+
+:root[data-theme='dark'] .ant-dropdown-menu-item-danger:hover {
+  background-color: var(--color-danger-muted) !important;
+  color: #fca5a5 !important;
+}
+
+:root[data-theme='dark'] .ant-typography.ant-typography-secondary {
+  color: var(--color-text-tertiary) !important;
+}
+
+:root[data-theme='dark'] .ant-empty-description {
+  color: var(--color-text-tertiary) !important;
+}
+
+:root[data-theme='dark'] select,
+:root[data-theme='dark'] select option {
+  background-color: var(--color-surface-raised) !important;
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-default) !important;
+}
+
+/* 原生 input / textarea：深色下需与弹窗背景区分 */
+.theme-input,
+:root[data-theme='dark'] input[type='text'],
+:root[data-theme='dark'] input[type='number'],
+:root[data-theme='dark'] input[type='password'],
+:root[data-theme='dark'] input[type='search'],
+:root[data-theme='dark'] input:not([type]),
+:root[data-theme='dark'] textarea {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+:root[data-theme='dark'] .theme-input,
+:root[data-theme='dark'] input[type='text'],
+:root[data-theme='dark'] input[type='number'],
+:root[data-theme='dark'] input[type='password'],
+:root[data-theme='dark'] input[type='search'],
+:root[data-theme='dark'] input:not([type]),
+:root[data-theme='dark'] textarea {
+  background-color: var(--color-surface-soft) !important;
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-strong) !important;
+}
+
+:root[data-theme='dark'] input::placeholder,
+:root[data-theme='dark'] textarea::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+:root[data-theme='dark'] .theme-input:focus,
+:root[data-theme='dark'] input[type='text']:focus,
+:root[data-theme='dark'] input[type='number']:focus,
+:root[data-theme='dark'] input[type='password']:focus,
+:root[data-theme='dark'] input[type='search']:focus,
+:root[data-theme='dark'] input:not([type]):focus,
+:root[data-theme='dark'] textarea:focus {
+  border-color: var(--color-accent) !important;
+  box-shadow: 0 0 0 2px var(--color-accent-muted);
+  outline: none;
 }
 
 :root[data-theme='dark'] .ant-modal-content,
@@ -74,19 +360,234 @@ body {
 :root[data-theme='dark'] .ant-input,
 :root[data-theme='dark'] .ant-input-affix-wrapper,
 :root[data-theme='dark'] .ant-select-selector {
-  background: var(--panel-bg) !important;
-  color: var(--foreground) !important;
-  border-color: var(--border-color) !important;
+  background: var(--color-surface-overlay) !important;
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-default) !important;
 }
 
-:root[data-theme='dark'] .ant-descriptions-item-label,
+:root[data-theme='dark'] .ant-descriptions-item-label {
+  color: var(--color-text-tertiary) !important;
+}
+
 :root[data-theme='dark'] .ant-descriptions-item-content,
 :root[data-theme='dark'] .ant-modal-title,
 :root[data-theme='dark'] .ant-dropdown-menu-title-content {
-  color: var(--foreground) !important;
+  color: var(--color-text-primary) !important;
 }
 
-/* 工作台品牌标题 — 科技感 */
+:root[data-theme='dark'] .ant-tag {
+  border-color: var(--color-border-default) !important;
+}
+
+/* 我的云：活动 / 最近上传 / 已收藏 空状态占位 */
+.section-empty-state {
+  background-color: var(--color-surface-muted);
+  border-color: var(--color-border-subtle);
+}
+
+.section-empty-state__desc {
+  color: var(--color-text-tertiary);
+}
+
+:root[data-theme='dark'] .section-empty-state {
+  background-color: var(--color-surface-muted) !important;
+  border-color: var(--color-border-default) !important;
+}
+
+:root[data-theme='dark'] .section-empty-state__desc {
+  color: var(--color-text-tertiary) !important;
+}
+
+/* Ant Empty 简版图标为内联 fill，深色下手动反转为浅描边/浅填充 */
+:root[data-theme='dark'] .section-empty-state .ant-empty-image svg ellipse {
+  fill: var(--color-surface-sunken) !important;
+}
+
+:root[data-theme='dark'] .section-empty-state .ant-empty-image svg path:nth-of-type(1) {
+  fill: none !important;
+  stroke: var(--color-text-secondary) !important;
+}
+
+:root[data-theme='dark'] .section-empty-state .ant-empty-image svg path:nth-of-type(2) {
+  fill: var(--color-surface-soft) !important;
+  stroke: var(--color-text-secondary) !important;
+}
+
+:root[data-theme='dark'] .bg-gray-50\/70 {
+  background-color: var(--color-surface-muted) !important;
+}
+
+/* 我的云：存储分类图标（文件/图片/视频/音频/其他） */
+.storage-category-icon {
+  flex-shrink: 0;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.storage-category-icon--document {
+  background-color: #e5f6ff;
+  color: #00a5ff;
+}
+
+.storage-category-icon--image {
+  background-color: #eeecfe;
+  color: #5542f6;
+}
+
+.storage-category-icon--video {
+  background-color: #e8f9f6;
+  color: #22c9ad;
+}
+
+.storage-category-icon--audio {
+  background-color: #fef0f5;
+  color: #fa699d;
+}
+
+.storage-category-icon--other {
+  background-color: #fff5ec;
+  color: #ffa043;
+}
+
+:root[data-theme='dark'] .storage-category-icon--document {
+  background-color: rgba(56, 189, 248, 0.14);
+  color: #7dd3fc;
+}
+
+:root[data-theme='dark'] .storage-category-icon--image {
+  background-color: rgba(109, 92, 247, 0.16);
+  color: #b4a8ff;
+}
+
+:root[data-theme='dark'] .storage-category-icon--video {
+  background-color: rgba(45, 212, 191, 0.14);
+  color: #5eead4;
+}
+
+:root[data-theme='dark'] .storage-category-icon--audio {
+  background-color: rgba(244, 114, 182, 0.14);
+  color: #f9a8d4;
+}
+
+:root[data-theme='dark'] .storage-category-icon--other {
+  background-color: rgba(251, 146, 60, 0.14);
+  color: #fdba74;
+}
+
+.storage-chart-panel--light {
+  box-shadow: 0 0 5px #eaeaea;
+}
+
+:root[data-theme='dark'] .storage-chart-panel--dark {
+  background-color: var(--color-surface-muted);
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
+}
+
+/* 个人主页：统计卡片图标（总文件数 / 存储使用 / 收藏数） */
+.profile-stat-icon {
+  flex-shrink: 0;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.profile-stat-icon--files {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.profile-stat-icon--storage {
+  background-color: #ede9fe;
+  color: #7c3aed;
+}
+
+.profile-stat-icon--favorites {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+:root[data-theme='dark'] .profile-stat-icon--files {
+  background-color: rgba(56, 189, 248, 0.14);
+  color: #7dd3fc;
+}
+
+:root[data-theme='dark'] .profile-stat-icon--storage {
+  background-color: rgba(109, 92, 247, 0.16);
+  color: #b4a8ff;
+}
+
+:root[data-theme='dark'] .profile-stat-icon--favorites {
+  background-color: rgba(251, 191, 36, 0.14);
+  color: #fcd34d;
+}
+
+/* 文件类型图标 */
+.file-type-icon--pdf {
+  color: #f87171;
+}
+
+.file-type-icon--doc {
+  color: #60a5fa;
+}
+
+.file-type-icon--xlsx {
+  color: #4ade80;
+}
+
+.file-type-icon--zip {
+  color: #fbbf24;
+}
+
+.file-type-icon--image {
+  color: #9ca3af;
+}
+
+.file-type-icon--video {
+  color: #9ca3af;
+}
+
+.file-type-icon--audio {
+  color: #9ca3af;
+}
+
+.file-type-icon--default {
+  color: #9ca3af;
+}
+
+:root[data-theme='dark'] .file-type-icon--pdf {
+  color: #fca5a5;
+}
+
+:root[data-theme='dark'] .file-type-icon--doc {
+  color: #7dd3fc;
+}
+
+:root[data-theme='dark'] .file-type-icon--xlsx {
+  color: #86efac;
+}
+
+:root[data-theme='dark'] .file-type-icon--zip {
+  color: #fcd34d;
+}
+
+:root[data-theme='dark'] .file-type-icon--image {
+  color: #c4b5fd;
+}
+
+:root[data-theme='dark'] .file-type-icon--video {
+  color: #5eead4;
+}
+
+:root[data-theme='dark'] .file-type-icon--audio {
+  color: #f9a8d4;
+}
+
+:root[data-theme='dark'] .file-type-icon--default {
+  color: #a8afc0;
+}
+
+/* ── 品牌标题 ── */
 @keyframes brand-gradient-shift {
   0%,
   100% {
@@ -146,40 +647,80 @@ body {
   letter-spacing: 0.06em;
 }
 
+/* 渐变字：勿与 filter 同元素，否则 background-clip:text 会退化为色块 */
+.brand-logo__main,
+.brand-logo__accent {
+  display: inline-block;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  background-size: 220% auto;
+}
+
 .brand-logo__main {
-  background: linear-gradient(
+  background-image: linear-gradient(
     120deg,
     #06b6d4 0%,
     #5542f6 42%,
     #7c3aed 72%,
     #22d3ee 100%
   );
-  background-size: 220% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
   animation: brand-gradient-shift 5s ease infinite;
-  filter: drop-shadow(0 0 10px rgba(85, 66, 246, 0.28));
+  text-shadow: 0 0 24px rgba(85, 66, 246, 0.35);
 }
 
 .brand-logo__accent {
   font-size: 0.94em;
   letter-spacing: 0.14em;
-  background: linear-gradient(90deg, #22d3ee 0%, #a5b4fc 50%, #c4b5fd 100%);
+  background-image: linear-gradient(90deg, #22d3ee 0%, #a5b4fc 50%, #c4b5fd 100%);
   background-size: 180% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
   animation: brand-gradient-shift 4.5s ease infinite reverse;
-  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.22));
+  text-shadow: 0 0 20px rgba(34, 211, 238, 0.28);
+}
+
+:root[data-theme='dark'] .brand-logo__bar {
+  background: linear-gradient(180deg, #67e8f9 0%, #8575f9 50%, #a594fa 100%);
+  box-shadow: 0 0 12px var(--brand-glow);
 }
 
 :root[data-theme='dark'] .brand-logo__main {
-  filter: drop-shadow(0 0 12px rgba(129, 140, 248, 0.35));
+  background-image: linear-gradient(
+    120deg,
+    #7dd3fc 0%,
+    #a594fa 35%,
+    #c4b5fd 65%,
+    #e9d5ff 100%
+  );
+  text-shadow: 0 0 28px rgba(165, 180, 252, 0.45);
 }
 
 :root[data-theme='dark'] .brand-logo__accent {
-  filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.3));
+  background-image: linear-gradient(90deg, #bae6fd 0%, #ddd6fe 45%, #ede9fe 100%);
+  text-shadow: 0 0 22px rgba(196, 181, 253, 0.35);
+}
+
+/* background-clip 不支持时的兜底 */
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .brand-logo__main {
+    -webkit-text-fill-color: unset;
+    color: #5542f6;
+    background-image: none;
+  }
+
+  .brand-logo__accent {
+    -webkit-text-fill-color: unset;
+    color: #818cf8;
+    background-image: none;
+  }
+
+  :root[data-theme='dark'] .brand-logo__main {
+    color: #c4b5fd;
+  }
+
+  :root[data-theme='dark'] .brand-logo__accent {
+    color: #ddd6fe;
+  }
 }
 
 /* 管理后台：强制浅色，不受云盘 dark 主题影响 */

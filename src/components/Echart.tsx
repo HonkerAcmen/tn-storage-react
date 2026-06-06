@@ -27,9 +27,12 @@ const EChart: React.FC<EChartProps> = ({
   useEffect(() => {
     if (!chartRef.current) return;
 
-    if (!chartInstance.current) {
-      chartInstance.current = echarts.init(chartRef.current, theme);
+    if (chartInstance.current) {
+      chartInstance.current.dispose();
+      chartInstance.current = null;
     }
+
+    chartInstance.current = echarts.init(chartRef.current, theme);
 
     chartInstance.current.setOption(option, { notMerge: true, lazyUpdate: false });
 

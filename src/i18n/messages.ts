@@ -20,7 +20,6 @@ const zhCN = {
 
   'theme.light': '浅色模式',
   'theme.dark': '深色模式',
-  'theme.system': '跟随系统',
 
   'role.admin': '管理员',
   'role.viewer': '访客',
@@ -137,7 +136,6 @@ const enUS: Record<keyof typeof zhCN, string> = {
 
   'theme.light': 'Light',
   'theme.dark': 'Dark',
-  'theme.system': 'System',
 
   'role.admin': 'Admin',
   'role.viewer': 'Viewer',
@@ -259,7 +257,6 @@ const jaJP: Record<keyof typeof zhCN, string> = {
 
   'theme.light': 'ライト',
   'theme.dark': 'ダーク',
-  'theme.system': 'システムに従う',
 
   'role.admin': '管理者',
   'role.viewer': '閲覧者',
