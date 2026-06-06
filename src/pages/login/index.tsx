@@ -25,6 +25,8 @@ import {
   usernameFormRule,
 } from '@/utils/usernameRules';
 import PasswordStrengthBar from '@/components/auth/PasswordStrengthBar';
+import CaptchaField from '@/components/auth/CaptchaField';
+import EmailChallengeModal from '@/components/verification/EmailChallengeModal';
 
 export default function Login() {
   const [messageApi, contextHolder] = message.useMessage();
@@ -45,10 +47,19 @@ export default function Login() {
   };
 
   // 登录表单提交
-  const onLoginFinish = async (values: LoginRequest) => {
+  const onLoginFinish = async (
+    values: LoginRequest & {
+      captcha?: { captchaId: string; captchaCode: string };
+    },
+  ) => {
     setLoading(true);
     try {
-      await login.mutateAsync(values);
+      await login.mutateAsync({
+        email: values.email,
+        password: values.password,
+        captchaId: values.captcha?.captchaId,
+        captchaCode: values.captcha?.captchaCode,
+      });
 
       // 确保 token 已保存到 localStorage
       if (localStorage.getItem('token')) {
@@ -73,10 +84,18 @@ export default function Login() {
     password: string;
     confirmPassword: string;
     agreement: boolean;
+    captcha?: { captchaId: string; captchaCode: string };
   }) => {
     setLoading(true);
     try {
-      await register.mutateAsync(values);
+      await register.mutateAsync({
+        username: values.username,
+        email: values.email,
+        phone: values.phone,
+        password: values.password,
+        captchaId: values.captcha?.captchaId,
+        captchaCode: values.captcha?.captchaCode,
+      });
       messageApi.success('注册成功！请登录');
       // 切换到登录标签页
       setActiveTab('login');
@@ -88,11 +107,28 @@ export default function Login() {
   };
 
   // 忘记密码表单提交
-  const onForgotPasswordFinish = async (values: ForgotPasswordRequest) => {
+  const onForgotPasswordFinish = async (
+    values: {
+      email: string;
+      newPassword: string;
+      confirmPassword: string;
+    },
+    challengeToken?: string,
+  ) => {
+    const token = challengeToken ?? forgotChallengeToken;
+    if (!token) {
+      setForgotChallengeOpen(true);
+      return;
+    }
     setLoading(true);
     try {
-      await forgotPassword.mutateAsync(values);
-      messageApi.success('重置密码邮件已发送，请检查您的邮箱');
+      await forgotPassword.mutateAsync({
+        email: values.email,
+        newPassword: values.newPassword,
+        challengeToken: token,
+      });
+      setForgotChallengeToken('');
+      messageApi.success('密码已重置，请使用新密码登录');
       // 2秒后切换到登录标签页
       setTimeout(() => {
         setActiveTab('login');
@@ -110,6 +146,9 @@ export default function Login() {
   const [resetPasswordForm] = Form.useForm();
   const resetNewPassword =
     Form.useWatch('newPassword', resetPasswordForm) ?? '';
+  const [forgotChallengeOpen, setForgotChallengeOpen] = useState(false);
+  const [forgotChallengeToken, setForgotChallengeToken] = useState('');
+  const forgotEmail = Form.useWatch('email', resetPasswordForm) ?? '';
 
   useEffect(() => {
     if (!router.isReady) {
@@ -158,6 +197,13 @@ export default function Login() {
               prefix={<AiOutlineLock className="text-gray-400" />}
               placeholder="密码"
             />
+          </Form.Item>
+
+          <Form.Item
+            name="captcha"
+            rules={[{ required: true, message: '请完成图形验证码' }]}
+          >
+            <CaptchaField />
           </Form.Item>
 
           <Form.Item>
@@ -279,6 +325,13 @@ export default function Login() {
           </Form.Item>
 
           <Form.Item
+            name="captcha"
+            rules={[{ required: true, message: '请完成图形验证码' }]}
+          >
+            <CaptchaField />
+          </Form.Item>
+
+          <Form.Item
             name="agreement"
             valuePropName="checked"
             rules={[
@@ -319,10 +372,11 @@ export default function Login() {
       children: (
         <div>
           <div className="mt-6 mb-6 rounded-lg bg-blue-50 p-4 text-sm text-gray-600">
-            <p>请输入邮箱，我们将向您发送重置密码链接。</p>
+            <p>请输入注册邮箱并完成邮箱验证后设置新密码。</p>
           </div>
 
           <Form
+            form={resetPasswordForm}
             name="forgot-password"
             onFinish={onForgotPasswordFinish}
             autoComplete="off"
@@ -340,42 +394,6 @@ export default function Login() {
                 placeholder="邮箱地址"
               />
             </Form.Item>
-
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                block
-                className="h-12 bg-[#5542f6] hover:bg-[#4532e6]"
-              >
-                发送重置链接
-              </Button>
-            </Form.Item>
-          </Form>
-
-          <div className="my-6 border-t border-gray-100" />
-
-          <div className="mb-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-            <p className="font-medium text-gray-700">设置新密码</p>
-            <p className="mt-1">
-              若您已通过邮件验证，或需要在登录后修改密码，请在此设置新密码（登录后也可在「设置
-              → 安全设置」中修改）。
-            </p>
-          </div>
-
-          <Form
-            form={resetPasswordForm}
-            name="reset-password"
-            layout="vertical"
-            autoComplete="off"
-            size="large"
-            onFinish={() => {
-              messageApi.info(
-                '邮件重置链接功能即将上线；已登录用户请前往「设置 → 安全设置」修改密码'
-              );
-            }}
-          >
             <Form.Item
               name="newPassword"
               label="新密码"
@@ -405,9 +423,15 @@ export default function Login() {
             >
               <Input.Password placeholder="确认新密码" />
             </Form.Item>
-            <Form.Item className="mb-0">
-              <Button block htmlType="submit" className="h-11">
-                保存新密码
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                block
+                className="h-12 bg-[#5542f6] hover:bg-[#4532e6]"
+              >
+                {forgotChallengeToken ? '重置密码' : '验证邮箱并重置密码'}
               </Button>
             </Form.Item>
           </Form>
@@ -429,6 +453,27 @@ export default function Login() {
   return (
     <>
       {contextHolder}
+      <EmailChallengeModal
+        open={forgotChallengeOpen}
+        purpose="auth.forgot_password"
+        scope="cloud"
+        email={forgotEmail}
+        title="验证邮箱以重置密码"
+        onClose={() => setForgotChallengeOpen(false)}
+        onVerified={async (token) => {
+          setForgotChallengeToken(token);
+          setForgotChallengeOpen(false);
+          const values = await resetPasswordForm.validateFields();
+          await onForgotPasswordFinish(
+            {
+              email: values.email,
+              newPassword: values.newPassword,
+              confirmPassword: values.confirmPassword,
+            },
+            token,
+          );
+        }}
+      />
       <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-[#5542f6] via-[#7c6cf5] to-[#9d8ef7]">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
           {/* Logo 和标题 */}

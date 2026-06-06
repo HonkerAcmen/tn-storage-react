@@ -28,6 +28,8 @@ import {
 } from '@/network/hooks/admin';
 import { AdminBackupJob } from '@/network/types/Response/admin';
 import { formatDateTime } from '@/utils/format/formatters';
+import EmailChallengeModal from '@/components/verification/EmailChallengeModal';
+import { useAdminProfile } from '@/network/hooks/adminAuth';
 
 const statusMap: Record<
   AdminBackupJob['status'],
@@ -66,6 +68,9 @@ export default function AdminBackupPage() {
   const updateSchedule = useAdminUpdateBackupSchedule();
   const feedback = useAdminFeedback();
   const canWrite = useAdminCanWrite();
+  const { data: adminProfile } = useAdminProfile();
+  const [restoreChallengeOpen, setRestoreChallengeOpen] = useState(false);
+  const [restoreJobId, setRestoreJobId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [scheduleForm] = Form.useForm<ScheduleFormValues>();
   const jobs = data?.data?.data ?? [];
@@ -124,6 +129,34 @@ export default function AdminBackupPage() {
 
   return (
     <AdminLayout title="数据备份">
+      <EmailChallengeModal
+        open={restoreChallengeOpen}
+        purpose="admin.backup_restore"
+        scope="admin"
+        admin
+        email={adminProfile?.data?.data?.email}
+        title="验证邮箱以恢复备份"
+        onClose={() => {
+          setRestoreChallengeOpen(false);
+          setRestoreJobId(null);
+        }}
+        onVerified={async (challengeToken) => {
+          if (!restoreJobId) return;
+          try {
+            const res = await restoreBackup.mutateAsync({
+              id: restoreJobId,
+              includeMinio: true,
+              challengeToken,
+            });
+            feedback.success(res.data?.data?.message ?? '恢复完成');
+          } catch (err) {
+            feedback.error(err, '恢复失败');
+          } finally {
+            setRestoreChallengeOpen(false);
+            setRestoreJobId(null);
+          }
+        }}
+      />
       <Card
         {...adminCardProps}
         title="定时备份"
@@ -289,30 +322,17 @@ export default function AdminBackupPage() {
                     </Popconfirm>
                   ) : null}
                   {record.status === 'completed' && canWrite ? (
-                    <Popconfirm
-                      title="从该备份恢复数据？将合并 JSON 表数据（不覆盖管理员账号），可选恢复 MinIO 镜像。"
-                      onConfirm={async () => {
-                        try {
-                          const res = await restoreBackup.mutateAsync({
-                            id: record.id,
-                            includeMinio: true,
-                          });
-                          feedback.success(
-                            res.data?.data?.message ?? '恢复完成',
-                          );
-                        } catch (err) {
-                          feedback.error(err, '恢复失败');
-                        }
+                    <Button
+                      size="small"
+                      icon={<MdRestore />}
+                      loading={restoreBackup.isPending}
+                      onClick={() => {
+                        setRestoreJobId(record.id);
+                        setRestoreChallengeOpen(true);
                       }}
                     >
-                      <Button
-                        size="small"
-                        icon={<MdRestore />}
-                        loading={restoreBackup.isPending}
-                      >
-                        恢复
-                      </Button>
-                    </Popconfirm>
+                      恢复
+                    </Button>
                   ) : null}
                   <Button
                     size="small"

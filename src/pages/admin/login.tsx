@@ -10,6 +10,7 @@ import { LoginRequest } from '@/network/types/Request/auth';
 import { getAdminApiErrorMessage } from '@/utils/admin/apiError';
 import { useAdminFeedback } from '@/hooks/useAdminFeedback';
 import AdminAppProvider from '@/components/admin/AdminAppProvider';
+import CaptchaField from '@/components/auth/CaptchaField';
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -33,11 +34,20 @@ function AdminLoginForm() {
     }
   }, [ready, authed, profileLoading, profileOk, router]);
 
-  const onFinish = async (values: LoginRequest) => {
+  const onFinish = async (
+    values: LoginRequest & {
+      captcha?: { captchaId: string; captchaCode: string };
+    },
+  ) => {
     setLoginError(null);
     setLoading(true);
     try {
-      await adminLogin.mutateAsync(values);
+      await adminLogin.mutateAsync({
+        email: values.email,
+        password: values.password,
+        captchaId: values.captcha?.captchaId,
+        captchaCode: values.captcha?.captchaCode,
+      });
       feedback.success('登录成功，正在进入管理后台…');
       router.replace('/admin');
     } catch (err) {
@@ -136,6 +146,14 @@ function AdminLoginForm() {
               prefix={<AiOutlineLock className="text-gray-400" />}
               placeholder="请输入密码"
             />
+          </Form.Item>
+
+          <Form.Item
+            name="captcha"
+            label="图形验证码"
+            rules={[{ required: true, message: '请完成图形验证码' }]}
+          >
+            <CaptchaField admin />
           </Form.Item>
 
           <Form.Item className="mb-2">

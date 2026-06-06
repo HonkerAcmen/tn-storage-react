@@ -19,6 +19,7 @@ import {
   MdFactCheck,
   MdBlock,
   MdCloudUpload,
+  MdSecurity,
 } from 'react-icons/md';
 import { HiOutlineCloud } from 'react-icons/hi';
 import AdminGuard from './AdminGuard';
@@ -38,6 +39,7 @@ const menuItems = [
   { key: '/admin/trash', label: '回收站', icon: <MdDeleteOutline /> },
   { key: '/admin/shares', label: '分享链接', icon: <MdLink /> },
   { key: '/admin/ops', label: '运维中心', icon: <MdBuild /> },
+  { key: '/admin/verification', label: '验证与安全', icon: <MdSecurity /> },
   { key: '/admin/forbidden-words', label: '违禁词', icon: <MdBlock /> },
   { key: '/admin/audit-logs', label: '操作审计', icon: <MdFactCheck /> },
   { key: '/admin/storage', label: '存储分析', icon: <MdStorage /> },

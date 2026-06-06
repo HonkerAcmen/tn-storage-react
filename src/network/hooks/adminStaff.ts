@@ -92,7 +92,12 @@ export function useAdminLoginLogs(params: {
 
 export function useAdminChangePassword() {
   return useMutation({
-    mutationFn: async (body: { oldPassword: string; newPassword: string }) =>
-      await adminHttp.put('/admin/auth/password', body),
+    mutationFn: async (body: {
+      oldPassword: string;
+      newPassword: string;
+      captchaId?: string;
+      captchaCode?: string;
+      challengeToken?: string;
+    }) => await adminHttp.put('/admin/auth/password', body),
   });
 }

@@ -21,4 +21,7 @@ export interface ChangePasswordRequest {
   oldPassword: string;
   newPassword: string;
   confirmNewPassword: string;
+  captchaId?: string;
+  captchaCode?: string;
+  challengeToken?: string;
 }

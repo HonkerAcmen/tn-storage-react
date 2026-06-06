@@ -1,9 +1,14 @@
-export interface LoginRequest {
+export interface CaptchaPayload {
+  captchaId?: string;
+  captchaCode?: string;
+}
+
+export interface LoginRequest extends CaptchaPayload {
   email: string;
   password: string;
 }
 
-export interface RegisterRequest {
+export interface RegisterRequest extends CaptchaPayload {
   username: string;
   password: string;
   email: string;
@@ -12,4 +17,6 @@ export interface RegisterRequest {
 
 export interface ForgotPasswordRequest {
   email: string;
+  newPassword: string;
+  challengeToken: string;
 }

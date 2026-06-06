@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Button,
   Card,
@@ -47,6 +47,9 @@ import {
 import { useAdminCanWrite } from '@/network/hooks/adminAuth';
 import { AdminCloudUserResponse } from '@/network/types/Response/user';
 import { formatDateTime, formatFileSize } from '@/utils/format/formatters';
+import EmailChallengeModal from '@/components/verification/EmailChallengeModal';
+import { VerificationPurpose } from '@/network/hooks/verification';
+import { useAdminProfile } from '@/network/hooks/adminAuth';
 
 type UserFormValues = {
   username: string;
@@ -79,6 +82,23 @@ export default function AdminUsersPage() {
   const updateQuota = useAdminUpdateUserQuota();
   const feedback = useAdminFeedback();
   const canWrite = useAdminCanWrite();
+  const { data: adminProfile } = useAdminProfile();
+  const adminEmail = adminProfile?.data?.data?.email;
+  const [challengeOpen, setChallengeOpen] = useState(false);
+  const [challengePurpose, setChallengePurpose] =
+    useState<VerificationPurpose>('admin.reset_user_password');
+  const pendingChallengeAction = useRef<
+    ((token: string) => Promise<void>) | null
+  >(null);
+
+  const runWithChallenge = (
+    purpose: VerificationPurpose,
+    action: (token: string) => Promise<void>,
+  ) => {
+    pendingChallengeAction.current = action;
+    setChallengePurpose(purpose);
+    setChallengeOpen(true);
+  };
 
   const [formOpen, setFormOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
@@ -168,28 +188,39 @@ export default function AdminUsersPage() {
   const handleResetPassword = async () => {
     const values = await resetForm.validateFields();
     if (!resetUserId) return;
-    try {
-      await resetPassword.mutateAsync({
-        id: resetUserId,
-        password: values.password,
-      });
-      feedback.success('密码已重置');
-      setResetOpen(false);
-      resetForm.resetFields();
-    } catch (err) {
-      feedback.error(err, '重置失败');
-    }
+    runWithChallenge('admin.reset_user_password', async (challengeToken) => {
+      try {
+        await resetPassword.mutateAsync({
+          id: resetUserId,
+          password: values.password,
+          challengeToken,
+        });
+        feedback.success('密码已重置');
+        setResetOpen(false);
+        resetForm.resetFields();
+      } catch (err) {
+        feedback.error(err, '重置失败');
+      }
+    });
   };
 
   const handleToggleStatus = async (record: AdminCloudUserResponse) => {
     const nextStatus =
       record.account_status === 'active' ? 'disabled' : 'active';
-    try {
-      await updateStatus.mutateAsync({ id: record.id, status: nextStatus });
-      feedback.success(nextStatus === 'disabled' ? '账号已禁用' : '账号已启用');
-    } catch (err) {
-      feedback.error(err, '状态更新失败');
-    }
+    runWithChallenge('admin.disable_user', async (challengeToken) => {
+      try {
+        await updateStatus.mutateAsync({
+          id: record.id,
+          status: nextStatus,
+          challengeToken,
+        });
+        feedback.success(
+          nextStatus === 'disabled' ? '账号已禁用' : '账号已启用',
+        );
+      } catch (err) {
+        feedback.error(err, '状态更新失败');
+      }
+    });
   };
 
   const handleSaveQuota = async () => {
@@ -215,6 +246,23 @@ export default function AdminUsersPage() {
 
   return (
     <AdminLayout title="云盘用户">
+      <EmailChallengeModal
+        open={challengeOpen}
+        purpose={challengePurpose}
+        scope="admin"
+        admin
+        email={adminEmail}
+        onClose={() => {
+          setChallengeOpen(false);
+          pendingChallengeAction.current = null;
+        }}
+        onVerified={async (token) => {
+          const action = pendingChallengeAction.current;
+          pendingChallengeAction.current = null;
+          setChallengeOpen(false);
+          if (action) await action(token);
+        }}
+      />
       <Card
         {...adminCardProps}
         extra={
@@ -366,21 +414,26 @@ export default function AdminUsersPage() {
                         {record.account_status === 'active' ? '禁用' : '启用'}
                       </Button>
                     </Popconfirm>
-                    <Popconfirm
-                      title="确定删除该用户？此操作不可恢复。"
-                      onConfirm={async () => {
-                        try {
-                          await deleteUser.mutateAsync(record.id);
-                          feedback.success('已删除');
-                        } catch (err) {
-                          feedback.error(err, '删除失败');
-                        }
-                      }}
+                    <Button
+                      size="small"
+                      danger
+                      icon={<MdDelete />}
+                      onClick={() =>
+                        runWithChallenge('admin.delete_user', async (token) => {
+                          try {
+                            await deleteUser.mutateAsync({
+                              id: record.id,
+                              challengeToken: token,
+                            });
+                            feedback.success('已删除');
+                          } catch (err) {
+                            feedback.error(err, '删除失败');
+                          }
+                        })
+                      }
                     >
-                      <Button size="small" danger icon={<MdDelete />}>
-                        删除
-                      </Button>
-                    </Popconfirm>
+                      删除
+                    </Button>
                     </>
                   ) : null}
                 </Space>

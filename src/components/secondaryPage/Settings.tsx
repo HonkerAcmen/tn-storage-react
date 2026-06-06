@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { message } from 'antd';
 import { getApiErrorMessage } from '@/utils/apiError';
+import CaptchaField from '@/components/auth/CaptchaField';
+import EmailChallengeModal from '@/components/verification/EmailChallengeModal';
 import {
   AiFillBell,
   AiFillCloud,
@@ -287,6 +289,11 @@ function SecuritySettings() {
     newPassword: '',
     confirmNewPassword: '',
   });
+  const [passwordCaptcha, setPasswordCaptcha] = useState({
+    captchaId: '',
+    captchaCode: '',
+  });
+  const [passwordChallengeOpen, setPasswordChallengeOpen] = useState(false);
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
   const currentTwoFactorEnabled =
@@ -303,6 +310,26 @@ function SecuritySettings() {
     }
   };
 
+  const submitPasswordWithToken = async (challengeToken: string) => {
+    try {
+      await changePassword.mutateAsync({
+        ...passwordForm,
+        captchaId: passwordCaptcha.captchaId,
+        captchaCode: passwordCaptcha.captchaCode,
+        challengeToken,
+      });
+      setPasswordForm({
+        oldPassword: '',
+        newPassword: '',
+        confirmNewPassword: '',
+      });
+      setPasswordCaptcha({ captchaId: '', captchaCode: '' });
+      messageApi.success(t('settings.security.password.updated'));
+    } catch (err) {
+      messageApi.error(getApiErrorMessage(err, t('settings.security.password.failed')));
+    }
+  };
+
   const submitPassword = async () => {
     if (
       !passwordForm.oldPassword ||
@@ -310,6 +337,10 @@ function SecuritySettings() {
       !passwordForm.confirmNewPassword
     ) {
       messageApi.error(t('settings.security.password.fillAll'));
+      return;
+    }
+    if (!passwordCaptcha.captchaId || !passwordCaptcha.captchaCode) {
+      messageApi.error('请完成图形验证码');
       return;
     }
     const confirmError = validatePasswordConfirm(
@@ -322,17 +353,7 @@ function SecuritySettings() {
       return;
     }
     setConfirmPasswordError('');
-    try {
-      await changePassword.mutateAsync(passwordForm);
-      setPasswordForm({
-        oldPassword: '',
-        newPassword: '',
-        confirmNewPassword: '',
-      });
-      messageApi.success(t('settings.security.password.updated'));
-    } catch (err) {
-      messageApi.error(getApiErrorMessage(err, t('settings.security.password.failed')));
-    }
+    setPasswordChallengeOpen(true);
   };
 
   return (
@@ -406,6 +427,12 @@ function SecuritySettings() {
           password={passwordForm.newPassword}
           className="mt-3"
         />
+        <div className="mt-4 max-w-md">
+          <CaptchaField
+            value={passwordCaptcha}
+            onChange={setPasswordCaptcha}
+          />
+        </div>
         <div className="mt-4">
           <ActionButton
             onClick={submitPassword}
@@ -415,6 +442,18 @@ function SecuritySettings() {
           </ActionButton>
         </div>
       </div>
+
+      <EmailChallengeModal
+        open={passwordChallengeOpen}
+        purpose="auth.change_password"
+        scope="cloud"
+        title="验证邮箱以修改密码"
+        onClose={() => setPasswordChallengeOpen(false)}
+        onVerified={async (token) => {
+          setPasswordChallengeOpen(false);
+          await submitPasswordWithToken(token);
+        }}
+      />
 
       <SettingRow
         title={t('settings.security.twoFactor.title')}

@@ -130,7 +130,16 @@ export function useAdminUpdateUser() {
 export function useAdminDeleteUser() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: number) => await adminHttp.delete(`/admin/users/${id}`),
+    mutationFn: async ({
+      id,
+      challengeToken,
+    }: {
+      id: number;
+      challengeToken?: string;
+    }) =>
+      await adminHttp.delete(`/admin/users/${id}`, {
+        data: { challengeToken },
+      }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [...adminKey, 'users'] });
       await queryClient.invalidateQueries({
@@ -145,8 +154,19 @@ export function useAdminDeleteUser() {
 
 export function useAdminResetPassword() {
   return useMutation({
-    mutationFn: async ({ id, password }: { id: number; password: string }) =>
-      await adminHttp.post(`/admin/users/${id}/reset-password`, { password }),
+    mutationFn: async ({
+      id,
+      password,
+      challengeToken,
+    }: {
+      id: number;
+      password: string;
+      challengeToken?: string;
+    }) =>
+      await adminHttp.post(`/admin/users/${id}/reset-password`, {
+        password,
+        challengeToken,
+      }),
   });
 }
 
@@ -156,10 +176,16 @@ export function useAdminUpdateUserStatus() {
     mutationFn: async ({
       id,
       status,
+      challengeToken,
     }: {
       id: number;
       status: AdminCloudUserResponse['account_status'];
-    }) => await adminHttp.put(`/admin/users/${id}/status`, { status }),
+      challengeToken?: string;
+    }) =>
+      await adminHttp.put(`/admin/users/${id}/status`, {
+        status,
+        challengeToken,
+      }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [...adminKey, 'users'] });
     },
@@ -255,13 +281,15 @@ export function useAdminRestoreBackupJob() {
     mutationFn: async ({
       id,
       includeMinio = true,
+      challengeToken,
     }: {
       id: string;
       includeMinio?: boolean;
+      challengeToken?: string;
     }) =>
       await adminHttp.post<RestoreAdminBackupApiResponse>(
         `/admin/backup/jobs/${id}/restore`,
-        { includeMinio },
+        { includeMinio, challengeToken },
       ),
   });
 }
