@@ -27,12 +27,11 @@ export default function FileBatchToolbar({
     return null;
   }
 
-  const actionBtnClass =
-    '!h-7 !border-gray-300 !text-gray-700 !shadow-none hover:!border-gray-400 hover:!text-gray-900';
+  const actionBtnClass = 'file-batch-action-btn !h-7 !shadow-none';
 
   return (
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-gray-300 px-4 py-2.5">
-      <span className="text-sm text-gray-600">
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-[var(--color-border-default)] px-4 py-2.5">
+      <span className="text-sm text-[var(--color-text-secondary)]">
         已选择 {selectedCount} / {totalCount} 项
       </span>
       <Space size={8} wrap>

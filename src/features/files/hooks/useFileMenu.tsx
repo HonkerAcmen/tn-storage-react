@@ -14,40 +14,34 @@ import {
 
 import { useFileActions } from './useFileActions';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
-import { useGetMySettings } from '@/network/hooks/user';
 
 /**
  * 文件菜单 Hook
  * 统一生成文件操作菜单
  */
 export function useFileMenu(): {
-  // 返回值为getFileMenuItems函数
   getFileMenuItems: (
     item: FileSystemTreeNode,
     options?: {
       onDetailsOpen?: (file: FileSystemTreeNode) => void;
       onFolderNavigate?: (folderId: string) => void;
-    }
+    },
   ) => MenuProps['items'];
 } {
   const { handleFileAction, isFavorite } = useFileActions();
-  const { data: settingsResponse } = useGetMySettings();
-  const settings = settingsResponse?.data?.data;
 
-  /**
-   * 获取文件操作菜单项
-   */
   const getFileMenuItems = useCallback(
     (
       item: FileSystemTreeNode,
       options?: {
         onDetailsOpen?: (file: FileSystemTreeNode) => void;
         onFolderNavigate?: (folderId: string) => void;
-      }
+      },
     ): MenuProps['items'] => {
       const isFav = isFavorite(item.UUID);
-      const items = [
-        item.type === 'file' && (settings?.allow_file_download ?? true)
+
+      return [
+        item.type === 'file'
           ? {
               key: 'download',
               label: (
@@ -59,7 +53,7 @@ export function useFileMenu(): {
               onClick: () => handleFileAction('download', item, options),
             }
           : null,
-        item.type === 'file' && settings?.allow_share
+        item.type === 'file'
           ? {
               key: 'share',
               label: (
@@ -101,8 +95,7 @@ export function useFileMenu(): {
           ),
           onClick: () => handleFileAction('copy', item, options),
         },
-        settings?.allow_favorite ?? true
-          ? {
+        {
           key: 'favorite',
           label: (
             <div className="flex items-center space-x-2">
@@ -115,8 +108,7 @@ export function useFileMenu(): {
             </div>
           ),
           onClick: () => handleFileAction('favorite', item, options),
-        }
-          : null,
+        },
         {
           key: 'details',
           label: (
@@ -127,13 +119,8 @@ export function useFileMenu(): {
           ),
           onClick: () => handleFileAction('details', item, options),
         },
-        settings?.allow_file_delete ?? true
-          ? {
-              type: 'divider' as const,
-            }
-          : null,
-        settings?.allow_file_delete ?? true
-          ? {
+        { type: 'divider' as const },
+        {
           key: 'delete',
           label: (
             <div className="flex items-center space-x-2">
@@ -143,12 +130,10 @@ export function useFileMenu(): {
           ),
           danger: true,
           onClick: () => handleFileAction('delete', item, options),
-        }
-          : null,
-      ];
-      return items.filter((menuItem) => menuItem !== null);
+        },
+      ].filter((menuItem) => menuItem !== null);
     },
-    [handleFileAction, isFavorite, settings]
+    [handleFileAction, isFavorite],
   );
 
   return {

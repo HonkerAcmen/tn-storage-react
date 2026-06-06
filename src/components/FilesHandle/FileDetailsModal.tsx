@@ -28,8 +28,6 @@ import { useFileData } from '@/contexts/FileDataContext';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import { findPathToNode } from '@/utils/fileSystem/fileSystemUtils';
 import * as fileOperations from '@/features/files/services/fileOperations';
-import { useGetMySettings } from '@/network/hooks/user';
-
 interface FileDetailsModalProps {
   open: boolean;
   file: FileSystemTreeNode | null;
@@ -48,11 +46,9 @@ export default function FileDetailsModal({
 }: FileDetailsModalProps) {
   const [messageApi, contextHolder] = message.useMessage();
   const { fileTree, openPreviewDialog, openTransferDialog } = useFileData();
-  const { data: settingsResponse } = useGetMySettings();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
-  const settings = settingsResponse?.data?.data;
 
   // 1. 提取文件名和后缀的解析逻辑 (useMemo 避免重复计算)
   const fileInfo = useMemo(() => {
@@ -232,21 +228,21 @@ export default function FileDetailsModal({
             <>
               <Button
                 icon={<AiOutlineEye />}
-                disabled={file.type === 'folder' ? false : !(settings?.allow_file_download ?? true)}
+                disabled={file.type === 'folder'}
                 onClick={() => openPreviewDialog(file)}
               >
                 预览
               </Button>
               <Button
                 icon={<AiOutlineDownload />}
-                disabled={file.type === 'folder' || !(settings?.allow_file_download ?? true)}
+                disabled={file.type === 'folder'}
                 onClick={() => void fileOperations.downloadFile(file)}
               >
                 下载
               </Button>
               <Button
                 icon={<AiOutlineShareAlt />}
-                disabled={!(settings?.allow_share ?? false)}
+                disabled={file.type === 'folder'}
                 onClick={() => {
                   void fileOperations
                     .copyShareLinkForFile(file)
@@ -264,14 +260,12 @@ export default function FileDetailsModal({
               </Button>
               <Button
                 icon={<AiOutlineFolderOpen />}
-                disabled={!(settings?.allow_file_upload ?? true)}
                 onClick={() => openTransferDialog(file, 'move')}
               >
                 移动
               </Button>
               <Button
                 icon={<AiOutlineCopy />}
-                disabled={!(settings?.allow_file_upload ?? true)}
                 onClick={() => openTransferDialog(file, 'copy')}
               >
                 复制

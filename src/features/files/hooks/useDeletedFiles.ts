@@ -9,6 +9,7 @@ import {
 import { message } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { DEFAULT_BUCKET } from '@/utils/constants/fileConstants';
+import { getApiErrorMessage } from '@/utils/apiError';
 
 /**
  * 已删除文件管理 Hook
@@ -49,9 +50,8 @@ export function useDeletedFiles() {
               resolve();
             },
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onError: (error: any) => {
-              const errorMsg = error?.message || '未知错误';
+            onError: (error: unknown) => {
+              const errorMsg = getApiErrorMessage(error, '未知错误');
               messageApi.error(`删除失败: ${errorMsg}`);
               reject(error);
             },
@@ -85,7 +85,7 @@ export function useDeletedFiles() {
               resolve('文件已恢复');
             },
             onError: (err) => {
-              reject(err.message);
+              reject(getApiErrorMessage(err, '恢复失败'));
             },
           }
         );
@@ -117,7 +117,7 @@ export function useDeletedFiles() {
               resolve('已永久删除');
             },
             onError: (err) => {
-              reject(err.message);
+              reject(getApiErrorMessage(err, '删除失败'));
             },
           }
         );

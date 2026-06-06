@@ -22,7 +22,7 @@ import {
   AdminBatchCancelUploadResponse,
   AdminBatchFileDeleteResponse,
 } from '@/network/types/Response/admin';
-import { AdminUserRoleResponse } from '@/network/types/Response/user';
+import { AdminCloudUserResponse } from '@/network/types/Response/user';
 import { isAdminAuthed } from '@/utils/auth/adminSession';
 
 const adminKey = ['admin'] as const;
@@ -75,8 +75,7 @@ export function useAdminUsers(params: {
   page: number;
   limit: number;
   keyword?: string;
-  role?: AdminUserRoleResponse['role'];
-  status?: AdminUserRoleResponse['account_status'];
+  status?: AdminCloudUserResponse['account_status'];
 }) {
   const authed = isAdminAuthed();
   return useQuery({
@@ -99,7 +98,6 @@ export function useAdminCreateUser() {
       email: string;
       phone: string;
       password: string;
-      role?: AdminUserRoleResponse['role'];
     }) => await adminHttp.post('/admin/users', body),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [...adminKey, 'users'] });
@@ -122,7 +120,6 @@ export function useAdminUpdateUser() {
       email?: string;
       phone?: string;
       desc?: string;
-      role?: AdminUserRoleResponse['role'];
     }) => await adminHttp.put(`/admin/users/${id}`, body),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [...adminKey, 'users'] });
@@ -153,26 +150,6 @@ export function useAdminResetPassword() {
   });
 }
 
-export function useAdminUpdateUserPermissions() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      id,
-      ...permissions
-    }: {
-      id: number;
-      allow_file_upload?: boolean;
-      allow_file_download?: boolean;
-      allow_file_delete?: boolean;
-      allow_favorite?: boolean;
-      allow_share?: boolean;
-    }) => await adminHttp.put(`/admin/users/${id}/permissions`, permissions),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: [...adminKey, 'users'] });
-    },
-  });
-}
-
 export function useAdminUpdateUserStatus() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -181,7 +158,7 @@ export function useAdminUpdateUserStatus() {
       status,
     }: {
       id: number;
-      status: AdminUserRoleResponse['account_status'];
+      status: AdminCloudUserResponse['account_status'];
     }) => await adminHttp.put(`/admin/users/${id}/status`, { status }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [...adminKey, 'users'] });

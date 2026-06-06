@@ -2,9 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import http from '@/network/http';
 import {
   AvatarUploadApiResponse,
-  AdminUserRoleResponse,
   ChangePasswordApiResponse,
-  GetCloudAdminUsersApiResponse,
   GetUserAvatarApiResponse,
   GetUserLoginHistoryApiResponse,
   GetUserSettingsApiResponse,
@@ -193,21 +191,6 @@ export function useGetMySettings() {
   });
 }
 
-/** @deprecated 已废弃，请使用管理后台 /admin/users */
-export function useGetAdminUsers(enabled = true) {
-  return useQuery({
-    queryKey: ['user', 'admin', 'users'],
-    queryFn: async () => {
-      return await http.get<GetCloudAdminUsersApiResponse>('/user/admin/users');
-    },
-    enabled,
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-  });
-}
-
 export function useUpdateMySettings() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -218,49 +201,6 @@ export function useUpdateMySettings() {
       );
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ['user', 'settings', 'me'],
-      });
-    },
-  });
-}
-
-export function useResetMyPermissions() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      return await http.post<GetUserSettingsApiResponse>(
-        '/user/settings/me/reset-permissions'
-      );
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ['user', 'settings', 'me'],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ['user', 'admin', 'users'],
-      });
-    },
-  });
-}
-
-/** @deprecated 已废弃，请使用管理后台 /admin/users */
-export function useUpdateUserRole() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      id,
-      role,
-    }: {
-      id: number;
-      role: AdminUserRoleResponse['role'];
-    }) => {
-      return await http.put('/user/admin/role/' + id, { role });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ['user', 'admin', 'users'],
-      });
       await queryClient.invalidateQueries({
         queryKey: ['user', 'settings', 'me'],
       });

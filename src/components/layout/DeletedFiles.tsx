@@ -13,6 +13,7 @@ import FileBatchToolbar from '@/components/FilesHandle/FileBatchToolbar';
 import { useDeletedFiles, useBatchFileActions } from '@/features/files/hooks';
 import { useFileSelection } from '@/hooks/useFileSelection';
 import { formatDate } from '@/utils/format/formatters';
+import { getApiErrorMessage } from '@/utils/apiError';
 import { useFileData } from '@/contexts/FileDataContext';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
 import FileDetailsModal from '../FilesHandle/FileDetailsModal';
@@ -118,7 +119,7 @@ export default function DeletedFiles() {
         messageApi.success(msg);
       })
       .catch((err) => {
-        messageApi.error(err);
+        messageApi.error(getApiErrorMessage(err, '恢复失败'));
       });
   };
 
@@ -140,7 +141,7 @@ export default function DeletedFiles() {
             messageApi.success(msg);
           })
           .catch((err) => {
-            messageApi.error(err);
+            messageApi.error(getApiErrorMessage(err, '删除失败'));
           });
       },
     });
@@ -159,8 +160,7 @@ export default function DeletedFiles() {
           await clearDeletedFiles();
           messageApi.success('回收站已清空');
         } catch (err) {
-          const msg = (err as Error)?.message || '清空回收站失败，请稍后重试';
-          messageApi.error(msg);
+          messageApi.error(getApiErrorMessage(err, '清空回收站失败，请稍后重试'));
         }
       },
     });

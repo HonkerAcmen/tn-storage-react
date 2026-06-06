@@ -105,10 +105,6 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
 
   function handleUpload(file: FileList | null) {
     const files: File[] = [];
-    if (!(settings?.allow_file_upload ?? true)) {
-      messageApi.error('当前账户未开启上传权限');
-      return;
-    }
     if (!selectKey) {
       messageApi.error('请选择一个文件夹');
       return;
@@ -173,7 +169,7 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
           取消
         </button>
         <FileUploadButton
-          isFolderSelect={selectKey ? !(settings?.allow_file_upload ?? true) : true}
+          isFolderSelect={!selectKey}
           multiple={true}
           uploading={false}
           onFileSelect={handleUpload}

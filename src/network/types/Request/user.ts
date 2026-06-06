@@ -15,12 +15,6 @@ export interface UpdateUserSettingsRequest {
   email_notification?: boolean;
   upload_notification?: boolean;
   share_notification?: boolean;
-  role?: string;
-  allow_file_upload?: boolean;
-  allow_file_download?: boolean;
-  allow_file_delete?: boolean;
-  allow_favorite?: boolean;
-  allow_share?: boolean;
 }
 
 export interface ChangePasswordRequest {

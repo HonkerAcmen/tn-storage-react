@@ -1,5 +1,5 @@
 import { BaseResponse } from '.';
-import { AdminUserRoleResponse } from './user';
+import { AdminCloudUserResponse } from './user';
 
 export interface AdminMetricsResponse {
   uptime: number;
@@ -62,10 +62,9 @@ export interface AdminStorageUserItem {
   usedBytes: number;
 }
 
-export type AdminUserItem = AdminUserRoleResponse;
+export type AdminUserItem = AdminCloudUserResponse;
 
 export interface AdminUserDetailResponse extends AdminUserItem {
-  storageQuotaBytes?: number;
   storage: {
     usedBytes: number;
     quotaBytes: number;

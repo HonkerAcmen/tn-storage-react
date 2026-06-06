@@ -4,9 +4,14 @@
 
 export interface ApiErrorBody {
   code?: number;
-  message?: string | string[];
+  message?: string | string[] | Record<string, unknown>;
   data?: unknown;
   timestamp?: string;
+  response?: {
+    message?: string | string[] | Record<string, unknown>;
+    data?: unknown;
+    code?: number;
+  };
 }
 
 export class ApiError extends Error {
@@ -26,6 +31,12 @@ export class ApiError extends Error {
   }
 }
 
+const GENERIC_ERROR_MESSAGES = new Set([
+  'Request failed',
+  '请求失败',
+  'Network Error',
+]);
+
 function formatMessage(value: unknown): string | null {
   if (typeof value === 'string' && value.trim()) {
     return value.trim();
@@ -36,21 +47,36 @@ function formatMessage(value: unknown): string | null {
   return null;
 }
 
-function extractFromBody(body: unknown): string | null {
-  if (!body || typeof body !== 'object') return null;
+function extractMessageFromUnknown(value: unknown, depth = 0): string | null {
+  if (depth > 5) return null;
 
-  const payload = body as Record<string, unknown>;
-  const nested = payload.response as Record<string, unknown> | undefined;
-  const data =
-    (payload.data as Record<string, unknown> | undefined) ??
-    (nested?.data as Record<string, unknown> | undefined);
+  const direct = formatMessage(value);
+  if (direct) return direct;
 
-  for (const item of [payload.message, data?.message, nested?.message]) {
-    const text = formatMessage(item);
+  if (!value || typeof value !== 'object') return null;
+
+  const payload = value as Record<string, unknown>;
+  const candidates = [
+    payload.message,
+    (payload.response as Record<string, unknown> | undefined)?.message,
+    (payload.data as Record<string, unknown> | undefined)?.message,
+    (payload.body as Record<string, unknown> | undefined)?.message,
+  ];
+
+  for (const item of candidates) {
+    const text = extractMessageFromUnknown(item, depth + 1);
     if (text) return text;
   }
 
   return null;
+}
+
+function extractFromBody(body: unknown): string | null {
+  return extractMessageFromUnknown(body);
+}
+
+function isMeaningfulMessage(message: string | undefined): message is string {
+  return Boolean(message && !GENERIC_ERROR_MESSAGES.has(message));
 }
 
 /** 从任意 catch 值中提取后端 message 文案 */
@@ -60,20 +86,38 @@ export function getApiErrorMessage(
 ): string {
   if (!err) return fallback;
 
-  if (err instanceof ApiError && err.message) {
-    return err.message;
+  if (err instanceof ApiError) {
+    const fromBody = extractFromBody(err.body);
+    if (fromBody) return fromBody;
+    if (isMeaningfulMessage(err.message)) {
+      return err.message;
+    }
   }
 
   if (typeof err === 'string' && err.trim()) {
     return err.trim();
   }
 
-  if (err instanceof Error && err.message && err.message !== 'Request failed') {
-    return err.message;
+  if (err instanceof Error) {
+    const fromBody = extractFromBody(err);
+    if (fromBody) return fromBody;
+    if (isMeaningfulMessage(err.message)) {
+      return err.message;
+    }
   }
 
-  const fromBody = extractFromBody(err);
-  if (fromBody) return fromBody;
+  if (err && typeof err === 'object') {
+    const payload = err as Record<string, unknown>;
+
+    if (payload.response && typeof payload.response === 'object') {
+      const response = payload.response as Record<string, unknown>;
+      const fromAxiosResponse = extractFromBody(response.data ?? response);
+      if (fromAxiosResponse) return fromAxiosResponse;
+    }
+
+    const fromBody = extractFromBody(err);
+    if (fromBody) return fromBody;
+  }
 
   return fallback;
 }

@@ -7,8 +7,6 @@ import { useDeletedFiles } from './useDeletedFiles';
 import { useFileData } from '@/contexts/FileDataContext';
 import * as fileOperations from '@/features/files/services/fileOperations';
 import { FileSystemTreeNode } from '@/network/types/Response/file';
-import { useGetMySettings } from '@/network/hooks/user';
-
 /**
  * 文件操作 Hook
  * 统一管理所有文件操作逻辑
@@ -19,8 +17,6 @@ export function useFileActions() {
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addDeletedFile } = useDeletedFiles();
   const { openRenameDialog, openTransferDialog } = useFileData();
-  const { data: settingsResponse } = useGetMySettings();
-  const settings = settingsResponse?.data?.data;
 
   /**
    * 处理文件操作
@@ -39,10 +35,6 @@ export function useFileActions() {
           void fileOperations.downloadFile(item);
           break;
         case 'share':
-          if (!(settings?.allow_share ?? false)) {
-            appMessage.error('当前账户未开启分享权限');
-            break;
-          }
           void fileOperations
             .copyShareLinkForFile(item)
             .then(() => {
@@ -94,7 +86,6 @@ export function useFileActions() {
       appMessage,
       addDeletedFile,
       isFavorite,
-      settings,
       toggleFavorite,
     ]
   );

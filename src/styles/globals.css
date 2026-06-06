@@ -235,6 +235,24 @@ body {
   box-shadow: inset 0 0 0 1px rgba(109, 92, 247, 0.25) !important;
 }
 
+/* 批量操作工具栏：全选 / 取消 / 下载等 */
+.file-batch-action-btn.ant-btn:not(:disabled) {
+  border-color: var(--color-border-default) !important;
+  color: var(--color-text-secondary) !important;
+  background-color: transparent !important;
+}
+
+.file-batch-action-btn.ant-btn:not(:disabled) > span {
+  color: inherit !important;
+}
+
+.file-batch-action-btn.ant-btn:not(:disabled):hover,
+.file-batch-action-btn.ant-btn:not(:disabled):focus-visible {
+  border-color: var(--color-border-strong) !important;
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-surface-soft) !important;
+}
+
 /* ── Ant Design 组件 ── */
 :root[data-theme='dark'] .ant-btn-text:not(:disabled),
 :root[data-theme='dark'] .ant-btn-text:not(:disabled) > span {

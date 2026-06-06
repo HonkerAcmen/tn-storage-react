@@ -35,13 +35,8 @@ export interface UserSettingsResponse {
   email_notification: boolean;
   upload_notification: boolean;
   share_notification: boolean;
-  role: string;
-  allow_file_upload: boolean;
-  allow_file_download: boolean;
-  allow_file_delete: boolean;
-  allow_favorite: boolean;
-  allow_share: boolean;
-  permissions_customized: boolean;
+  account_status: 'active' | 'disabled';
+  storage_quota_bytes: number;
   updatedAt: string;
   createdAt: string;
 }
@@ -54,16 +49,18 @@ export interface UserLoginHistoryResponse {
   loginAt: string;
 }
 
-export interface AdminUserRoleResponse {
+export interface AdminCloudUserResponse {
   id: number;
   username: string;
   email: string;
   phone: string;
   desc: string;
-  role: 'admin' | 'user' | 'viewer';
   account_status: 'active' | 'disabled';
-  permissions: UserSettingsResponse;
+  storageQuotaBytes: number;
 }
+
+/** @deprecated 使用 AdminCloudUserResponse */
+export type AdminUserRoleResponse = AdminCloudUserResponse;
 
 interface GetUserAvatarResponse {
   fieldname: string;
@@ -111,6 +108,3 @@ export type GetUserLoginHistoryApiResponse = BaseResponse<
   UserLoginHistoryResponse[]
 >;
 export type ChangePasswordApiResponse = BaseResponse<null>;
-export type GetCloudAdminUsersApiResponse = BaseResponse<
-  AdminUserRoleResponse[]
->;

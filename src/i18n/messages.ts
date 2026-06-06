@@ -31,6 +31,7 @@ const zhCN = {
   'settings.tab.security': '安全设置',
   'settings.tab.notification': '通知设置',
   'settings.tab.permissions': '权限设置',
+  'settings.tab.shares': '我的分享',
 
   'settings.general.saved': '通用设置已保存',
   'settings.general.language.title': '语言设置',
@@ -147,6 +148,7 @@ const enUS: Record<keyof typeof zhCN, string> = {
   'settings.tab.security': 'Security',
   'settings.tab.notification': 'Notifications',
   'settings.tab.permissions': 'Permissions',
+  'settings.tab.shares': 'My shares',
 
   'settings.general.saved': 'General settings saved',
   'settings.general.language.title': 'Language',
@@ -268,6 +270,7 @@ const jaJP: Record<keyof typeof zhCN, string> = {
   'settings.tab.security': 'セキュリティ',
   'settings.tab.notification': '通知',
   'settings.tab.permissions': '権限',
+  'settings.tab.shares': '共有リンク',
 
   'settings.general.saved': '一般設定を保存しました',
   'settings.general.language.title': '言語',
