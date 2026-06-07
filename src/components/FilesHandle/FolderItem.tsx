@@ -29,10 +29,10 @@ export default function FolderItem({
           onSelect(item.UUID);
           onSelectId(item.id);
         }}
-        className={`my-1 flex cursor-pointer rounded-lg border-2 p-2 transition duration-200 ${
+        className={`my-1 flex cursor-pointer rounded-lg border p-2 transition duration-200 ${
           isSelect
-            ? 'border-[var(--color-text-primary)] bg-[var(--color-accent-muted)] shadow-sm'
-            : 'border-transparent bg-[var(--color-surface-soft)] hover:border-[var(--color-border-strong)]'
+            ? 'border-(--color-border-default) bg-(--select-bg) shadow-sm'
+            : 'border-(--color-border-strong) bg-(--select-no-bg)'
         }`}
         aria-selected={isSelect}
       >
