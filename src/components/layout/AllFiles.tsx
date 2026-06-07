@@ -98,14 +98,6 @@ export default function AllFiles() {
   );
   const [showDetails, setShowDetails] = useState(false);
 
-  const [showActionMenu, setShowActionMenu] = useState(false);
-  const [actionMenuPos, setActionMenuPos] = useState({
-    x: 0,
-    y: 0,
-  });
-
-  const activeMenuRef = useRef<HTMLDivElement>(null);
-
   const [showFolderNameInputElem, setShowFolderNameInputElem] = useState(false);
 
   const folderInputRef = useRef<HTMLInputElement>(null);
@@ -223,23 +215,14 @@ export default function AllFiles() {
     }
   };
 
-  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setActionMenuPos({
-      x: event.clientX,
-      y: event.clientY,
-    });
-    setShowActionMenu(true);
-  };
-
-  const handleClick = (event: MouseEvent) => {
-    if (
-      activeMenuRef &&
-      !activeMenuRef.current?.contains(event.target as Node)
-    ) {
-      setShowActionMenu(false); // 点击其他地方时隐藏菜单
-    }
-  };
+  const blankAreaMenuItems: MenuProps['items'] = [
+    {
+      key: 'new-folder',
+      label: '新建文件夹',
+      icon: <AiFillFolder className="text-amber-400" />,
+      onClick: () => setShowFolderNameInputElem(true),
+    },
+  ];
 
   function handleFolderInputModal() {
     if (folderInputRef.current) {
@@ -286,26 +269,13 @@ export default function AllFiles() {
     }
   }
 
-  useEffect(() => {
-    // 添加事件监听
-    document.addEventListener('click', handleClick);
-
-    // 清除事件监听
-    return () => {
-      document.removeEventListener('click', handleClick);
-    };
-  }, []);
-
   return (
     <>
       {contextHolder}
       {batchModalHolder}
-      <div
-        className="relative ml-4 min-h-0 min-w-0 overflow-x-hidden pb-8"
-        onContextMenu={handleContextMenu}
-      >
+      <div className="relative ml-4 flex min-h-[calc(100dvh-4rem)] min-w-0 flex-col overflow-x-hidden pb-8">
         {/* 头部 Header */}
-        <div className="mt-4 mb-6 flex flex-row items-center justify-between">
+        <div className="mt-4 mb-6 flex shrink-0 flex-row items-center justify-between">
           <div className="mb-4 flex flex-col">
             <p className="text-3xl font-semibold whitespace-nowrap text-[#2e2c34]">
               所有文件
@@ -356,7 +326,7 @@ export default function AllFiles() {
         {/* 面包屑导航 */}
         {currentFolderId && (
           <Breadcrumb
-            className="mb-4 px-4"
+            className="mb-4 shrink-0 px-4"
             items={[
               {
                 title: (
@@ -393,22 +363,26 @@ export default function AllFiles() {
           />
         )}
 
-        <FileBatchToolbar
-          selectedCount={selection.selectedCount}
-          totalCount={sortedFiles.length}
-          onSelectAll={selection.selectAll}
-          onClear={selection.clearSelection}
-          onDelete={() =>
-            confirmBatchMoveToTrash(
-              selection.selectedItems,
-              selection.clearSelection,
-            )
-          }
-          onDownload={() => batchDownload(selection.selectedItems)}
-        />
+        <div className="shrink-0">
+          <FileBatchToolbar
+            selectedCount={selection.selectedCount}
+            totalCount={sortedFiles.length}
+            onSelectAll={selection.selectAll}
+            onClear={selection.clearSelection}
+            onDelete={() =>
+              confirmBatchMoveToTrash(
+                selection.selectedItems,
+                selection.clearSelection,
+              )
+            }
+            onDownload={() => batchDownload(selection.selectedItems)}
+          />
+        </div>
 
-        {/* 内容区域 */}
-        {seleRadioItem === 0 ? (
+        {/* 内容区域：flex-1 撑满剩余高度，文件少时空白处也可右键；菜单挂到 body，不随画布裁切 */}
+        <Dropdown menu={{ items: blankAreaMenuItems }} trigger={['contextMenu']}>
+          <div className="min-h-0 w-full flex-1">
+            {seleRadioItem === 0 ? (
           // 列表模式
           sortedFiles.length === 0 ? (
             <Empty
@@ -423,7 +397,7 @@ export default function AllFiles() {
               className="py-12"
             />
           ) : (
-            <ul className="mt-2 mr-8 flex min-w-0 flex-col space-y-2 overflow-hidden">
+            <ul className="mt-2 mr-8 flex min-w-0 flex-col space-y-2">
               {sortedFiles.map((item) => {
                 const convertedItem = item;
                 return (
@@ -494,99 +468,115 @@ export default function AllFiles() {
           />
         ) : (
           <ul className="grid w-full min-w-0 grid-cols-2 gap-4 p-4 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-            {sortedFiles.map((item) => (
-              <li
-                key={item.id}
-                className={`group relative flex min-h-[132px] min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl border p-3 transition-all duration-200 hover:border-gray-200 hover:bg-gray-100 ${
-                  selection.isSelected(item.id)
-                    ? 'border-blue-300 bg-blue-50/40'
-                    : 'border-transparent'
-                }`}
-                onClick={() => {
-                  if (item.type === 'folder') {
-                    handleFolderClick(item.id);
-                  } else {
-                    openPreviewDialog(item);
-                  }
-                }}
-              >
-                <Checkbox
-                  checked={selection.isSelected(item.id)}
-                  className="absolute top-2 left-2 z-10"
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={() => selection.toggleItem(item.id)}
-                />
-                <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col items-center overflow-hidden">
-                  {item.type === 'folder' ? (
-                    <AiFillFolder
-                      className={`${ICON_SIZE_LARGE} shrink-0 text-amber-400`}
-                    />
-                  ) : (
-                    <div className="shrink-0 text-gray-400">
-                      {getFileIcon(item.ext, 'large')}
-                    </div>
-                  )}
-                  <span
-                    className="mt-2 line-clamp-2 w-full min-w-0 px-1 text-center text-sm break-all text-gray-700"
-                    title={item.filename}
-                  >
-                    {item.filename}
-                  </span>
-                </div>
+            {sortedFiles.map((item) => {
+              const fileMenuConfig: MenuProps = {
+                items: getFileMenuItems(item, {
+                  onDetailsOpen: () => {
+                    setSelectedFile(item);
+                    setShowDetails(true);
+                  },
+                  onFolderNavigate: handleFolderClick,
+                }),
+                onClick: (e) => e.domEvent.stopPropagation(),
+              };
 
-                <div className="mt-2 flex w-full shrink-0 items-center justify-between opacity-0 transition-opacity group-hover:opacity-100">
-                  <Button
-                    type="text"
-                    size="small"
-                    icon={
-                      isFavorite(item.UUID) ? (
-                        <AiFillStar className="h-4 w-4 text-amber-400" />
-                      ) : (
-                        <AiOutlineStar className="h-4 w-4 text-gray-400" />
-                      )
+              const cardBody = (
+                <div
+                  className="flex min-h-[108px] w-full min-w-0 flex-1 cursor-pointer flex-col"
+                  onClick={() => {
+                    if (item.type === 'folder') {
+                      handleFolderClick(item.id);
+                    } else {
+                      openPreviewDialog(item);
                     }
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const convertedItem = item;
-                      handleFileAction('favorite', convertedItem, {
-                        onDetailsOpen: () => {
-                          setSelectedFile(item);
-                          setShowDetails(true);
-                        },
-                        onFolderNavigate: handleFolderClick,
-                      });
-                    }}
-                    className="flex items-center justify-center"
-                  />
-                  <Dropdown
-                    menu={{
-                      items: getFileMenuItems(item, {
-                        onDetailsOpen: () => {
-                          setSelectedFile(item);
-                          setShowDetails(true);
-                        },
-                        onFolderNavigate: handleFolderClick,
-                      }),
-                      onClick: (e) => e.domEvent.stopPropagation(),
-                    }}
-                    trigger={['click']}
-                    placement="bottomRight"
-                  >
+                  }}
+                  onContextMenu={(e) => e.stopPropagation()}
+                >
+                  <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col items-center overflow-hidden">
+                    {item.type === 'folder' ? (
+                      <AiFillFolder
+                        className={`${ICON_SIZE_LARGE} shrink-0 text-amber-400`}
+                      />
+                    ) : (
+                      <div className="shrink-0 text-gray-400">
+                        {getFileIcon(item.ext, 'large')}
+                      </div>
+                    )}
+                    <span
+                      className="mt-2 line-clamp-2 w-full min-w-0 px-1 text-center text-sm break-all text-gray-700"
+                      title={item.filename}
+                    >
+                      {item.filename}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex w-full shrink-0 items-center justify-between opacity-0 transition-opacity group-hover:opacity-100">
                     <Button
                       type="text"
                       size="small"
                       icon={
-                        <AiOutlineEllipsis className="h-4 w-4 text-gray-600" />
+                        isFavorite(item.UUID) ? (
+                          <AiFillStar className="h-4 w-4 text-amber-400" />
+                        ) : (
+                          <AiOutlineStar className="h-4 w-4 text-gray-400" />
+                        )
                       }
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex items-center justify-center bg-white shadow-md hover:bg-gray-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFileAction('favorite', item, {
+                          onDetailsOpen: () => {
+                            setSelectedFile(item);
+                            setShowDetails(true);
+                          },
+                          onFolderNavigate: handleFolderClick,
+                        });
+                      }}
+                      className="flex items-center justify-center"
                     />
-                  </Dropdown>
+                    <Dropdown
+                      menu={fileMenuConfig}
+                      trigger={['click']}
+                      placement="bottomRight"
+                    >
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={
+                          <AiOutlineEllipsis className="h-4 w-4 text-gray-600" />
+                        }
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center justify-center bg-white shadow-md hover:bg-gray-50"
+                      />
+                    </Dropdown>
+                  </div>
                 </div>
-              </li>
-            ))}
+              );
+
+              return (
+                <li
+                  key={item.id}
+                  className={`group relative flex min-h-[132px] min-w-0 flex-col overflow-hidden rounded-xl border p-3 transition-all duration-200 hover:border-gray-200 hover:bg-gray-100 ${
+                    selection.isSelected(item.id)
+                      ? 'border-blue-300 bg-blue-50/40'
+                      : 'border-transparent'
+                  }`}
+                >
+                  <Checkbox
+                    checked={selection.isSelected(item.id)}
+                    className="absolute top-2 left-2 z-10"
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={() => selection.toggleItem(item.id)}
+                  />
+                  <Dropdown menu={fileMenuConfig} trigger={['contextMenu']}>
+                    {cardBody}
+                  </Dropdown>
+                </li>
+              );
+            })}
           </ul>
         )}
+          </div>
+        </Dropdown>
 
         {/* 文件详情模态框 */}
         {selectedFile && (
@@ -622,21 +612,6 @@ export default function AllFiles() {
               await handleFileUpdate(fileId, apiUpdates);
             }}
           />
-        )}
-
-        {showActionMenu && (
-          <div
-            className="absolute flex h-10 w-40 cursor-pointer items-center justify-center rounded-lg border border-gray-200 text-gray-800 transition duration-200 hover:border-gray-400"
-            ref={activeMenuRef}
-            style={{
-              top: `${actionMenuPos.y - 75}px`, // 使用内联样式来设置动态位置
-              left: `${actionMenuPos.x - 245}px`, // 使用内联样式来设置动态位置
-              zIndex: 1000,
-            }}
-            onClick={() => setShowFolderNameInputElem(true)}
-          >
-            <div>新建文件夹</div>
-          </div>
         )}
 
         <Modal

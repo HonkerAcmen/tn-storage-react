@@ -44,12 +44,18 @@ export default function FileListItem({
     [file.filename.split('.').length - 1].toLocaleLowerCase()
     .trim();
 
-  return (
-    <li
-      className={`mb-2 flex min-w-0 items-center gap-3 overflow-hidden rounded-lg border px-4 py-3 transition hover:bg-gray-50 ${
-        selected ? 'border-blue-300 bg-blue-50/40' : 'border-gray-100'
-      }`}
+  const menuConfig: MenuProps | undefined = menuItems
+    ? {
+        items: menuItems,
+        onClick: (e) => e.domEvent.stopPropagation(),
+      }
+    : undefined;
+
+  const rowContent = (
+    <div
+      className="flex w-full min-w-0 items-center gap-3"
       onClick={onClick}
+      onContextMenu={(e) => e.stopPropagation()}
     >
       {selectable ? (
         <Checkbox
@@ -101,15 +107,8 @@ export default function FileListItem({
 
       <div className="flex shrink-0 items-center gap-1">
         {actions}
-        {menuItems ? (
-          <Dropdown
-            menu={{
-              items: menuItems,
-              onClick: (e) => e.domEvent.stopPropagation(),
-            }}
-            trigger={['click']}
-            placement="bottomRight"
-          >
+        {menuConfig ? (
+          <Dropdown menu={menuConfig} trigger={['click']} placement="bottomRight">
             <Button
               type="text"
               icon={<AiOutlineEllipsis className="h-5 w-5 text-gray-600" />}
@@ -119,6 +118,22 @@ export default function FileListItem({
           </Dropdown>
         ) : null}
       </div>
+    </div>
+  );
+
+  return (
+    <li
+      className={`mb-2 flex min-w-0 overflow-hidden rounded-lg border px-4 py-3 transition hover:bg-gray-50 ${
+        selected ? 'border-blue-300 bg-blue-50/40' : 'border-gray-100'
+      }`}
+    >
+      {menuConfig ? (
+        <Dropdown menu={menuConfig} trigger={['contextMenu']}>
+          {rowContent}
+        </Dropdown>
+      ) : (
+        rowContent
+      )}
     </li>
   );
 }
