@@ -484,7 +484,7 @@ export default function Login() {
           {/* Logo 和标题 */}
           <div className="mb-8 text-center">
             <h1 className="mb-2 text-3xl font-bold text-gray-800">
-              伏羲文化数据云盘
+              陇原伏羲数据管理在线平台
             </h1>
             <p className="text-gray-500">欢迎使用云存储服务</p>
           </div>

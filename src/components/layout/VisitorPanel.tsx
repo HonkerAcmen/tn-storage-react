@@ -59,7 +59,7 @@ export default function VisitorPanel() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-base leading-8 text-[#5f5b6b] md:text-lg">
-              伏羲文化数据云盘
+              陇原伏羲数据管理在线平台
               为您提供安全稳定的云端存储体验，支持多端同步与高效文件管理，让数据触手可及。
             </p>
 
@@ -100,7 +100,7 @@ export default function VisitorPanel() {
                   <p className="text-sm tracking-[0.24em] text-white/60 uppercase">
                     Workspace
                   </p>
-                  <h2 className="mt-3 text-3xl font-semibold">伏羲文化数据云盘</h2>
+                  <h2 className="mt-3 text-3xl font-semibold">陇原伏羲数据管理在线平台</h2>
                 </div>
                 <div className="rounded-2xl bg-white/12 p-3">
                   <AiFillCloud className="h-8 w-8 text-white" />
@@ -171,7 +171,7 @@ export default function VisitorPanel() {
                   Before You Sign In
                 </p>
                 <h3 className="mt-2 text-3xl font-semibold text-[#2e2c34]">
-                  伏羲文化数据云盘，安全可用
+                  陇原伏羲数据管理在线平台，安全可用
                 </h3>
               </div>
               <div className="flex flex-wrap gap-3">

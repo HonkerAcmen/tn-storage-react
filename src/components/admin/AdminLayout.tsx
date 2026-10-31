@@ -95,7 +95,7 @@ export default function AdminLayout({
               {!collapsed && (
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-gray-800">
-                    伏羲文化
+                    陇原伏羲数据管理在线平台
                   </p>
                   <p className="text-xs text-gray-400">管理后台</p>
                 </div>

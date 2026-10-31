@@ -61,7 +61,7 @@ interface FileDataContextType {
 
 // 初始空根节点
 const EMPTY_ROOT: FileSystemTreeNode = {
-  id: '1',
+  id: '0',
   UUID: '0',
   parent_id: 0,
   size: '0',
@@ -173,7 +173,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
   const [transferTarget, setTransferTarget] =
     useState<FileSystemTreeNode | null>(null);
   const [transferMode, setTransferMode] = useState<'move' | 'copy'>('move');
-  const [transferTargetId, setTransferTargetId] = useState('1');
+  const [transferTargetId, setTransferTargetId] = useState('0');
   const [transferTargetKey, setTransferTargetKey] = useState('');
   const [transferLoading, setTransferLoading] = useState(false);
 
@@ -305,7 +305,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
     (file: FileSystemTreeNode, mode: 'move' | 'copy') => {
       setTransferTarget(file);
       setTransferMode(mode);
-      setTransferTargetId('1');
+      setTransferTargetId('0');
       setTransferTargetKey(fileTree.UUID);
     },
     [fileTree.UUID]
@@ -349,7 +349,7 @@ export function FileDataProvider({ children }: { children: ReactNode }) {
 
   const handleTransferCancel = useCallback(() => {
     setTransferTarget(null);
-    setTransferTargetId('1');
+    setTransferTargetId('0');
     setTransferTargetKey(fileTree.UUID);
   }, [fileTree.UUID]);
 

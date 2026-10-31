@@ -30,8 +30,8 @@ export type SiteContentView = {
 
 export const DEFAULT_SITE_CONTENT: SiteContentView = {
   product_name: PRODUCT_NAME,
-  brand_main_text: '伏羲文化',
-  brand_accent_text: '数据云盘',
+  brand_main_text: '陇原伏羲',
+  brand_accent_text: '数据管理在线平台',
   icp: { number: '', link: '' },
   enterprise: {
     name: '',

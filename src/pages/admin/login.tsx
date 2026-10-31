@@ -94,7 +94,7 @@ function AdminLoginForm() {
             管理后台登录
           </h1>
           <p className="mt-2 text-sm text-gray-500">
-            伏羲文化数据云盘 · 管理员独立账号
+            陇原伏羲数据管理在线平台 · 管理员独立账号
           </p>
         </div>
 

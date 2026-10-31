@@ -53,7 +53,7 @@ export default function AllFiles() {
   const { fileTree, updateFile, fileMap, openPreviewDialog } = useFileData();
 
   // 获取当前文件夹ID，如果没有则在根路径下显示根目录的直接子节点
-  const currentFolderId = router.query.folderId as string | '1';
+  const currentFolderId = router.query.folderId as string | undefined;
 
   // 0: 列表模式, 1: 网格模式
   const [seleRadioItem, setSeleRadioItem] = useState(1);
@@ -208,7 +208,7 @@ export default function AllFiles() {
 
   // 处理面包屑导航
   const handleBreadcrumbClick = (targetId: string) => {
-    if (targetId === '1') {
+    if (targetId === '0') {
       handleBackToRoot();
     } else {
       handleFolderClick(targetId);
@@ -230,7 +230,7 @@ export default function AllFiles() {
       createFolder.mutate(
         {
           foldername: folderInputRef.current.value,
-          parent: currentFolderId ? currentFolderId : '1',
+          parent: currentFolderId ? currentFolderId : '0',
         },
         {
           onSuccess: (res) => {
@@ -331,7 +331,7 @@ export default function AllFiles() {
               {
                 title: (
                   <span
-                    onClick={() => handleBreadcrumbClick('1')}
+                    onClick={() => handleBreadcrumbClick('0')}
                     className="cursor-pointer rounded-md border border-white px-2 py-1 transition hover:border-gray-200 hover:text-gray-600"
                   >
                     所有文件

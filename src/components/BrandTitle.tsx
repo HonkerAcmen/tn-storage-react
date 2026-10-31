@@ -25,8 +25,8 @@ type BrandTitleProps = {
 export default function BrandTitle({
   asLink = false,
   className = '',
-  mainText = '伏羲文化',
-  accentText = '数据云盘',
+  mainText = '陇原伏羲',
+  accentText = '数据管理在线平台',
   ariaLabel = PRODUCT_NAME,
 }: BrandTitleProps) {
   const content = (

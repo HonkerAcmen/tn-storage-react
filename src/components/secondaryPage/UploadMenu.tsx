@@ -74,12 +74,12 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
   ];
 
   useEffect(() => {
-    const defaultParentId = String(settings?.default_upload_parent_id ?? '1');
+    const defaultParentId = String(settings?.default_upload_parent_id ?? '0');
     const fallbackUUID = fileTree.UUID;
 
     if (!selectId) {
-      if (defaultParentId === '1') {
-        setSelectId('1');
+      if (defaultParentId === '0') {
+        setSelectId('0');
         setSelectKey(fallbackUUID);
         return;
       }
@@ -98,7 +98,7 @@ export default function UploadMenu({ open, onClose }: UploadMenuProps) {
         current.children?.forEach((child) => stack.push(child));
       }
 
-      setSelectId('1');
+      setSelectId('0');
       setSelectKey(fallbackUUID);
     }
   }, [fileTree, selectId, settings?.default_upload_parent_id]);

@@ -381,7 +381,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
           taskId: task.taskId,
           fileName: task.filename ?? matched?.fileName ?? '未知文件',
           fileSize: task.size ?? matched?.fileSize ?? 0,
-          parentId: task.parentId ?? matched?.parentId ?? 1,
+          parentId: task.parentId ?? matched?.parentId ?? 0,
           bucket: task.bucket ?? matched?.bucket ?? DEFAULT_BUCKET,
           progress: task.size
             ? Math.round((task.uploadedFiles / task.fileNum) * 100)

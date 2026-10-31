@@ -201,7 +201,7 @@ function StorageSettings() {
 
   const currentDraft = {
     default_upload_parent_id:
-      draft.default_upload_parent_id ?? settings?.default_upload_parent_id ?? 1,
+      draft.default_upload_parent_id ?? settings?.default_upload_parent_id ?? 0,
     auto_clean_temp:
       draft.auto_clean_temp ?? settings?.auto_clean_temp ?? false,
     download_concurrency:
@@ -246,12 +246,12 @@ function StorageSettings() {
         control={
           <input
             type="number"
-            min={1}
+            min={0}
             value={currentDraft.default_upload_parent_id}
             onChange={(e) =>
               setDraft((prev) => ({
                 ...prev,
-                default_upload_parent_id: Number(e.target.value) || 1,
+                default_upload_parent_id: Number(e.target.value) || 0,
               }))
             }
             className="w-28 rounded-lg border border-gray-200 px-4 py-2 text-sm"

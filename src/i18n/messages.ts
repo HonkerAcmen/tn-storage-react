@@ -45,7 +45,7 @@ const zhCN = {
   'settings.storage.usage': '存储空间使用情况',
   'settings.storage.defaultUpload.title': '默认上传位置',
   'settings.storage.defaultUpload.desc':
-    '根目录固定为 1，上传组件可读取此默认父目录',
+    '根目录固定为 0，上传组件可读取此默认父目录',
   'settings.storage.autoClean.title': '自动清理临时文件',
   'settings.storage.autoClean.desc': '仅保存用户偏好，供上传和缓存策略读取',
   'settings.storage.downloadConcurrency.title': '同时下载任务数',
@@ -166,7 +166,7 @@ const enUS: Record<keyof typeof zhCN, string> = {
   'settings.storage.usage': 'Storage usage',
   'settings.storage.defaultUpload.title': 'Default upload folder',
   'settings.storage.defaultUpload.desc':
-    'Root folder is fixed to 1; uploads use this parent by default',
+    'Root folder is fixed to 0; uploads use this parent by default',
   'settings.storage.autoClean.title': 'Auto clean temp files',
   'settings.storage.autoClean.desc':
     'Saved as preference for upload and cache policies',
@@ -293,7 +293,7 @@ const jaJP: Record<keyof typeof zhCN, string> = {
   'settings.storage.usage': 'ストレージ使用状況',
   'settings.storage.defaultUpload.title': '既定アップロード先',
   'settings.storage.defaultUpload.desc':
-    'ルートは 1 固定。アップロードの既定親フォルダ',
+    'ルートは 0 固定。アップロードの既定親フォルダ',
   'settings.storage.autoClean.title': '一時ファイル自動削除',
   'settings.storage.autoClean.desc': 'アップロードとキャッシュ設定用の preference',
   'settings.storage.downloadConcurrency.title': '同時ダウンロード数',
